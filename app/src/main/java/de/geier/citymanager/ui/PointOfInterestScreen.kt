@@ -13,44 +13,50 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun PointOfInterestScreen(
     poiType: PoiType,
+    categoryId: String,
+    isGameMaster: Boolean,      // ✅ NEU
     onBack: () -> Unit
 ) {
     var showCreate by remember { mutableStateOf(false) }
 
-    // 🔹 Lokale, veränderbare POI-Liste
     val pois = remember {
         mutableStateListOf(
             PointOfInterest(
                 id = "1",
                 name = "Alte Taverne",
                 description = "Ein beliebter Treffpunkt für Abenteurer.",
-                categoryId = "tavern",
+                categoryId = "1",
                 type = PoiType.SHOP,
                 visible = true
             ),
-
-                    PointOfInterest(
-                    id = "2",
-            name = "Verlassener Turm",
-            description = "Niemand weiß, was dort wirklich passiert ist.",
-            categoryId = "public_building",
-            type = PoiType.LOCATION,
-            visible = true
-        )
+            PointOfInterest(
+                id = "2",
+                name = "Geheimer Keller",
+                description = "Nicht für Spieler gedacht.",
+                categoryId = "1",
+                type = PoiType.LOCATION,
+                visible = false
+            ),
+            PointOfInterest(
+                id = "3",
+                name = "Tempel des Lichts",
+                description = "Zentrum des Glaubens.",
+                categoryId = "2",
+                type = PoiType.LOCATION,
+                visible = true
+            )
         )
     }
 
-    // 🔹 Eingabemaske anzeigen
-    if (showCreate) {
+    // ➕ POI anlegen nur für SL
+    if (showCreate && isGameMaster) {
         PoiCreateScreen(
             poiType = poiType,
             onSave = { newPoi ->
-                pois.add(newPoi)
+                pois.add(newPoi.copy(categoryId = categoryId))
                 showCreate = false
             },
-            onCancel = {
-                showCreate = false
-            }
+            onCancel = { showCreate = false }
         )
         return
     }
@@ -59,6 +65,14 @@ fun PointOfInterestScreen(
         PoiType.LOCATION -> "📍 Orte"
         PoiType.SHOP -> "🏪 Geschäfte"
     }
+
+    // 🔥 ZENTRALER FILTER
+    val filteredPois =
+        pois.filter {
+            it.type == poiType &&
+                    it.categoryId == categoryId &&
+                    (isGameMaster || it.visible)
+        }
 
     Column(
         modifier = Modifier
@@ -76,43 +90,43 @@ fun PointOfInterestScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // ➕ Neuer POI
-        Button(
-            onClick = { showCreate = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("➕ Neu")
-        }
+        if (isGameMaster) {
+            Button(
+                onClick = { showCreate = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("➕ Neu")
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(
-                pois.filter { it.type == poiType }
-            ) { poi ->
-                PoiCard(poi)
+            items(filteredPois) { poi ->
+                PoiCard(poi, isGameMaster)
             }
         }
     }
 }
 
 @Composable
-private fun PoiCard(poi: PointOfInterest) {
+private fun PoiCard(
+    poi: PointOfInterest,
+    isGameMaster: Boolean
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                // später: Detailansicht
-            }
+            .clickable { }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(poi.name, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(4.dp))
             Text(poi.description)
 
-            if (!poi.visible) {
+            if (isGameMaster && !poi.visible) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("🔒 Nicht sichtbar für Spieler", fontSize = 12.sp)
             }

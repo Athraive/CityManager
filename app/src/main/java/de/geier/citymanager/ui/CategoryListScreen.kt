@@ -6,32 +6,31 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import androidx.compose.material3.SmallTopAppBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryListScreen(
     categories: List<PoiCategory>,
     onCategoryClick: (PoiCategory) -> Unit,
     onAddCategory: () -> Unit,
+    onDeleteCategory: (PoiCategory) -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 title = { Text("📂 Kategorien") },
                 navigationIcon = {
-                    Text(
-                        text = "⬅",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
-                    )
+                    IconButton(onClick = onBack) {
+                        Text("⬅")
+                    }
                 }
             )
         },
@@ -62,7 +61,8 @@ fun CategoryListScreen(
                 items(categories) { category ->
                     CategoryCard(
                         category = category,
-                        onClick = { onCategoryClick(category) }
+                        onClick = { onCategoryClick(category) },
+                        onDelete = { onDeleteCategory(category) }
                     )
                 }
             }
@@ -73,18 +73,17 @@ fun CategoryListScreen(
 @Composable
 private fun CategoryCard(
     category: PoiCategory,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
-            .clickable { onClick() },
+            .height(120.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box {
+        Box(modifier = Modifier.fillMaxSize()) {
 
-            // ───── Hintergrundbild ─────
             if (category.backgroundImageUri != null) {
                 Image(
                     painter = rememberAsyncImagePainter(category.backgroundImageUri),
@@ -94,10 +93,11 @@ private fun CategoryCard(
                 )
             }
 
-            // ───── Overlay ─────
+            // Klickbarer Inhalt
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .clickable { onClick() }
                     .padding(16.dp),
                 contentAlignment = Alignment.BottomStart
             ) {
@@ -109,18 +109,32 @@ private fun CategoryCard(
                         modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = category.icon,
-                            style = MaterialTheme.typography.headlineSmall
-                        )
+                        Text(category.icon, style = MaterialTheme.typography.headlineSmall)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = category.title,
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Text(category.title, style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }
+
+            // Löschen-Button
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                Text("🗑")
+            }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CategoryListPreview() {
+    CategoryListScreen(
+        categories = emptyList(),
+        onCategoryClick = {},
+        onAddCategory = {},
+        onDeleteCategory = {},
+        onBack = {}
+    )
 }
