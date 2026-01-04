@@ -5,18 +5,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import java.util.UUID
 
 @Composable
-fun PoiCreateScreen(
-    poiType: PoiType,
-    categoryId: String,
+fun PoiEditScreen(
+    poi: PointOfInterest,
     onSave: (PointOfInterest) -> Unit,
     onCancel: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var visible by remember { mutableStateOf(true) }
+    var name by remember { mutableStateOf(poi.name) }
+    var description by remember { mutableStateOf(poi.description) }
+    var visible by remember { mutableStateOf(poi.visible) }
 
     Column(
         modifier = Modifier
@@ -26,7 +24,7 @@ fun PoiCreateScreen(
     ) {
 
         Text(
-            text = "➕ Neuer Eintrag",
+            text = "✏ POI bearbeiten",
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -63,12 +61,9 @@ fun PoiCreateScreen(
                 enabled = name.isNotBlank(),
                 onClick = {
                     onSave(
-                        PointOfInterest(
-                            id = UUID.randomUUID().toString(),
+                        poi.copy(
                             name = name,
                             description = description,
-                            categoryId = categoryId,
-                            type = poiType,
                             visible = visible
                         )
                     )

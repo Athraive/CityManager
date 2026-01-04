@@ -1,22 +1,9 @@
 package de.geier.citymanager.ui.navigation
 
-import de.geier.citymanager.ui.PoiType
-
 sealed class Screen(val route: String) {
 
     // ─────────────────────────────
-    // Start & Rollen
-    // ─────────────────────────────
-    object Start : Screen("start")
-    object RoleSelect : Screen("role_select")
-
-    // ─────────────────────────────
     // Spielleiter
-    // ─────────────────────────────
-    object GameMasterDashboard : Screen("gm_dashboard")
-
-    // ─────────────────────────────
-    // Kategorien
     // ─────────────────────────────
     object CategoryList : Screen("category_list")
 
@@ -29,14 +16,23 @@ sealed class Screen(val route: String) {
             }
     }
 
+    object Pois : Screen("pois/{categoryId}") {
+        fun createRoute(categoryId: String): String =
+            "pois/$categoryId"
+    }
+
     // ─────────────────────────────
-    // POIs (an Kategorie gebunden)
+    // Spieler
     // ─────────────────────────────
-    object PoiList : Screen("poi_list/{categoryId}/{type}") {
-        fun createRoute(
-            categoryId: String,
-            type: PoiType
-        ): String =
-            "poi_list/$categoryId/${type.name}"
+    object PlayerCategories : Screen("player_categories")
+
+    object PlayerPois : Screen("player_pois/{categoryId}") {
+        fun createRoute(categoryId: String): String =
+            "player_pois/$categoryId"
+    }
+
+    object PlayerPoiDetail : Screen("player_poi_detail/{poiId}") {
+        fun createRoute(poiId: String): String =
+            "player_poi_detail/$poiId"
     }
 }

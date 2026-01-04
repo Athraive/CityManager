@@ -16,7 +16,7 @@ import java.util.UUID
 
 @Composable
 fun CategoryEditScreen(
-    category: PoiCategory?,            // null = neue Kategorie
+    category: PoiCategory?,
     onSave: (PoiCategory) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -28,12 +28,12 @@ fun CategoryEditScreen(
         mutableStateOf(category?.backgroundImageUri)
     }
 
-    // Image Picker (Galerie)
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        backgroundImageUri = uri?.toString()
-    }
+    val imagePicker =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri: Uri? ->
+            backgroundImageUri = uri?.toString()
+        }
 
     Column(
         modifier = Modifier
@@ -42,13 +42,11 @@ fun CategoryEditScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        // ───── Titel ─────
         Text(
             text = if (isNew) "➕ Neue Kategorie" else "✏ Kategorie bearbeiten",
             style = MaterialTheme.typography.headlineSmall
         )
 
-        // ───── Name ─────
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
@@ -56,7 +54,6 @@ fun CategoryEditScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // ───── Icon ─────
         OutlinedTextField(
             value = icon,
             onValueChange = { icon = it },
@@ -66,7 +63,6 @@ fun CategoryEditScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // ───── Hintergrundbild ─────
         Text(
             text = "Hintergrundbild",
             style = MaterialTheme.typography.titleMedium
@@ -100,7 +96,6 @@ fun CategoryEditScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ───── Aktionen ─────
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {

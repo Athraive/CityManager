@@ -2,8 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    // 🔑 KAPT für Room
+    id("kotlin-kapt")
+
     alias(libs.plugins.google.services)
 }
+
 
 android {
     namespace = "de.geier.citymanager"
@@ -90,4 +95,11 @@ dependencies {
 // 🧭 Navigation (Compose)
 // ─────────────────────────────────────────
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    // ─────────────────────────────────────────
+// 🗄️ Room (Persistenz – Vorbereitung)
+// ─────────────────────────────────────────
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+
 }

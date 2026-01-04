@@ -10,11 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import de.geier.citymanager.ui.navigation.Screen
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PointOfInterestScreen(
+fun PlayerPoiScreen(
+    navController: NavController,
     categoryId: String,
     onBack: () -> Unit
 ) {
@@ -22,42 +25,9 @@ fun PointOfInterestScreen(
     val pois by cityViewModel.pois.collectAsState()
 
     var selectedTab by remember { mutableStateOf(PoiType.LOCATION) }
-    var showCreate by remember { mutableStateOf(false) }
-    var editPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
     LaunchedEffect(categoryId) {
         cityViewModel.loadPoisForCategory(categoryId)
-    }
-
-    // ───── Edit ─────
-    editPoi?.let { poi ->
-        PoiEditScreen(
-            poi = poi,
-            onSave = {
-                cityViewModel.savePoi(it)
-                editPoi = null
-            },
-            onCancel = {
-                editPoi = null
-            }
-        )
-        return
-    }
-
-    // ───── Create ─────
-    if (showCreate) {
-        PoiCreateScreen(
-            poiType = selectedTab,
-            categoryId = categoryId,
-            onSave = {
-                cityViewModel.savePoi(it)
-                showCreate = false
-            },
-            onCancel = {
-                showCreate = false
-            }
-        )
-        return
     }
 
     Scaffold(
@@ -73,11 +43,6 @@ fun PointOfInterestScreen(
                     )
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showCreate = true }) {
-                Text("＋")
-            }
         }
     ) { padding ->
 
@@ -87,6 +52,7 @@ fun PointOfInterestScreen(
                 .padding(padding)
         ) {
 
+            // Tabs
             TabRow(
                 selectedTabIndex = if (selectedTab == PoiType.LOCATION) 0 else 1
             ) {
@@ -102,50 +68,31 @@ fun PointOfInterestScreen(
                 )
             }
 
+            // Liste
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(16.dp)
             ) {
-                items(pois.filter { it.type == selectedTab }) { poi ->
-                    PoiCard(
-                        poi = poi,
-                        onEdit = { editPoi = poi },
-                        onDelete = { cityViewModel.deletePoi(poi) }
-                    )
+                items(
+                    pois.filter { it.type == selectedTab && it.visible }
+                ) { poi ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                navController.navigate(
+                                    Screen.PlayerPoiDetail.createRoute(poi.id)
+                                )
+                            }
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(poi.name, fontSize = 18.sp)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(poi.description)
+                        }
+                    }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun PoiCard(
-    poi: PointOfInterest,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onEdit() }
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-
-            Text(poi.name, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(poi.description)
-
-            if (!poi.visible) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("🔒 Nicht sichtbar für Spieler", fontSize = 12.sp)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "🗑 Löschen",
-                modifier = Modifier.clickable { onDelete() }
-            )
         }
     }
 }

@@ -6,22 +6,28 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryListScreen(
-    categories: List<PoiCategory>,
+fun PlayerCategoryListScreen(
     onCategoryClick: (PoiCategory) -> Unit,
-    onAddCategory: () -> Unit,
-    onDeleteCategory: (PoiCategory) -> Unit,
     onBack: () -> Unit
 ) {
+    val cityViewModel: CityViewModel = viewModel()
+    val categories by cityViewModel.categories.collectAsState()
+
+    LaunchedEffect(Unit) {
+        cityViewModel.loadCategories()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -35,11 +41,6 @@ fun CategoryListScreen(
                     )
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddCategory) {
-                Text("＋")
-            }
         }
     ) { padding ->
 
@@ -50,7 +51,7 @@ fun CategoryListScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Noch keine Kategorien angelegt")
+                Text("Keine Kategorien vorhanden")
             }
         } else {
             LazyColumn(
@@ -61,10 +62,9 @@ fun CategoryListScreen(
                 contentPadding = PaddingValues(16.dp)
             ) {
                 items(categories) { category ->
-                    CategoryCard(
+                    PlayerCategoryCard(
                         category = category,
-                        onClick = { onCategoryClick(category) },
-                        onDelete = { onDeleteCategory(category) }
+                        onClick = { onCategoryClick(category) }
                     )
                 }
             }
@@ -73,10 +73,9 @@ fun CategoryListScreen(
 }
 
 @Composable
-private fun CategoryCard(
+private fun PlayerCategoryCard(
     category: PoiCategory,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -118,11 +117,6 @@ private fun CategoryCard(
                         Text(
                             text = category.title,
                             style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = "🗑",
-                            modifier = Modifier.clickable { onDelete() }
                         )
                     }
                 }

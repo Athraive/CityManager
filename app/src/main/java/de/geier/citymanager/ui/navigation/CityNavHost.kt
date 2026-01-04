@@ -1,85 +1,44 @@
 package de.geier.citymanager.ui.navigation
 
-import androidx.compose.runtime.*
-import androidx.navigation.NavType
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import de.geier.citymanager.ui.*
+import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 @Composable
 fun CityNavHost(
     navController: NavHostController
 ) {
-    // ─────────────────────────────
-    // Kategorien (zentraler State)
-    // ─────────────────────────────
-    var categories by remember {
-        mutableStateOf(
-            listOf(
-                PoiCategory("1", "Stadtviertel", "🏘️", null),
-                PoiCategory("2", "Gasthäuser", "🍺", null)
-            )
-        )
-    }
-
     NavHost(
         navController = navController,
-        startDestination = Screen.Start.route
+        startDestination = Screen.CategoryList.route
     ) {
 
-        // ───── Start ─────
-        composable(Screen.Start.route) {
-            StartScreen(
-                cityName = "Eldoria",
-                onStartClicked = {
-                    navController.navigate(Screen.RoleSelect.route)
-                }
-            )
-        }
-
-        // ───── Rollenwahl ─────
-        composable(Screen.RoleSelect.route) {
-            RoleSelectScreen(
-                onPlayerClick = { /* später */ },
-                onGameMasterClick = {
-                    navController.navigate(Screen.GameMasterDashboard.route)
-                }
-            )
-        }
-
-        // ───── Spielleiter Dashboard ─────
-        composable(Screen.GameMasterDashboard.route) {
-            GameMasterDashboardScreen(
-                onBack = { navController.popBackStack() },
-                onCityDescription = { /* später */ },
-                onGroups = { /* später */ },
-                onLocations = {
-                    // ➜ Kategorien → POIs
-                    navController.navigate(Screen.CategoryList.route)
-                },
-                onShops = {
-                    // ebenfalls Kategorien (keine getrennte Route mehr!)
-                    navController.navigate(Screen.CategoryList.route)
-                },
-                onPeople = { /* später */ },
-                onNotes = { /* später */ },
-                onVisibility = { /* später */ }
-            )
-        }
-
-        // ───── Kategorienliste ─────
+        // ─────────────────────────────
+        // SL – Kategorien
+        // ─────────────────────────────
         composable(Screen.CategoryList.route) {
+
+            val cityViewModel: CityViewModel = viewModel()
+            val categories by cityViewModel.categories.collectAsState()
+
+            LaunchedEffect(Unit) {
+                cityViewModel.loadCategories()
+            }
+
             CategoryListScreen(
                 categories = categories,
                 onCategoryClick = { category ->
-                    // STANDARD: erst mal Orte anzeigen
                     navController.navigate(
-                        Screen.PoiList.createRoute(
-                            categoryId = category.id,
-                            type = PoiType.LOCATION
-                        )
+                        Screen.Pois.createRoute(category.id)
                     )
                 },
                 onAddCategory = {
@@ -88,7 +47,7 @@ fun CityNavHost(
                     )
                 },
                 onDeleteCategory = { category ->
-                    categories = categories.filterNot { it.id == category.id }
+                    cityViewModel.deleteCategory(category)
                 },
                 onBack = {
                     navController.popBackStack()
@@ -96,7 +55,9 @@ fun CityNavHost(
             )
         }
 
-        // ───── Kategorie bearbeiten / neu ─────
+        // ─────────────────────────────
+        // SL – Kategorie bearbeiten / neu
+        // ─────────────────────────────
         composable(
             route = Screen.CategoryEdit.route,
             arguments = listOf(
@@ -108,14 +69,17 @@ fun CityNavHost(
             )
         ) { entry ->
 
+            val cityViewModel: CityViewModel = viewModel()
+            val categories by cityViewModel.categories.collectAsState()
+
             val categoryId = entry.arguments?.getString("categoryId")
-            val existing = categories.find { it.id == categoryId }
+            val existingCategory =
+                categories.find { it.id == categoryId }
 
             CategoryEditScreen(
-                category = existing,
-                onSave = { updated ->
-                    categories =
-                        categories.filterNot { it.id == updated.id } + updated
+                category = existingCategory,
+                onSave = { category ->
+                    cityViewModel.saveCategory(category)
                     navController.popBackStack()
                 },
                 onCancel = {
@@ -124,30 +88,97 @@ fun CityNavHost(
             )
         }
 
-        // ───── POIs einer Kategorie ─────
+        // ─────────────────────────────
+        // SL – POIs (Tabs: Orte / Geschäfte)
+        // ─────────────────────────────
         composable(
-            route = Screen.PoiList.route,
+            route = Screen.Pois.route,
             arguments = listOf(
-                navArgument("categoryId") { type = NavType.StringType },
-                navArgument("type") { type = NavType.StringType }
+                navArgument("categoryId") {
+                    type = NavType.StringType
+                }
             )
         ) { entry ->
 
             val categoryId =
-                entry.arguments!!.getString("categoryId")!!
-
-            val type =
-                PoiType.valueOf(
-                    entry.arguments!!.getString("type")!!
-                )
+                entry.arguments?.getString("categoryId") ?: return@composable
 
             PointOfInterestScreen(
-                poiType = type,
                 categoryId = categoryId,
-                isGameMaster = true,   // 👈 SL
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    navController.popBackStack()
+                }
             )
+        }
 
+        // ─────────────────────────────
+        // Spieler – Kategorien (read-only)
+        // ─────────────────────────────
+        composable(Screen.PlayerCategories.route) {
+
+            PlayerCategoryListScreen(
+                onCategoryClick = { category ->
+                    navController.navigate(
+                        Screen.PlayerPois.createRoute(category.id)
+                    )
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // ─────────────────────────────
+        // Spieler – POIs (read-only, Tabs)
+        // ─────────────────────────────
+        composable(
+            route = Screen.PlayerPois.route,
+            arguments = listOf(
+                navArgument("categoryId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { entry ->
+
+            val categoryId =
+                entry.arguments?.getString("categoryId") ?: return@composable
+
+            PlayerPoiScreen(
+                navController = navController,
+                categoryId = categoryId,
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // ─────────────────────────────
+        // Spieler – POI Detail
+        // ─────────────────────────────
+        composable(
+            route = Screen.PlayerPoiDetail.route,
+            arguments = listOf(
+                navArgument("poiId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { entry ->
+
+            val poiId =
+                entry.arguments?.getString("poiId") ?: return@composable
+
+            val cityViewModel: CityViewModel = viewModel()
+            val pois by cityViewModel.pois.collectAsState()
+
+            val poi =
+                pois.firstOrNull { it.id == poiId } ?: return@composable
+
+            PlayerPoiDetailScreen(
+                poi = poi,
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
