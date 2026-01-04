@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,17 +31,11 @@ fun PlayerCategoryListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("📂 Kategorien") },
-                navigationIcon = {
-                    Text(
-                        text = "⬅",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
-                    )
-                }
+            AppTopBar(
+                title = "📂 Kategorien",
+                onBack = onBack
             )
+
         }
     ) { padding ->
 

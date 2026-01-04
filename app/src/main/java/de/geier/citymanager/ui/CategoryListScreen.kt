@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import de.geier.citymanager.ui.components.AppTopBar
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,17 +26,11 @@ fun CategoryListScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("📂 Kategorien") },
-                navigationIcon = {
-                    Text(
-                        text = "⬅",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
-                    )
-                }
+            AppTopBar(
+                title = "📂 Kategorien",
+                onBack = onBack
             )
+
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddCategory) {

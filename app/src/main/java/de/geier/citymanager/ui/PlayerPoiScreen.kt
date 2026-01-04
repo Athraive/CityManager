@@ -13,6 +13,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import de.geier.citymanager.ui.navigation.Screen
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.components.AppTopBar
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,17 +34,12 @@ fun PlayerPoiScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("📍 Orte & Geschäfte") },
-                navigationIcon = {
-                    Text(
-                        text = "⬅",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
-                    )
-                }
+            AppTopBar(
+                title = "📍 Orte & Geschäfte",
+                onBack = onBack
             )
+
+
         }
     ) { padding ->
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
+import de.geier.citymanager.ui.components.AppTopBar
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -17,17 +18,11 @@ fun PlayerPoiDetailScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(poi.name) },
-                navigationIcon = {
-                    Text(
-                        text = "⬅",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
-                    )
-                }
+            AppTopBar(
+                title = poi.name,
+                onBack = onBack
             )
+
         }
     ) { padding ->
 
