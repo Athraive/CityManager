@@ -14,12 +14,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import de.geier.citymanager.ui.components.AppTopBar
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryListScreen(
     categories: List<PoiCategory>,
-    onCategoryClick: (PoiCategory) -> Unit,
+    onCategoryClick: (PoiCategory) -> Unit,   // Öffnen → POIs
+    onEditCategory: (PoiCategory) -> Unit,    // Bearbeiten
     onAddCategory: () -> Unit,
     onDeleteCategory: (PoiCategory) -> Unit,
     onBack: () -> Unit
@@ -30,7 +29,6 @@ fun CategoryListScreen(
                 title = "📂 Kategorien",
                 onBack = onBack
             )
-
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddCategory) {
@@ -59,7 +57,8 @@ fun CategoryListScreen(
                 items(categories) { category ->
                     CategoryCard(
                         category = category,
-                        onClick = { onCategoryClick(category) },
+                        onEdit = { onEditCategory(category) },
+                        onOpen = { onCategoryClick(category) },
                         onDelete = { onDeleteCategory(category) }
                     )
                 }
@@ -71,18 +70,23 @@ fun CategoryListScreen(
 @Composable
 private fun CategoryCard(
     category: PoiCategory,
-    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onOpen: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
-            .clickable { onClick() },
+            .height(120.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { onEdit() }   // 🔹 Klick = Bearbeiten
+        ) {
 
+            // Hintergrundbild
             if (category.backgroundImageUri != null) {
                 Image(
                     painter = rememberAsyncImagePainter(category.backgroundImageUri),
@@ -92,6 +96,7 @@ private fun CategoryCard(
                 )
             }
 
+            // Overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -103,22 +108,39 @@ private fun CategoryCard(
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = category.icon,
                             style = MaterialTheme.typography.headlineSmall
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = category.title,
                             style = MaterialTheme.typography.titleMedium
                         )
+
                         Spacer(modifier = Modifier.weight(1f))
+
+                        Text(
+                            text = "Öffnen",
+                            modifier = Modifier
+                                .clickable { onOpen() }
+                                .padding(end = 12.dp),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+
                         Text(
                             text = "🗑",
-                            modifier = Modifier.clickable { onDelete() }
+                            modifier = Modifier
+                                .clickable { onDelete() }
+                                .padding(start = 8.dp),
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                 }

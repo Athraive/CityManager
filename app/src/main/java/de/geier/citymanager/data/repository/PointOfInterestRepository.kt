@@ -1,19 +1,28 @@
 package de.geier.citymanager.data.repository
 
 import de.geier.citymanager.data.dao.PointOfInterestDao
-import de.geier.citymanager.data.mapper.toEntity
-import de.geier.citymanager.data.mapper.toModel
+import de.geier.citymanager.data.entity.mapper.toDomain
+import de.geier.citymanager.data.entity.mapper.toEntity
 import de.geier.citymanager.ui.PointOfInterest
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class PointOfInterestRepository(
     private val dao: PointOfInterestDao
 ) {
 
-    suspend fun getAll(): List<PointOfInterest> =
-        dao.getAll().map { it.toModel() }
+    fun getAll(): Flow<List<PointOfInterest>> =
+        dao.getAll().map { list ->
+            list.map { it.toDomain() }
+        }
 
-    suspend fun getByCategory(categoryId: String): List<PointOfInterest> =
-        dao.getByCategory(categoryId).map { it.toModel() }
+    fun getByCategory(categoryId: String): Flow<List<PointOfInterest>> =
+        dao.getByCategory(categoryId).map { list ->
+            list.map { it.toDomain() }
+        }
+
+    suspend fun getById(id: String): PointOfInterest? =
+        dao.getById(id)?.toDomain()
 
     suspend fun save(poi: PointOfInterest) {
         dao.insert(poi.toEntity())

@@ -3,6 +3,12 @@ package de.geier.citymanager.ui.navigation
 sealed class Screen(val route: String) {
 
     // ─────────────────────────────
+    // Start & Rollenwahl
+    // ─────────────────────────────
+    object Start : Screen("start")
+    object RoleSelect : Screen("role_select")
+
+    // ─────────────────────────────
     // Spielleiter
     // ─────────────────────────────
     object CategoryList : Screen("category_list")

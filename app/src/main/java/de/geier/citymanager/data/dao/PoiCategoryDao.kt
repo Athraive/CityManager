@@ -6,12 +6,16 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import de.geier.citymanager.data.entity.PoiCategoryEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PoiCategoryDao {
 
     @Query("SELECT * FROM poi_categories")
-    suspend fun getAll(): List<PoiCategoryEntity>
+    fun getAll(): Flow<List<PoiCategoryEntity>>
+
+    @Query("SELECT * FROM poi_categories WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): PoiCategoryEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(category: PoiCategoryEntity)

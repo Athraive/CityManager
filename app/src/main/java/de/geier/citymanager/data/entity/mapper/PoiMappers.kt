@@ -1,4 +1,4 @@
-package de.geier.citymanager.data.mapper
+package de.geier.citymanager.data.entity.mapper
 
 import de.geier.citymanager.data.entity.PoiCategoryEntity
 import de.geier.citymanager.data.entity.PointOfInterestEntity
@@ -6,12 +6,15 @@ import de.geier.citymanager.ui.PoiCategory
 import de.geier.citymanager.ui.PointOfInterest
 import de.geier.citymanager.ui.PoiType
 
-fun PoiCategoryEntity.toModel(): PoiCategory =
+/* ---------- Kategorie ---------- */
+
+fun PoiCategoryEntity.toDomain(): PoiCategory =
     PoiCategory(
         id = id,
         title = title,
         icon = icon,
-        backgroundImageUri = backgroundImageUri
+        backgroundImageUri = backgroundImageUri,
+        visible = visible
     )
 
 fun PoiCategory.toEntity(): PoiCategoryEntity =
@@ -19,10 +22,13 @@ fun PoiCategory.toEntity(): PoiCategoryEntity =
         id = id,
         title = title,
         icon = icon,
-        backgroundImageUri = backgroundImageUri
+        backgroundImageUri = backgroundImageUri,
+        visible = visible
     )
 
-fun PointOfInterestEntity.toModel(): PointOfInterest =
+/* ---------- Point of Interest ---------- */
+
+fun PointOfInterestEntity.toDomain(): PointOfInterest =
     PointOfInterest(
         id = id,
         name = name,
@@ -35,9 +41,9 @@ fun PointOfInterestEntity.toModel(): PointOfInterest =
 fun PointOfInterest.toEntity(): PointOfInterestEntity =
     PointOfInterestEntity(
         id = id,
+        categoryId = categoryId,
         name = name,
         description = description,
-        categoryId = categoryId,
         type = type.name,
         visible = visible
     )

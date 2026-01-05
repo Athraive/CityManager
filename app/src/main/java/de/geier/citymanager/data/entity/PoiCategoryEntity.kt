@@ -7,8 +7,8 @@ import androidx.room.PrimaryKey
 data class PoiCategoryEntity(
     @PrimaryKey
     val id: String,
-
     val title: String,
     val icon: String,
-    val backgroundImageUri: String?
+    val backgroundImageUri: String?,
+    val visible: Boolean = true
 )

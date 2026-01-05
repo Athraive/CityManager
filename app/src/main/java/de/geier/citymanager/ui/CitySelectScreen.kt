@@ -12,26 +12,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RoleSelectScreen(
-    onRoleSelected: (isGameMaster: Boolean) -> Unit
+fun CitySelectScreen(
+    onCitySelected: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Text(
-            text = "Rolle wählen",
+            text = "Stadt auswählen",
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Button(onClick = { onRoleSelected(false) }) {
-            Text("Spieler")
-        }
-
-        Button(onClick = { onRoleSelected(true) }) {
-            Text("Spielleiter")
+        Button(onClick = onCitySelected) {
+            Text("Beispielstadt betreten")
         }
     }
 }

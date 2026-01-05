@@ -16,11 +16,12 @@ import java.util.UUID
 
 @Composable
 fun CategoryEditScreen(
-    category: PoiCategory?,
+    category: PoiCategory?,   // null = NEU, != null = BEARBEITEN
     onSave: (PoiCategory) -> Unit,
     onCancel: () -> Unit
 ) {
-    val isNew = category == null
+    // 🔹 explizit merken, ob wir editieren
+    val isEditMode = category != null
 
     var title by remember { mutableStateOf(category?.title ?: "") }
     var icon by remember { mutableStateOf(category?.icon ?: "📁") }
@@ -28,12 +29,12 @@ fun CategoryEditScreen(
         mutableStateOf(category?.backgroundImageUri)
     }
 
-    val imagePicker =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
-        ) { uri: Uri? ->
-            backgroundImageUri = uri?.toString()
-        }
+    // Image Picker
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        backgroundImageUri = uri?.toString()
+    }
 
     Column(
         modifier = Modifier
@@ -43,7 +44,7 @@ fun CategoryEditScreen(
     ) {
 
         Text(
-            text = if (isNew) "➕ Neue Kategorie" else "✏ Kategorie bearbeiten",
+            text = if (isEditMode) "✏ Kategorie bearbeiten" else "➕ Neue Kategorie",
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -61,12 +62,7 @@ fun CategoryEditScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Hintergrundbild",
-            style = MaterialTheme.typography.titleMedium
-        )
+        Text("Hintergrundbild", style = MaterialTheme.typography.titleMedium)
 
         if (backgroundImageUri != null) {
             Image(
@@ -88,23 +84,25 @@ fun CategoryEditScreen(
             }
         }
 
-        Button(
-            onClick = { imagePicker.launch("image/*") }
-        ) {
+        Button(onClick = { imagePicker.launch("image/*") }) {
             Text("Hintergrundbild auswählen")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
             Button(
                 enabled = title.isNotBlank(),
                 onClick = {
                     onSave(
                         PoiCategory(
-                            id = category?.id ?: UUID.randomUUID().toString(),
+                            // 🔴 DER ENTSCHEIDENDE FIX
+                            id = if (isEditMode) {
+                                category!!.id          // ✅ ID BEHALTEN
+                            } else {
+                                UUID.randomUUID().toString() // 🆕 NEU
+                            },
                             title = title,
                             icon = icon,
                             backgroundImageUri = backgroundImageUri
