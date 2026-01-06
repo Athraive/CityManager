@@ -6,15 +6,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PoiEditScreen(
     poi: PointOfInterest,
+    factions: List<Faction>,
     onSave: (PointOfInterest) -> Unit,
     onCancel: () -> Unit
 ) {
     var name by remember { mutableStateOf(poi.name) }
     var description by remember { mutableStateOf(poi.description) }
     var visible by remember { mutableStateOf(poi.visible) }
+
+    // 🔹 Fraktionsauswahl
+    var selectedFactionId by remember { mutableStateOf(poi.factionId) }
+    var factionDropdownExpanded by remember { mutableStateOf(false) }
+
+    val selectedFactionName =
+        factions.firstOrNull { it.id == selectedFactionId }?.name ?: "Keine Fraktion"
 
     Column(
         modifier = Modifier
@@ -42,6 +51,48 @@ fun PoiEditScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        // 🔹 Fraktions-Dropdown
+        ExposedDropdownMenuBox(
+            expanded = factionDropdownExpanded,
+            onExpandedChange = { factionDropdownExpanded = !factionDropdownExpanded }
+        ) {
+            OutlinedTextField(
+                value = selectedFactionName,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Fraktion") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = factionDropdownExpanded)
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = factionDropdownExpanded,
+                onDismissRequest = { factionDropdownExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Keine Fraktion") },
+                    onClick = {
+                        selectedFactionId = null
+                        factionDropdownExpanded = false
+                    }
+                )
+
+                factions.forEach { faction ->
+                    DropdownMenuItem(
+                        text = { Text(faction.name) },
+                        onClick = {
+                            selectedFactionId = faction.id
+                            factionDropdownExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -64,7 +115,8 @@ fun PoiEditScreen(
                         poi.copy(
                             name = name,
                             description = description,
-                            visible = visible
+                            visible = visible,
+                            factionId = selectedFactionId
                         )
                     )
                 }

@@ -1,6 +1,8 @@
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -8,49 +10,45 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun GameMasterCategoryListScreen() {
+fun GameMasterCategoryListScreen(
+    viewModel: PoiCategoryViewModel = viewModel()
+) {
+    val categories by viewModel.categories.collectAsState()
 
-    val visibilityMap = remember {
-        mutableStateMapOf<String, Boolean>().apply {
-            DUMMY_POI_CATEGORIES.forEach { category ->
-                this[category.id] = true
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
-        Text(
-            text = "POI-Kategorien (Spielleiter)",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        DUMMY_POI_CATEGORIES.forEach { category ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Text(
-                    text = "${category.icon} ${category.title}",
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Checkbox(
-                    checked = visibilityMap[category.id] == true,
-                    onCheckedChange = { checked ->
-                        visibilityMap[category.id] = checked
-                    }
-                )
-            }
+        items(categories) { category ->
+            GameMasterCategoryRow(category)
         }
+    }
+}
+
+@Composable
+private fun GameMasterCategoryRow(category: PoiCategory) {
+
+    // 🔹 TEMPORÄR: Sichtbarkeit nur lokal
+    var visibleForPlayers by remember { mutableStateOf(true) }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${category.icon} ${category.title}",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+        Checkbox(
+            checked = visibleForPlayers,
+            onCheckedChange = { visibleForPlayers = it }
+        )
     }
 }

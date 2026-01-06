@@ -1,20 +1,48 @@
 package de.geier.citymanager.ui
 
 /**
- * Repräsentiert einen Ort oder ein Geschäft innerhalb der Stadt.
+ * Repräsentiert einen Punkt von Interesse (POI) innerhalb der Stadt.
  *
- * @param id eindeutige ID (z. B. UUID)
- * @param name Anzeigename des Ortes
- * @param description Freitext-Beschreibung
- * @param categoryId Kategorie-Zuordnung (z. B. "tavern", "public", ...)
- * @param type Typ des POI (LOCATION oder SHOP)
- * @param visible Ob der POI für Spieler sichtbar ist
+ * POIs können optional einer Fraktion zugeordnet sein.
+ * Wenn factionId == null, gehört der POI zu keiner Fraktion.
  */
 data class PointOfInterest(
+    /**
+     * Eindeutige ID des POI.
+     */
     val id: String,
+
+    /**
+     * Anzeigename des POI.
+     */
     val name: String,
+
+    /**
+     * Beschreibung des POI.
+     * Inhalt ist optional, darf leer sein.
+     */
     val description: String,
+
+    /**
+     * Kategorie-ID, zu der dieser POI gehört.
+     */
     val categoryId: String,
+
+    /**
+     * Typ des POI (z. B. Ort oder Geschäft).
+     */
     val type: PoiType,
-    val visible: Boolean
+
+    /**
+     * Gibt an, ob der POI für Spieler sichtbar ist.
+     */
+    val visible: Boolean,
+
+    /**
+     * Optionale Zuordnung zu einer Fraktion.
+     *
+     * - null  → keine Fraktion
+     * - sonst → ID einer Faction
+     */
+    val factionId: String? = null
 )
