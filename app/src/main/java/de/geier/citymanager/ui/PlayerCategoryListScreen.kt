@@ -18,43 +18,56 @@ fun PlayerCategoryListScreen(
 ) {
     val categories by viewModel.categories.collectAsState()
 
+    // 🔹 Spieler sehen nur sichtbare Kategorien
+    val visibleCategories = remember(categories) {
+        categories.filter { it.visible }
+    }
+
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
 
     if (selectedCategory == null) {
+        // 🔹 Kategorienliste
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(categories) { category ->
-                PlayerCategoryRow(
-                    category = category,
-                    onClick = { selectedCategory = category }
-                )
+            items(visibleCategories) { category ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selectedCategory = category }
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "${category.icon} ${category.title}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
         }
     } else {
-        PlayerPoiListScreen(
-            category = selectedCategory!!,
-            pois = allPois
-        )
-    }
-}
+        // 🔹 POI-Liste innerhalb einer Kategorie
+        val visiblePois = remember(allPois, selectedCategory) {
+            allPois.filter {
+                it.categoryId == selectedCategory!!.id && it.visible
+            }
+        }
 
-@Composable
-private fun PlayerCategoryRow(
-    category: PoiCategory,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(12.dp)
-    ) {
-        Text(
-            text = "${category.icon} ${category.title}",
-            style = MaterialTheme.typography.titleMedium
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            // ⬅ Zurück zur Kategorienliste
+            Text(
+                text = "← ${selectedCategory!!.title}",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clickable { selectedCategory = null }
+            )
+
+            PlayerPoiListScreen(
+                pois = visiblePois
+            )
+        }
     }
 }

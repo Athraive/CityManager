@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -16,11 +18,15 @@ fun CityScreen(
     val cityName = "Beispielstadt"
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    val poiCategoryViewModel: PoiCategoryViewModel = viewModel(
+        factory = PoiCategoryViewModelFactory(LocalContext.current)
+    )
+
+    val allPois by cityViewModel.allPois.collectAsState()
+
     Column(modifier = Modifier.fillMaxSize()) {
 
-        TopAppBar(
-            title = { Text(cityName) }
-        )
+        TopAppBar(title = { Text(cityName) })
 
         TabRow(selectedTabIndex = selectedTab) {
             listOf("Karte", "Geschichte", "POI", "Personen", "Fraktionen")
@@ -34,35 +40,28 @@ fun CityScreen(
         }
 
         when (selectedTab) {
-            0 -> KarteTab()
+            0 -> PlatzhalterTab("Karte")
             1 -> PlatzhalterTab("Geschichte")
+
             2 -> {
-                Text(
-                    text = "POIs\n(Inhalt folgt)",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(24.dp)
-                )
+                if (isGameMaster) {
+                    GameMasterCategoryListScreen(
+                        categoryViewModel = poiCategoryViewModel,
+                        cityViewModel = cityViewModel,
+                        allPois = allPois
+                    )
+                } else {
+                    PlayerCategoryListScreen(
+                        viewModel = poiCategoryViewModel,
+                        allPois = allPois
+                    )
+                }
             }
+
             3 -> PlatzhalterTab("Personen")
-            4 -> FraktionenTab(
-                cityViewModel = cityViewModel,
-                isGameMaster = isGameMaster
-            )
+            4 -> FraktionenTab(cityViewModel, isGameMaster)
         }
     }
-}
-
-/* =========================
-   Platzhalter-Tabs
-   ========================= */
-
-@Composable
-private fun KarteTab() {
-    Text(
-        text = "Karte\n(hier kommt später die Stadtkarte)",
-        style = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier.padding(24.dp)
-    )
 }
 
 @Composable
