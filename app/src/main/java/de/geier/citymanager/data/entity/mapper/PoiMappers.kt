@@ -1,41 +1,18 @@
 package de.geier.citymanager.data.entity.mapper
 
-import de.geier.citymanager.data.entity.PoiCategoryEntity
 import de.geier.citymanager.data.entity.PointOfInterestEntity
-import de.geier.citymanager.ui.PoiCategory
 import de.geier.citymanager.ui.PointOfInterest
 import de.geier.citymanager.ui.PoiType
-
-/* ---------- Kategorie ---------- */
-
-fun PoiCategoryEntity.toDomain(): PoiCategory =
-    PoiCategory(
-        id = id,
-        title = title,
-        icon = icon,
-        backgroundImageUri = backgroundImageUri,
-        visible = visible
-    )
-
-fun PoiCategory.toEntity(): PoiCategoryEntity =
-    PoiCategoryEntity(
-        id = id,
-        title = title,
-        icon = icon,
-        backgroundImageUri = backgroundImageUri,
-        visible = visible
-    )
-
-/* ---------- Point of Interest ---------- */
 
 fun PointOfInterestEntity.toDomain(): PointOfInterest =
     PointOfInterest(
         id = id,
+        categoryId = categoryId,
         name = name,
         description = description,
-        categoryId = categoryId,
         type = PoiType.valueOf(type),
-        visible = visible
+        visible = visible,
+        factionId = factionId          // 🔹 NEU
     )
 
 fun PointOfInterest.toEntity(): PointOfInterestEntity =
@@ -45,5 +22,6 @@ fun PointOfInterest.toEntity(): PointOfInterestEntity =
         name = name,
         description = description,
         type = type.name,
-        visible = visible
+        visible = visible,
+        factionId = factionId          // 🔹 NEU
     )

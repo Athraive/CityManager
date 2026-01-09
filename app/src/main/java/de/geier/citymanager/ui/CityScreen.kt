@@ -52,7 +52,8 @@ fun CityScreen(
                     )
                 } else {
                     PlayerCategoryListScreen(
-                        viewModel = poiCategoryViewModel,
+                        cityViewModel = cityViewModel,
+                        categoryViewModel = poiCategoryViewModel,
                         allPois = allPois
                     )
                 }

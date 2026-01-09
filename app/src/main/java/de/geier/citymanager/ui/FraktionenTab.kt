@@ -1,106 +1,119 @@
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.CityViewModel
-import java.util.UUID
 
-/**
- * Fraktionen mit zugeordneten POIs (read-only Ressourcen).
- */
 @Composable
 fun FraktionenTab(
     cityViewModel: CityViewModel,
     isGameMaster: Boolean
 ) {
-    val allFactions by cityViewModel.factions.collectAsState()
+    val factions by cityViewModel.factions.collectAsState()
     val allPois by cityViewModel.allPois.collectAsState()
 
-    // Spieler sehen nur sichtbare Fraktionen
-    val visibleFactions = remember(allFactions, isGameMaster) {
-        if (isGameMaster) allFactions else allFactions.filter { it.visible }
-    }
+    var selectedFaction by remember { mutableStateOf<Faction?>(null) }
 
-    Column(modifier = Modifier.padding(24.dp)) {
+    val visibleFactions =
+        if (isGameMaster) factions else factions.filter { it.visible }
 
-        Text(
-            text = "Fraktionen",
-            style = MaterialTheme.typography.headlineMedium
-        )
+    if (selectedFaction == null) {
+        /* ---------- LISTENANSICHT ---------- */
 
-        // ➕ Fraktion hinzufügen (nur Spielleiter)
-        if (isGameMaster) {
-            Button(
-                onClick = {
-                    cityViewModel.saveFaction(
-                        Faction(
-                            id = UUID.randomUUID().toString(),
-                            name = "Neue Fraktion",
-                            visible = true
-                        )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(visibleFactions) { faction ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { selectedFaction = faction }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = faction.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
                     )
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Fraktion hinzufügen")
+
+                    if (isGameMaster) {
+                        Checkbox(
+                            checked = faction.visible,
+                            onCheckedChange = { visible ->
+                                cityViewModel.saveFaction(
+                                    faction.copy(visible = visible)
+                                )
+                            }
+                        )
+                    }
+                }
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.padding(top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            items(visibleFactions) { faction ->
+    } else {
+        /* ---------- DETAILANSICHT ---------- */
 
-                val factionPois = remember(allPois, faction.id) {
-                    allPois.filter { it.factionId == faction.id }
+        val faction = selectedFaction!!
+
+        val factionPois =
+            if (isGameMaster) {
+                allPois.filter { it.factionId == faction.id }
+            } else {
+                allPois.filter {
+                    it.factionId == faction.id && it.visible
                 }
+            }
 
-                Column {
-                    // 🔹 Fraktionskopf
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = faction.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.weight(1f)
-                        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
-                        if (isGameMaster) {
-                            Checkbox(
-                                checked = faction.visible,
-                                onCheckedChange = { visible ->
-                                    cityViewModel.saveFaction(
-                                        faction.copy(visible = visible)
-                                    )
-                                }
-                            )
-                        }
-                    }
+            Text(
+                text = "← ${faction.name}",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.clickable { selectedFaction = null }
+            )
 
-                    // 🔹 Ressourcen (POIs)
-                    if (factionPois.isEmpty()) {
-                        Text(
-                            text = "Keine zugeordneten POIs",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                        )
-                    } else {
-                        factionPois.forEach { poi ->
-                            Text(
-                                text = "• ${poi.name}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                            )
-                        }
-                    }
+            if (!faction.description.isNullOrBlank()) {
+                Text(
+                    text = faction.description,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Text(
+                text = "Zugeordnete POIs",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+
+            if (factionPois.isEmpty()) {
+                Text(
+                    text = "Keine zugeordneten POIs",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            } else {
+                factionPois.forEach { poi ->
+                    Text(
+                        text = "• ${poi.name}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }

@@ -11,5 +11,6 @@ data class PointOfInterestEntity(
     val name: String,
     val description: String,
     val type: String,
-    val visible: Boolean
+    val visible: Boolean,
+    val factionId: String?    // 🔹 NEU (optional)
 )

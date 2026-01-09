@@ -21,6 +21,17 @@ object DatabaseProvider {
         }
     }
 
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                """
+                ALTER TABLE pois
+                ADD COLUMN factionId TEXT
+                """.trimIndent()
+            )
+        }
+    }
+
     fun getDatabase(context: Context): AppDatabase {
         return INSTANCE ?: synchronized(this) {
             val instance = Room.databaseBuilder(
@@ -28,7 +39,10 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "city_manager.db"
             )
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3
+                )
                 .build()
             INSTANCE = instance
             instance
