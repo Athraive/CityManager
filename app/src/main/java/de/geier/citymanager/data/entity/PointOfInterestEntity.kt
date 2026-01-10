@@ -7,10 +7,16 @@ import androidx.room.PrimaryKey
 data class PointOfInterestEntity(
     @PrimaryKey
     val id: String,
+
     val categoryId: String,
+
     val name: String,
+
     val description: String,
+
     val type: String,
+
     val visible: Boolean,
-    val factionId: String?    // 🔹 NEU (optional)
+
+    val factionId: String?
 )

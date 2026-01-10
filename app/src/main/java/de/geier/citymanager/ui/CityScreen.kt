@@ -22,6 +22,11 @@ fun CityScreen(
         factory = PoiCategoryViewModelFactory(LocalContext.current)
     )
 
+    // 🔹 NEU: PersonViewModel
+    val personViewModel: PersonViewModel = viewModel(
+        factory = PersonViewModelFactory(LocalContext.current)
+    )
+
     val allPois by cityViewModel.allPois.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -59,7 +64,11 @@ fun CityScreen(
                 }
             }
 
-            3 -> PlatzhalterTab("Personen")
+            // 🔹 HIER DER ENTSCHEIDENDE FIX
+            3 -> PersonenTab(
+                viewModel = personViewModel
+            )
+
             4 -> FraktionenTab(cityViewModel, isGameMaster)
         }
     }

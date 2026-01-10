@@ -43,6 +43,8 @@ object DatabaseProvider {
                     MIGRATION_1_2,
                     MIGRATION_2_3
                 )
+                // ✅ ERLAUBT destruktive Migrationen (Entwicklungsphase)
+                .fallbackToDestructiveMigration()
                 .build()
             INSTANCE = instance
             instance
