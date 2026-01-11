@@ -2,68 +2,82 @@ package de.geier.citymanager.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.data.repository.PersonRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class PersonViewModel(
-    private val repository: PersonRepository
+    private val personRepository: PersonRepository,
+    private val personPoiRepository: PersonPoiRepository
 ) : ViewModel() {
 
-    /**
-     * Alle Personen (SL-Sicht).
-     * Für Spieler kann später gezielt getVisible() verwendet werden.
-     */
-    val persons = repository.getAll()
+    /* ---------------- Personen ---------------- */
+
+    val persons = personRepository.getAll()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
         )
 
-    /**
-     * Aktuell ausgewählte Person (für Detailansicht).
-     */
     private val _selectedPerson = MutableStateFlow<Person?>(null)
     val selectedPerson: StateFlow<Person?> = _selectedPerson
 
-    /**
-     * Setzt die aktuell ausgewählte Person.
-     */
     fun selectPerson(person: Person) {
         _selectedPerson.value = person
     }
 
-    /**
-     * Hebt die Auswahl auf (z. B. bei Zurücknavigation).
-     */
     fun clearSelection() {
         _selectedPerson.value = null
     }
 
-    /**
-     * Speichert eine Person.
-     * Wird für:
-     * - SL-Bearbeitung
-     * - gemeinsame Notizen
-     * verwendet.
-     */
     fun save(person: Person) {
         viewModelScope.launch {
-            repository.save(person)
+            personRepository.save(person)
+
+            // 🔹 State aktuell halten
+            if (_selectedPerson.value?.id == person.id) {
+                _selectedPerson.value = person
+            }
         }
     }
 
-    /**
-     * Löscht eine Person (nur SL).
-     */
     fun delete(person: Person) {
         viewModelScope.launch {
-            repository.delete(person)
+            personRepository.delete(person)
             clearSelection()
+        }
+    }
+
+    /* ---------------- POI-Zuordnungen ---------------- */
+
+    val poiIdsForSelectedPerson: StateFlow<Set<String>> =
+        selectedPerson
+            .flatMapLatest { person ->
+                if (person == null) {
+                    flowOf(emptyList())
+                } else {
+                    personPoiRepository.getPoiIdsForPerson(person.id)
+                }
+            }
+            .map { it.toSet() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptySet()
+            )
+
+    fun togglePoiAssignment(poiId: String) {
+        val person = selectedPerson.value ?: return
+        val current = poiIdsForSelectedPerson.value
+
+        viewModelScope.launch {
+            if (current.contains(poiId)) {
+                personPoiRepository.removePoiFromPerson(person.id, poiId)
+            } else {
+                personPoiRepository.addPoiToPerson(person.id, poiId)
+            }
         }
     }
 }

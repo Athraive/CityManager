@@ -22,7 +22,6 @@ fun CityScreen(
         factory = PoiCategoryViewModelFactory(LocalContext.current)
     )
 
-    // 🔹 NEU: PersonViewModel
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(LocalContext.current)
     )
@@ -64,9 +63,12 @@ fun CityScreen(
                 }
             }
 
-            // 🔹 HIER DER ENTSCHEIDENDE FIX
+            // 🔹 FIX: POIs + Rolle explizit durchreichen
             3 -> PersonenTab(
-                viewModel = personViewModel
+                viewModel = personViewModel,
+                factions = cityViewModel.factions.collectAsState().value,
+                isGameMaster = isGameMaster,
+                pois = allPois
             )
 
             4 -> FraktionenTab(cityViewModel, isGameMaster)

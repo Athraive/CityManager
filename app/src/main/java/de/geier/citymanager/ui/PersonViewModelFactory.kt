@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
+import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.data.repository.PersonRepository
 
 class PersonViewModelFactory(
@@ -12,11 +13,11 @@ class PersonViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(PersonViewModel::class.java)) {
-            val database = DatabaseProvider.getDatabase(context)
-            val repository = PersonRepository(database.personDao())
-            return PersonViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        val db = DatabaseProvider.getDatabase(context)
+
+        return PersonViewModel(
+            personRepository = PersonRepository(db.personDao()),
+            personPoiRepository = PersonPoiRepository(db.personPoiDao())
+        ) as T
     }
 }

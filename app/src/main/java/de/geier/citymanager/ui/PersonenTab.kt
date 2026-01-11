@@ -15,8 +15,9 @@ import java.util.UUID
 @Composable
 fun PersonenTab(
     viewModel: PersonViewModel,
-    factions: List<Faction> = emptyList(), // 🔹 Default → verhindert Compile-Fehler
-    isGameMaster: Boolean = true
+    factions: List<Faction> = emptyList(),
+    pois: List<PointOfInterest>,
+    isGameMaster: Boolean
 ) {
     val persons by viewModel.persons.collectAsState()
     val selectedPerson by viewModel.selectedPerson.collectAsState()
@@ -27,8 +28,10 @@ fun PersonenTab(
         PersonDetailScreen(
             person = selectedPerson!!,
             factions = factions,
+            pois = pois,
             viewModel = viewModel,
-            onBack = { viewModel.clearSelection() }
+            onBack = { viewModel.clearSelection() },
+            isGameMaster = isGameMaster
         )
         return
     }
@@ -58,10 +61,38 @@ fun PersonenTab(
                     .padding(8.dp)
             ) {
                 items(persons) { person ->
-                    PersonListItem(
-                        person = person,
-                        onClick = { viewModel.selectPerson(person) }
-                    )
+
+                    val faction = factions.firstOrNull { it.id == person.factionId }
+                    val showFaction =
+                        faction != null && (isGameMaster || faction.visible)
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.selectPerson(person) }
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = person.name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        if (showFaction) {
+                            Text(
+                                text = faction!!.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        if (!person.description.isNullOrBlank()) {
+                            Text(
+                                text = person.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 2
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -86,33 +117,7 @@ fun PersonenTab(
     }
 }
 
-/* --- unverändert --- */
-
-@Composable
-private fun PersonListItem(
-    person: Person,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = person.name,
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        if (!person.description.isNullOrBlank()) {
-            Text(
-                text = person.description,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2
-            )
-        }
-    }
-}
+/* ---------------- Dialog ---------------- */
 
 @Composable
 private fun CreatePersonDialog(
@@ -124,22 +129,7 @@ private fun CreatePersonDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank(),
-                onClick = { onCreate(name.trim(), description.takeIf { it.isNotBlank() }) }
-            ) {
-                Text("Anlegen")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
-            }
-        },
-        title = {
-            Text("Neue Person")
-        },
+        title = { Text("Neue Person") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -155,6 +145,24 @@ private fun CreatePersonDialog(
                     label = { Text("Beschreibung") },
                     minLines = 3
                 )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank(),
+                onClick = {
+                    onCreate(
+                        name.trim(),
+                        description.takeIf { it.isNotBlank() }
+                    )
+                }
+            ) {
+                Text("Anlegen")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Abbrechen")
             }
         }
     )
