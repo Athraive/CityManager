@@ -1,105 +1,164 @@
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.*
 import de.geier.citymanager.ui.viewmodel.CityViewModel
-import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CityScreen(
     cityViewModel: CityViewModel,
-    isGameMaster: Boolean = false
+    isGameMaster: Boolean
 ) {
-    val cityName = "Beispielstadt"
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val navController = rememberNavController()
 
-    val context = LocalContext.current
+    Scaffold(
+        bottomBar = {
+            CityBottomBar(
+                navController = navController,
+                isGameMaster = isGameMaster
+            )
+        }
+    ) { padding ->
 
-    val poiCategoryViewModel: PoiCategoryViewModel = viewModel(
-        factory = PoiCategoryViewModelFactory(context)
-    )
+        NavHost(
+            navController = navController,
+            startDestination = "stadt",
+            modifier = Modifier.padding(padding)
+        ) {
 
-    val personViewModel: PersonViewModel = viewModel(
-        factory = PersonViewModelFactory(context)
-    )
+            composable("stadt") {
+                StadtContent()
+            }
 
-    val allPois by cityViewModel.allPois.collectAsState()
-    val categories by poiCategoryViewModel.categories.collectAsState()
-    val factions by cityViewModel.factions.collectAsState()
-    val persons by personViewModel.persons.collectAsState()
+            composable("personen") {
+                ScreenPlaceholder("Personen")
+            }
+
+            composable("pois") {
+                ScreenPlaceholder("POIs")
+            }
+
+            composable("fraktionen") {
+                ScreenPlaceholder("Fraktionen")
+            }
+        }
+    }
+}
+
+/* -------------------------------------------------------
+ * Über die Stadt
+ * ----------------------------------------------------- */
+
+private enum class StadtTab(val title: String) {
+    STADTKARTE("Stadtkarte"),
+    STADTVIERTEL("Stadtviertel"),
+    STADTGESCHICHTE("Stadtgeschichte")
+}
+
+@Composable
+private fun StadtContent() {
+    var selectedTab by remember { mutableStateOf(StadtTab.STADTKARTE) }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        TopAppBar(
-            title = { Text(cityName) }
-        )
-
-        TabRow(selectedTabIndex = selectedTab) {
-            listOf("Karte", "Geschichte", "POI", "Personen", "Fraktionen")
-                .forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = { Text(title) }
-                    )
-                }
+        TabRow(selectedTabIndex = selectedTab.ordinal) {
+            StadtTab.values().forEach { tab ->
+                Tab(
+                    selected = selectedTab == tab,
+                    onClick = { selectedTab = tab },
+                    text = { Text(tab.title) }
+                )
+            }
         }
 
         when (selectedTab) {
-            0 -> PlatzhalterTab("Karte")
-            1 -> PlatzhalterTab("Geschichte")
+            StadtTab.STADTKARTE -> StadtkarteContent()
+            StadtTab.STADTVIERTEL -> StadtviertelContent()
+            StadtTab.STADTGESCHICHTE -> StadtgeschichteContent()
+        }
+    }
+}
 
-            /* ---------------- POIs ---------------- */
+/* -------------------------------------------------------
+ * Stadtkarte (visueller Platzhalter)
+ * ----------------------------------------------------- */
 
-            2 -> {
-                if (isGameMaster) {
-                    GameMasterCategoryListScreen(
-                        categoryViewModel = poiCategoryViewModel,
-                        cityViewModel = cityViewModel,
-                        allPois = allPois
-                    )
-                } else {
-                    PlayerCategoryListScreen(
-                        cityViewModel = cityViewModel,
-                        categoryViewModel = poiCategoryViewModel,
-                        persons = persons,
-                        personViewModel = personViewModel
-                    )
+@Composable
+private fun StadtkarteContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = MaterialTheme.shapes.medium
+            )
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = MaterialTheme.shapes.medium
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                }
-            }
-
-            /* ---------------- PERSONEN ---------------- */
-
-            3 -> PersonenTab(
-                viewModel = personViewModel,
-                factions = factions,
-                pois = allPois,
-                categories = categories,
-                isGameMaster = isGameMaster
+            Text(
+                text = "Stadtkarte",
+                style = MaterialTheme.typography.titleLarge
             )
 
-            /* ---------------- FRAKTIONEN ---------------- */
+            Spacer(modifier = Modifier.height(8.dp))
 
-            4 -> FraktionenTab(
-                cityViewModel = cityViewModel,
-                isGameMaster = isGameMaster
+            Text(
+                text = "Hier wird später die Stadtkarte angezeigt.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
+/* -------------------------------------------------------
+ * Weitere Inhalte
+ * ----------------------------------------------------- */
+
 @Composable
-private fun PlatzhalterTab(name: String) {
-    Text(
-        text = "$name\n(Inhalt folgt)",
-        style = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier.padding(24.dp)
-    )
+private fun StadtviertelContent() {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Stadtviertel", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(8.dp))
+        Text("Allgemeine Beschreibungen der Stadtviertel.")
+    }
+}
+
+@Composable
+private fun StadtgeschichteContent() {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Stadtgeschichte", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(8.dp))
+        Text("Allgemeine Geschichte der Stadt.")
+    }
+}
+
+@Composable
+private fun ScreenPlaceholder(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "$title – Inhalt (Platzhalter)",
+            style = MaterialTheme.typography.titleLarge
+        )
+    }
 }
