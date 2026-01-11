@@ -1,5 +1,6 @@
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.geier.citymanager.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +27,11 @@ fun PersonDetailScreen(
     var selectedFactionId by remember(person.id) {
         mutableStateOf(person.factionId)
     }
+
+    var visible by remember(person.id) {
+        mutableStateOf(person.visible)
+    }
+
     var factionDropdownExpanded by remember { mutableStateOf(false) }
 
     val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
@@ -37,9 +42,16 @@ fun PersonDetailScreen(
 
     Scaffold(
         topBar = {
-            AppTopBar(
-                title = person.name,
-                onBack = onBack
+            TopAppBar(
+                title = { Text(person.name) },
+                navigationIcon = {
+                    Text(
+                        text = "←",
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .clickable { onBack() }
+                    )
+                }
             )
         }
     ) { padding ->
@@ -60,6 +72,26 @@ fun PersonDetailScreen(
 
             if (!person.description.isNullOrBlank()) {
                 Text(text = person.description)
+            }
+
+            /* ---------------- Sichtbarkeit (nur SL) ---------------- */
+
+            if (isGameMaster) {
+                HorizontalDivider()
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = visible,
+                        onCheckedChange = { visible = it }
+                    )
+                    Text(
+                        text = "Für Spieler sichtbar",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
 
             /* ---------------- Fraktion ---------------- */
@@ -132,53 +164,48 @@ fun PersonDetailScreen(
 
             /* ---------------- POIs ---------------- */
 
-            if (isGameMaster) {
+            if (isGameMaster && pois.isNotEmpty()) {
 
-                if (pois.isNotEmpty()) {
+                HorizontalDivider()
 
-                    HorizontalDivider()
+                Text(
+                    text = "Zugeordnete Orte (POIs)",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-                    Text(
-                        text = "Zugeordnete Orte (POIs)",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    pois.forEach { poi ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Checkbox(
-                                checked = assignedPoiIds.contains(poi.id),
-                                onCheckedChange = {
-                                    viewModel.togglePoiAssignment(poi.id)
-                                }
-                            )
-                            Text(
-                                text = poi.name,
-                                modifier = Modifier.padding(top = 12.dp)
-                            )
-                        }
-                    }
-                }
-
-            } else {
-
-                if (visibleAssignedPois.isNotEmpty()) {
-
-                    HorizontalDivider()
-
-                    Text(
-                        text = "Orte",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    visibleAssignedPois.forEach { poi ->
+                pois.forEach { poi ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Checkbox(
+                            checked = assignedPoiIds.contains(poi.id),
+                            onCheckedChange = {
+                                viewModel.togglePoiAssignment(poi.id)
+                            }
+                        )
                         Text(
-                            text = "• ${poi.name}",
-                            style = MaterialTheme.typography.bodyLarge
+                            text = poi.name,
+                            modifier = Modifier.padding(top = 12.dp)
                         )
                     }
+                }
+            }
+
+            if (!isGameMaster && visibleAssignedPois.isNotEmpty()) {
+
+                HorizontalDivider()
+
+                Text(
+                    text = "Orte",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                visibleAssignedPois.forEach { poi ->
+                    Text(
+                        text = "• ${poi.name}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
 
@@ -204,7 +231,8 @@ fun PersonDetailScreen(
                     viewModel.save(
                         person.copy(
                             sharedNotes = notes,
-                            factionId = selectedFactionId
+                            factionId = selectedFactionId,
+                            visible = visible
                         )
                     )
                 }

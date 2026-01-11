@@ -19,28 +19,46 @@ fun PersonenTab(
     pois: List<PointOfInterest>,
     isGameMaster: Boolean
 ) {
-    val persons by viewModel.persons.collectAsState()
+    val allPersons by viewModel.persons.collectAsState()
     val selectedPerson by viewModel.selectedPerson.collectAsState()
 
+    // 🔹 Sichtbarkeit: Spieler sehen nur visible Personen
+    val persons = remember(allPersons, isGameMaster) {
+        if (isGameMaster) {
+            allPersons
+        } else {
+            allPersons.filter { it.visible }
+        }
+    }
+
     var showCreateDialog by remember { mutableStateOf(false) }
+
+    /* ---------------- DETAIL ---------------- */
 
     if (selectedPerson != null) {
         PersonDetailScreen(
             person = selectedPerson!!,
             factions = factions,
-            pois = pois,
             viewModel = viewModel,
             onBack = { viewModel.clearSelection() },
-            isGameMaster = isGameMaster
+            isGameMaster = isGameMaster,
+            pois = pois
         )
         return
     }
 
+    /* ---------------- LISTE ---------------- */
+
     Scaffold(
         floatingActionButton = {
             if (isGameMaster) {
-                FloatingActionButton(onClick = { showCreateDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Person anlegen")
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true }
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Person anlegen"
+                    )
                 }
             }
         }
@@ -58,7 +76,8 @@ fun PersonenTab(
             LazyColumn(
                 modifier = Modifier
                     .padding(padding)
-                    .padding(8.dp)
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(persons) { person ->
 
@@ -72,6 +91,7 @@ fun PersonenTab(
                             .clickable { viewModel.selectPerson(person) }
                             .padding(16.dp)
                     ) {
+
                         Text(
                             text = person.name,
                             style = MaterialTheme.typography.titleMedium
@@ -97,6 +117,8 @@ fun PersonenTab(
             }
         }
     }
+
+    /* ---------------- CREATE (SL only) ---------------- */
 
     if (showCreateDialog) {
         CreatePersonDialog(
