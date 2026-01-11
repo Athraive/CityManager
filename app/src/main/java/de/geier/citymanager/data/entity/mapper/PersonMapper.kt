@@ -3,9 +3,6 @@ package de.geier.citymanager.data.entity.mapper
 import de.geier.citymanager.data.entity.PersonEntity
 import de.geier.citymanager.ui.Person
 
-/**
- * Mapper zwischen PersonEntity (Room) und Person (UI/Domain).
- */
 fun PersonEntity.toDomain(): Person =
     Person(
         id = id,

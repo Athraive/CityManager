@@ -10,19 +10,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 @Composable
 fun PlayerCategoryListScreen(
     cityViewModel: CityViewModel,
     categoryViewModel: PoiCategoryViewModel,
-    allPois: List<PointOfInterest>
+    persons: List<Person>,
+    personViewModel: PersonViewModel
 ) {
     val categories by categoryViewModel.categories.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
-    /* ---------- KATEGORIEN ---------- */
+    /* ---------------- Kategorien ---------------- */
+
     if (selectedCategory == null) {
 
         LazyColumn(
@@ -42,13 +45,13 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------- POI-LISTE ---------- */
+        /* ---------------- POIs (Spieler-Flow) ---------------- */
+
     } else if (selectedPoi == null) {
 
-        val poisInCategory =
-            allPois.filter {
-                it.categoryId == selectedCategory!!.id && it.visible
-            }
+        val poisInCategory by cityViewModel
+            .visiblePoisForPlayerByCategory(selectedCategory!!.id)
+            .collectAsState()
 
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -78,13 +81,14 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------- POI-DETAIL (neu, sauber) ---------- */
+        /* ---------------- POI-Detail ---------------- */
+
     } else {
 
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
-            persons = emptyList(),              // 🔹 kommt im nächsten Schritt
-            assignedPersonIds = emptySet(),     // 🔹 kommt im nächsten Schritt
+            persons = persons,
+            onPersonClick = { personViewModel.selectPerson(it) },
             onBack = { selectedPoi = null }
         )
     }

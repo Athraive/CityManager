@@ -11,18 +11,32 @@ class PointOfInterestRepository(
     private val dao: PointOfInterestDao
 ) {
 
+    /* ---------------- SL ---------------- */
+
     fun getAll(): Flow<List<PointOfInterest>> =
-        dao.getAll().map { list ->
-            list.map { it.toDomain() }
-        }
+        dao.getAll()
+            .map { list -> list.map { it.toDomain() } }
 
     fun getByCategory(categoryId: String): Flow<List<PointOfInterest>> =
-        dao.getByCategory(categoryId).map { list ->
-            list.map { it.toDomain() }
-        }
+        dao.getByCategory(categoryId)
+            .map { list -> list.map { it.toDomain() } }
+
+    /* ---------------- Spieler (erzwingend) ---------------- */
+
+    fun getVisibleForPlayer(): Flow<List<PointOfInterest>> =
+        dao.getVisibleForPlayer()
+            .map { list -> list.map { it.toDomain() } }
+
+    fun getVisibleForPlayerByCategory(categoryId: String): Flow<List<PointOfInterest>> =
+        dao.getVisibleForPlayerByCategory(categoryId)
+            .map { list -> list.map { it.toDomain() } }
+
+    /* ---------------- Einzel ---------------- */
 
     suspend fun getById(id: String): PointOfInterest? =
         dao.getById(id)?.toDomain()
+
+    /* ---------------- Mutationen (SL) ---------------- */
 
     suspend fun save(poi: PointOfInterest) {
         dao.insert(poi.toEntity())

@@ -9,6 +9,7 @@ import de.geier.citymanager.ui.FactionRepository
 import de.geier.citymanager.ui.PoiCategory
 import de.geier.citymanager.ui.PointOfInterest
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -20,12 +21,13 @@ class CityViewModel(
 
     /* ---------------- Kategorien ---------------- */
 
-    val categories = categoryRepository.categories
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+    val categories: StateFlow<List<PoiCategory>> =
+        categoryRepository.categories
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
 
     fun saveCategory(category: PoiCategory) {
         viewModelScope.launch {
@@ -39,14 +41,35 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- POIs ---------------- */
+    /* ---------------- POIs (SL) ---------------- */
 
-    val allPois = poiRepository.getAll()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+    val allPois: StateFlow<List<PointOfInterest>> =
+        poiRepository.getAll()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
+    /* ---------------- POIs (Spieler, erzwingend) ---------------- */
+
+    val visiblePoisForPlayer: StateFlow<List<PointOfInterest>> =
+        poiRepository.getVisibleForPlayer()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
+    fun visiblePoisForPlayerByCategory(
+        categoryId: String
+    ): StateFlow<List<PointOfInterest>> =
+        poiRepository.getVisibleForPlayerByCategory(categoryId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
 
     fun savePoi(poi: PointOfInterest) {
         viewModelScope.launch {
@@ -62,12 +85,13 @@ class CityViewModel(
 
     /* ---------------- Fraktionen ---------------- */
 
-    val factions = factionRepository.factions
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            emptyList()
-        )
+    val factions: StateFlow<List<Faction>> =
+        factionRepository.factions
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
 
     fun saveFaction(faction: Faction) {
         factionRepository.save(faction)

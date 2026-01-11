@@ -11,18 +11,24 @@ class PersonRepository(
     private val dao: PersonDao
 ) {
 
-    fun getAll(): Flow<List<Person>> =
-        dao.getAllPersons().map { list ->
-            list.map { it.toDomain() }
-        }
+    /* ---------------- SL ---------------- */
 
-    fun getVisible(): Flow<List<Person>> =
-        dao.getVisiblePersons().map { list ->
-            list.map { it.toDomain() }
-        }
+    fun getAll(): Flow<List<Person>> =
+        dao.getAllPersons()
+            .map { list -> list.map { it.toDomain() } }
+
+    /* ---------------- Spieler ---------------- */
+
+    fun getVisibleForPlayer(): Flow<List<Person>> =
+        dao.getVisiblePersons()
+            .map { list -> list.map { it.toDomain() } }
+
+    /* ---------------- Einzel ---------------- */
 
     suspend fun getById(id: String): Person? =
         dao.getPersonById(id)?.toDomain()
+
+    /* ---------------- Mutationen (SL) ---------------- */
 
     suspend fun save(person: Person) {
         dao.upsertPerson(person.toEntity())

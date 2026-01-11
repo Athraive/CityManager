@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.data.repository.PersonRepository
+import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 class PersonViewModelFactory(
     private val context: Context

@@ -1,9 +1,10 @@
-package de.geier.citymanager.ui
+package de.geier.citymanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.data.repository.PersonRepository
+import de.geier.citymanager.ui.Person
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -12,14 +13,27 @@ class PersonViewModel(
     private val personPoiRepository: PersonPoiRepository
 ) : ViewModel() {
 
-    /* ---------------- Personen ---------------- */
+    /* ---------------- SL ---------------- */
 
-    val persons = personRepository.getAll()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
+    val persons: StateFlow<List<Person>> =
+        personRepository.getAll()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+
+    /* ---------------- Spieler ---------------- */
+
+    val visiblePersonsForPlayer: StateFlow<List<Person>> =
+        personRepository.getVisibleForPlayer()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
+
+    /* ---------------- Auswahl ---------------- */
 
     private val _selectedPerson = MutableStateFlow<Person?>(null)
     val selectedPerson: StateFlow<Person?> = _selectedPerson
@@ -32,11 +46,11 @@ class PersonViewModel(
         _selectedPerson.value = null
     }
 
+    /* ---------------- Persistenz (SL) ---------------- */
+
     fun save(person: Person) {
         viewModelScope.launch {
             personRepository.save(person)
-
-            // 🔹 State aktuell halten
             if (_selectedPerson.value?.id == person.id) {
                 _selectedPerson.value = person
             }

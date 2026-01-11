@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,19 +19,26 @@ fun CityScreen(
     val cityName = "Beispielstadt"
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    val context = LocalContext.current
+
     val poiCategoryViewModel: PoiCategoryViewModel = viewModel(
-        factory = PoiCategoryViewModelFactory(LocalContext.current)
+        factory = PoiCategoryViewModelFactory(context)
     )
 
     val personViewModel: PersonViewModel = viewModel(
-        factory = PersonViewModelFactory(LocalContext.current)
+        factory = PersonViewModelFactory(context)
     )
 
     val allPois by cityViewModel.allPois.collectAsState()
+    val categories by poiCategoryViewModel.categories.collectAsState()
+    val factions by cityViewModel.factions.collectAsState()
+    val persons by personViewModel.persons.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        TopAppBar(title = { Text(cityName) })
+        TopAppBar(
+            title = { Text(cityName) }
+        )
 
         TabRow(selectedTabIndex = selectedTab) {
             listOf("Karte", "Geschichte", "POI", "Personen", "Fraktionen")
@@ -47,6 +55,8 @@ fun CityScreen(
             0 -> PlatzhalterTab("Karte")
             1 -> PlatzhalterTab("Geschichte")
 
+            /* ---------------- POIs ---------------- */
+
             2 -> {
                 if (isGameMaster) {
                     GameMasterCategoryListScreen(
@@ -58,20 +68,29 @@ fun CityScreen(
                     PlayerCategoryListScreen(
                         cityViewModel = cityViewModel,
                         categoryViewModel = poiCategoryViewModel,
-                        allPois = allPois
+                        persons = persons,
+                        personViewModel = personViewModel
                     )
+
                 }
             }
 
-            // 🔹 FIX: POIs + Rolle explizit durchreichen
+            /* ---------------- PERSONEN ---------------- */
+
             3 -> PersonenTab(
                 viewModel = personViewModel,
-                factions = cityViewModel.factions.collectAsState().value,
-                isGameMaster = isGameMaster,
-                pois = allPois
+                factions = factions,
+                pois = allPois,
+                categories = categories,
+                isGameMaster = isGameMaster
             )
 
-            4 -> FraktionenTab(cityViewModel, isGameMaster)
+            /* ---------------- FRAKTIONEN ---------------- */
+
+            4 -> FraktionenTab(
+                cityViewModel = cityViewModel,
+                isGameMaster = isGameMaster
+            )
         }
     }
 }

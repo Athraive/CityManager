@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.geier.citymanager.ui.viewmodel.PersonViewModel
 import java.util.UUID
 
 @Composable
@@ -17,17 +18,36 @@ fun PersonenTab(
     viewModel: PersonViewModel,
     factions: List<Faction> = emptyList(),
     pois: List<PointOfInterest>,
+    categories: List<PoiCategory>,
     isGameMaster: Boolean
 ) {
     val allPersons by viewModel.persons.collectAsState()
+    val visiblePersonsForPlayer by viewModel.visiblePersonsForPlayer.collectAsState()
     val selectedPerson by viewModel.selectedPerson.collectAsState()
 
-    // 🔹 Sichtbarkeit: Spieler sehen nur visible Personen
-    val persons = remember(allPersons, isGameMaster) {
+    /* ---------------- Personenquelle ---------------- */
+
+    val persons = remember(allPersons, visiblePersonsForPlayer, isGameMaster) {
         if (isGameMaster) {
             allPersons
         } else {
-            allPersons.filter { it.visible }
+            visiblePersonsForPlayer
+        }
+    }
+
+    /* ---------------- POI-Härtung (Kategorie + POI sichtbar) ---------------- */
+
+    val visibleCategoryIds = remember(categories) {
+        categories.filter { it.visible }.map { it.id }.toSet()
+    }
+
+    val hardenedPois = remember(pois, visibleCategoryIds, isGameMaster) {
+        if (isGameMaster) {
+            pois
+        } else {
+            pois.filter { poi ->
+                poi.visible && visibleCategoryIds.contains(poi.categoryId)
+            }
         }
     }
 
@@ -42,7 +62,8 @@ fun PersonenTab(
             viewModel = viewModel,
             onBack = { viewModel.clearSelection() },
             isGameMaster = isGameMaster,
-            pois = pois
+            pois = hardenedPois,
+            categories = categories
         )
         return
     }

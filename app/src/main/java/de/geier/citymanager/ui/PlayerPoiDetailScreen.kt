@@ -1,6 +1,6 @@
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.clickable        // 🔹 FIX
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,7 +19,7 @@ import de.geier.citymanager.data.repository.PersonPoiRepository
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     persons: List<Person>,
-    assignedPersonIds: Set<String>, // bewusst ungenutzt (v1)
+    onPersonClick: (Person) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -39,8 +39,12 @@ fun PlayerPoiDetailScreen(
 
     val personIds by poiViewModel.personIdsForPoi.collectAsState()
 
+    /* ---------------- Sichtbarkeit (gehärtet) ---------------- */
+
     val visiblePersons = remember(persons, personIds) {
-        persons.filter { it.visible && personIds.contains(it.id) }
+        persons.filter { person ->
+            person.visible && personIds.contains(person.id)
+        }
     }
 
     Scaffold(
@@ -89,7 +93,11 @@ fun PlayerPoiDetailScreen(
                 visiblePersons.forEach { person ->
                     Text(
                         text = "• ${person.name}",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onPersonClick(person) }
+                            .padding(vertical = 4.dp)
                     )
                 }
             }
