@@ -8,6 +8,8 @@ class PersonPoiRepository(
     private val dao: PersonPoiDao
 ) {
 
+    /* ---------- Person → POIs ---------- */
+
     fun getPoiIdsForPerson(personId: String): Flow<List<String>> {
         return dao.getPoiIdsForPerson(personId)
     }
@@ -23,5 +25,11 @@ class PersonPoiRepository(
 
     suspend fun removePoiFromPerson(personId: String, poiId: String) {
         dao.delete(personId, poiId)
+    }
+
+    /* ---------- POI → Personen (NEU) ---------- */
+
+    fun getPersonIdsForPoi(poiId: String): Flow<List<String>> {
+        return dao.getPersonIdsForPoi(poiId)
     }
 }

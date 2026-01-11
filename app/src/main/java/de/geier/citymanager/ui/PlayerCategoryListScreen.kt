@@ -18,7 +18,6 @@ fun PlayerCategoryListScreen(
     allPois: List<PointOfInterest>
 ) {
     val categories by categoryViewModel.categories.collectAsState()
-    val factions by cityViewModel.factions.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
@@ -79,43 +78,14 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------- POI-DETAIL ---------- */
+        /* ---------- POI-DETAIL (neu, sauber) ---------- */
     } else {
 
-        val poi = selectedPoi!!
-
-        val visibleFactionName =
-            factions.firstOrNull {
-                it.id == poi.factionId && it.visible
-            }?.name
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            Text(
-                text = "← ${poi.name}",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.clickable { selectedPoi = null }
-            )
-
-            if (poi.description.isNotBlank()) {
-                Text(
-                    text = poi.description,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            if (visibleFactionName != null) {
-                Text(
-                    text = "Fraktion: $visibleFactionName",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
-            }
-        }
+        PlayerPoiDetailScreen(
+            poi = selectedPoi!!,
+            persons = emptyList(),              // 🔹 kommt im nächsten Schritt
+            assignedPersonIds = emptySet(),     // 🔹 kommt im nächsten Schritt
+            onBack = { selectedPoi = null }
+        )
     }
 }
