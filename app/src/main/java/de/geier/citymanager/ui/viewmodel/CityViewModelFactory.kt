@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
+import de.geier.citymanager.data.repository.CityDistrictRepository
+import de.geier.citymanager.data.repository.CityDistrictRepositoryImpl
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
 import de.geier.citymanager.ui.FactionRepository
@@ -12,25 +14,38 @@ class CityViewModelFactory(
     private val context: Context
 ) : ViewModelProvider.Factory {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+
         if (modelClass.isAssignableFrom(CityViewModel::class.java)) {
 
-            val db = DatabaseProvider.getDatabase(context)
+            // ✅ korrekt für dein Projekt
+            val database = DatabaseProvider.getDatabase(context)
 
-            val categoryRepo = PoiCategoryRepository(db.poiCategoryDao())
-            val poiRepo = PointOfInterestRepository(db.pointOfInterestDao())
+            // ---------------- Repositories ----------------
 
-            // In-Memory Repository für Fraktionen
-            val factionRepo = FactionRepository()
+            val categoryRepository =
+                PoiCategoryRepository(database.poiCategoryDao())
 
-            @Suppress("UNCHECKED_CAST")
+            val poiRepository =
+                PointOfInterestRepository(database.pointOfInterestDao())
+
+            val factionRepository =
+                FactionRepository() // ✅ parameterlos
+
+            val cityDistrictRepository: CityDistrictRepository =
+                CityDistrictRepositoryImpl(database.cityDistrictDao())
+
             return CityViewModel(
-                categoryRepo,
-                poiRepo,
-                factionRepo
+                categoryRepository = categoryRepository,
+                poiRepository = poiRepository,
+                factionRepository = factionRepository,
+                cityDistrictRepository = cityDistrictRepository
             ) as T
         }
 
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException(
+            "Unknown ViewModel class: ${modelClass.name}"
+        )
     }
 }

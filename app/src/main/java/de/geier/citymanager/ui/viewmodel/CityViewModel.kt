@@ -2,6 +2,8 @@ package de.geier.citymanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.geier.citymanager.data.entity.CityDistrictEntity
+import de.geier.citymanager.data.repository.CityDistrictRepository
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
 import de.geier.citymanager.ui.Faction
@@ -16,7 +18,8 @@ import kotlinx.coroutines.launch
 class CityViewModel(
     private val categoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
-    private val factionRepository: FactionRepository
+    private val factionRepository: FactionRepository,
+    private val cityDistrictRepository: CityDistrictRepository
 ) : ViewModel() {
 
     /* ---------------- Kategorien ---------------- */
@@ -99,5 +102,41 @@ class CityViewModel(
 
     fun deleteFaction(factionId: String) {
         factionRepository.delete(factionId)
+    }
+
+    /* ---------------- Stadtviertel ---------------- */
+
+    fun districtsForCity(
+        cityId: String
+    ): StateFlow<List<CityDistrictEntity>> =
+        cityDistrictRepository
+            .getDistrictsForCity(cityId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
+    fun districtById(
+        districtId: String
+    ): StateFlow<CityDistrictEntity?> =
+        cityDistrictRepository
+            .getDistrictById(districtId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                null
+            )
+
+    fun saveDistrict(district: CityDistrictEntity) {
+        viewModelScope.launch {
+            cityDistrictRepository.save(district)
+        }
+    }
+
+    fun deleteDistrict(districtId: String) {
+        viewModelScope.launch {
+            cityDistrictRepository.delete(districtId)
+        }
     }
 }

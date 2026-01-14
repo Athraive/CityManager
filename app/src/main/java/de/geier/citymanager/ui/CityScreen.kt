@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
 import de.geier.citymanager.ui.viewmodel.CityViewModel
@@ -35,7 +34,7 @@ fun CityScreen(
         ) {
 
             composable("stadt") {
-                StadtContent()
+                StadtContent(cityViewModel)
             }
 
             composable("personen") {
@@ -64,7 +63,9 @@ private enum class StadtTab(val title: String) {
 }
 
 @Composable
-private fun StadtContent() {
+private fun StadtContent(
+    cityViewModel: CityViewModel
+) {
     var selectedTab by remember { mutableStateOf(StadtTab.STADTKARTE) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -81,14 +82,14 @@ private fun StadtContent() {
 
         when (selectedTab) {
             StadtTab.STADTKARTE -> StadtkarteContent()
-            StadtTab.STADTVIERTEL -> StadtviertelContent()
+            StadtTab.STADTVIERTEL -> StadtviertelContent(cityViewModel)
             StadtTab.STADTGESCHICHTE -> StadtgeschichteContent()
         }
     }
 }
 
 /* -------------------------------------------------------
- * Stadtkarte (visueller Platzhalter)
+ * Stadtkarte (Platzhalter)
  * ----------------------------------------------------- */
 
 @Composable
@@ -97,47 +98,56 @@ private fun StadtkarteContent() {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = MaterialTheme.shapes.medium
-            )
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = MaterialTheme.shapes.medium
-            ),
+            .border(2.dp, MaterialTheme.colorScheme.outline)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("Stadtkarte (Platzhalter)")
+    }
+}
 
-            Text(
-                text = "Stadtkarte",
-                style = MaterialTheme.typography.titleLarge
+/* -------------------------------------------------------
+ * Stadtviertel – Liste + Detail (Phase 4)
+ * ----------------------------------------------------- */
+
+@Composable
+private fun StadtviertelContent(
+    cityViewModel: CityViewModel
+) {
+    val localNavController = rememberNavController()
+    val cityId = "default" // 🔹 später ersetzen
+
+    NavHost(
+        navController = localNavController,
+        startDestination = "list"
+    ) {
+
+        composable("list") {
+            CityDistrictListScreen(
+                cityId = cityId,
+                cityViewModel = cityViewModel,
+                onDistrictSelected = { districtId ->
+                    localNavController.navigate("detail/$districtId")
+                }
             )
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
+        composable("detail/{districtId}") { backStackEntry ->
+            val districtId =
+                backStackEntry.arguments?.getString("districtId")
+                    ?: return@composable
 
-            Text(
-                text = "Hier wird später die Stadtkarte angezeigt.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            CityDistrictDetailScreen(
+                districtId = districtId,
+                cityViewModel = cityViewModel
             )
         }
     }
 }
 
 /* -------------------------------------------------------
- * Weitere Inhalte
+ * Stadtgeschichte (Platzhalter)
  * ----------------------------------------------------- */
-
-@Composable
-private fun StadtviertelContent() {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Stadtviertel", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-        Text("Allgemeine Beschreibungen der Stadtviertel.")
-    }
-}
 
 @Composable
 private fun StadtgeschichteContent() {
@@ -148,17 +158,16 @@ private fun StadtgeschichteContent() {
     }
 }
 
+/* -------------------------------------------------------
+ * Platzhalter
+ * ----------------------------------------------------- */
+
 @Composable
 private fun ScreenPlaceholder(title: String) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "$title – Inhalt (Platzhalter)",
-            style = MaterialTheme.typography.titleLarge
-        )
+        Text("$title – Inhalt (Platzhalter)")
     }
 }

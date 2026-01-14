@@ -10,9 +10,10 @@ import de.geier.citymanager.data.entity.*
         PoiCategoryEntity::class,
         PointOfInterestEntity::class,
         PersonEntity::class,
-        PersonPoiCrossRef::class // 🔹 NEU
+        PersonPoiCrossRef::class,
+        CityDistrictEntity::class      // ✅ HINZUFÜGEN
     ],
-    version = 5,
+    version = 6,                      // 🔺 VERSION ERHÖHEN
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,7 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun poiCategoryDao(): PoiCategoryDao
     abstract fun pointOfInterestDao(): PointOfInterestDao
     abstract fun personDao(): PersonDao
-
-    // 🔹 NEU
     abstract fun personPoiDao(): PersonPoiDao
+
+    abstract fun cityDistrictDao(): CityDistrictDao   // ✅ HINZUFÜGEN
 }
