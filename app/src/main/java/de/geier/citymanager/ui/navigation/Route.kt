@@ -1,26 +1,15 @@
-package com.yourpackage.citymanager.navigation
+package de.geier.citymanager.ui.navigation
 
-sealed class Route(val route: String) {
+object Route {
 
-    /**
-     * Top-Level Navigation
-     */
-    object Karte : Route("karte")
-    object Personen : Route("personen")
-    object Pois : Route("pois")
+    // Über die Stadt
+    const val STADTKARTE = "stadtkarte"
+    const val STADTVIERTEL_LIST = "stadtviertel"
+    const val STADTVIERTEL_DETAIL = "stadtviertel/{districtId}"
+    const val STADTGESCHICHTE = "stadtgeschichte"
 
-    /**
-     * Unter-Navigation innerhalb des Karten-Tabs
-     */
-    object Stadtviertel : Route("karte/stadtviertel")
-    object Stadtgeschichte : Route("karte/geschichte")
-
-    /**
-     * Detail-Screen für ein Stadtviertel
-     * (wird später gebraucht, jetzt schon stabil vorbereitet)
-     */
-    object StadtviertelDetail : Route("karte/stadtviertel/{districtId}") {
-        fun create(districtId: Long): String =
-            "karte/stadtviertel/$districtId"
-    }
+    // Weitere Tabs
+    const val PERSONEN = "personen"
+    const val POIS = "pois"
+    const val FRAKTIONEN = "fraktionen"
 }

@@ -3,125 +3,69 @@ package de.geier.citymanager.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geier.citymanager.data.entity.CityDistrictEntity
+import de.geier.citymanager.data.entity.CityLoreEntity
 import de.geier.citymanager.data.repository.CityDistrictRepository
+import de.geier.citymanager.data.repository.CityLoreRepository
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
 import de.geier.citymanager.ui.Faction
 import de.geier.citymanager.ui.FactionRepository
-import de.geier.citymanager.ui.PoiCategory
-import de.geier.citymanager.ui.PointOfInterest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import de.geier.citymanager.ui.PointOfInterest
 
 class CityViewModel(
-    private val categoryRepository: PoiCategoryRepository,
+    private val poiCategoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
     private val factionRepository: FactionRepository,
-    private val cityDistrictRepository: CityDistrictRepository
+    private val cityDistrictRepository: CityDistrictRepository,
+    private val cityLoreRepository: CityLoreRepository
 ) : ViewModel() {
 
-    /* ---------------- Kategorien ---------------- */
+    /* ---------------- Stadtgeschichte ---------------- */
 
-    val categories: StateFlow<List<PoiCategory>> =
-        categoryRepository.categories
+    fun cityLore(cityId: String): StateFlow<CityLoreEntity?> =
+        cityLoreRepository
+            .loreForCity(cityId)
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
-                emptyList()
+                null
             )
 
-    fun saveCategory(category: PoiCategory) {
+    fun seedCityLoreIfNeeded(cityId: String) {
         viewModelScope.launch {
-            categoryRepository.save(category)
+            cityLoreRepository.save(
+                CityLoreEntity(
+                    cityId = cityId,
+                    title = "Geschichte der Stadt",
+                    text = """
+                        Diese Stadt wurde vor Generationen gegründet.
+
+                        Händler, Abenteurer und Machtgruppen haben sie geprägt.
+                        Ihre Geschichte ist reich an Intrigen, Umbrüchen und Legenden.
+                    """.trimIndent()
+                )
+            )
         }
     }
 
-    fun deleteCategory(category: PoiCategory) {
-        viewModelScope.launch {
-            categoryRepository.delete(category)
-        }
-    }
+    /* ---------------- Stadtviertel (KORREKT) ---------------- */
 
-    /* ---------------- POIs (SL) ---------------- */
-
-    val allPois: StateFlow<List<PointOfInterest>> =
-        poiRepository.getAll()
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
-
-    /* ---------------- POIs (Spieler, erzwingend) ---------------- */
-
-    val visiblePoisForPlayer: StateFlow<List<PointOfInterest>> =
-        poiRepository.getVisibleForPlayer()
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
-
-    fun visiblePoisForPlayerByCategory(
-        categoryId: String
-    ): StateFlow<List<PointOfInterest>> =
-        poiRepository.getVisibleForPlayerByCategory(categoryId)
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
-
-    fun savePoi(poi: PointOfInterest) {
-        viewModelScope.launch {
-            poiRepository.save(poi)
-        }
-    }
-
-    fun deletePoi(poi: PointOfInterest) {
-        viewModelScope.launch {
-            poiRepository.delete(poi)
-        }
-    }
-
-    /* ---------------- Fraktionen ---------------- */
-
-    val factions: StateFlow<List<Faction>> =
-        factionRepository.factions
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
-
-    fun saveFaction(faction: Faction) {
-        factionRepository.save(faction)
-    }
-
-    fun deleteFaction(factionId: String) {
-        factionRepository.delete(factionId)
-    }
-
-    /* ---------------- Stadtviertel ---------------- */
-
-    fun districtsForCity(
-        cityId: String
-    ): StateFlow<List<CityDistrictEntity>> =
+    fun districtsForCity(cityId: String): StateFlow<List<CityDistrictEntity>> =
         cityDistrictRepository
-            .getDistrictsForCity(cityId)
+            .getDistrictsForCity(cityId)   // ✅ exakt dein Interface
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
 
-    fun districtById(
-        districtId: String
-    ): StateFlow<CityDistrictEntity?> =
+    fun districtById(districtId: String): StateFlow<CityDistrictEntity?> =
         cityDistrictRepository
-            .getDistrictById(districtId)
+            .getDistrictById(districtId)   // ✅ exakt dein Interface
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -139,4 +83,51 @@ class CityViewModel(
             cityDistrictRepository.delete(districtId)
         }
     }
+
+    /* ---------------- Fraktionen ---------------- */
+
+    fun saveFaction(faction: Faction) {
+        factionRepository.save(faction)
+    }
+
+    val factions: StateFlow<List<Faction>> =
+        factionRepository.factions
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+    /* ---------------- POIs ---------------- */
+
+    fun savePoi(poi: PointOfInterest) {
+        viewModelScope.launch {
+            poiRepository.save(poi)
+        }
+    }
+
+    fun deletePoi(poi: PointOfInterest) {
+        viewModelScope.launch {
+            poiRepository.delete(poi)
+        }
+    }
+    fun visiblePoisForPlayerByCategory(
+        categoryId: String
+    ): StateFlow<List<PointOfInterest>> =
+        poiRepository
+            .getVisibleForPlayerByCategory(categoryId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+    /* ---------------- POIs ---------------- */
+
+    val allPois: StateFlow<List<PointOfInterest>> =
+        poiRepository.getAll()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
 }

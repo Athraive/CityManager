@@ -6,9 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.data.entity.CityDistrictEntity
@@ -20,15 +19,15 @@ fun CityDistrictListScreen(
     cityViewModel: CityViewModel,
     onDistrictSelected: (String) -> Unit
 ) {
+    // Flow liefert direkt den aktuellen Stand aus Room
     val districts by cityViewModel
         .districtsForCity(cityId)
-        .collectAsState()
+        .collectAsState(initial = emptyList())
 
     if (districts.isEmpty()) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Für diese Stadt sind noch keine Stadtviertel angelegt.",

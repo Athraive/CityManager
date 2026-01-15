@@ -1,15 +1,27 @@
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.viewmodel.PersonViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 
 @Composable
 fun CityScreen(
@@ -17,6 +29,14 @@ fun CityScreen(
     isGameMaster: Boolean
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val cityId = "default"
+
+    /* ---------------- ViewModels ---------------- */
+
+    val personViewModel: PersonViewModel = viewModel(
+        factory = PersonViewModelFactory(context)
+    )
 
     Scaffold(
         bottomBar = {
@@ -27,147 +47,144 @@ fun CityScreen(
         }
     ) { padding ->
 
-        NavHost(
-            navController = navController,
-            startDestination = "stadt",
-            modifier = Modifier.padding(padding)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
 
-            composable("stadt") {
-                StadtContent(cityViewModel)
-            }
+            /* ---------------- Stadt-Tabs ---------------- */
 
-            composable("personen") {
-                ScreenPlaceholder("Personen")
-            }
+            StadtTabs(navController)
 
-            composable("pois") {
-                ScreenPlaceholder("POIs")
-            }
+            /* ---------------- Content ---------------- */
 
-            composable("fraktionen") {
-                ScreenPlaceholder("Fraktionen")
-            }
-        }
-    }
-}
+            NavHost(
+                navController = navController,
+                startDestination = Route.STADTKARTE,
+                modifier = Modifier.weight(1f)
+            ) {
 
-/* -------------------------------------------------------
- * Über die Stadt
- * ----------------------------------------------------- */
-
-private enum class StadtTab(val title: String) {
-    STADTKARTE("Stadtkarte"),
-    STADTVIERTEL("Stadtviertel"),
-    STADTGESCHICHTE("Stadtgeschichte")
-}
-
-@Composable
-private fun StadtContent(
-    cityViewModel: CityViewModel
-) {
-    var selectedTab by remember { mutableStateOf(StadtTab.STADTKARTE) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-
-        TabRow(selectedTabIndex = selectedTab.ordinal) {
-            StadtTab.values().forEach { tab ->
-                Tab(
-                    selected = selectedTab == tab,
-                    onClick = { selectedTab = tab },
-                    text = { Text(tab.title) }
-                )
-            }
-        }
-
-        when (selectedTab) {
-            StadtTab.STADTKARTE -> StadtkarteContent()
-            StadtTab.STADTVIERTEL -> StadtviertelContent(cityViewModel)
-            StadtTab.STADTGESCHICHTE -> StadtgeschichteContent()
-        }
-    }
-}
-
-/* -------------------------------------------------------
- * Stadtkarte (Platzhalter)
- * ----------------------------------------------------- */
-
-@Composable
-private fun StadtkarteContent() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .border(2.dp, MaterialTheme.colorScheme.outline)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Stadtkarte (Platzhalter)")
-    }
-}
-
-/* -------------------------------------------------------
- * Stadtviertel – Liste + Detail (Phase 4)
- * ----------------------------------------------------- */
-
-@Composable
-private fun StadtviertelContent(
-    cityViewModel: CityViewModel
-) {
-    val localNavController = rememberNavController()
-    val cityId = "default" // 🔹 später ersetzen
-
-    NavHost(
-        navController = localNavController,
-        startDestination = "list"
-    ) {
-
-        composable("list") {
-            CityDistrictListScreen(
-                cityId = cityId,
-                cityViewModel = cityViewModel,
-                onDistrictSelected = { districtId ->
-                    localNavController.navigate("detail/$districtId")
+                composable(Route.STADTKARTE) {
+                    // Stadtkarte folgt später
                 }
-            )
-        }
 
-        composable("detail/{districtId}") { backStackEntry ->
-            val districtId =
-                backStackEntry.arguments?.getString("districtId")
-                    ?: return@composable
+                composable(Route.STADTVIERTEL_LIST) {
+                    CityDistrictListScreen(
+                        cityId = cityId,
+                        cityViewModel = cityViewModel,
+                        onDistrictSelected = { id ->
+                            navController.navigate("stadtviertel/$id")
+                        }
+                    )
+                }
 
-            CityDistrictDetailScreen(
-                districtId = districtId,
-                cityViewModel = cityViewModel
-            )
+                composable(Route.STADTVIERTEL_DETAIL) { backStackEntry ->
+                    val id =
+                        backStackEntry.arguments?.getString("districtId")
+                            ?: return@composable
+
+                    CityDistrictDetailScreen(
+                        districtId = id,
+                        cityViewModel = cityViewModel
+                    )
+                }
+
+                composable(Route.STADTGESCHICHTE) {
+                    StadtgeschichteScreen(
+                        cityId = cityId,
+                        cityViewModel = cityViewModel
+                    )
+                }
+
+                /* ---------------- Fach-Tabs ---------------- */
+
+                composable(Route.PERSONEN) {
+                    PersonenTab(
+                        viewModel = personViewModel,
+                        pois = emptyList(),
+                        categories = emptyList(),
+                        isGameMaster = isGameMaster
+                    )
+
+                }
+
+                composable(Route.POIS) {
+
+                    val categoryViewModel: PoiCategoryViewModel = viewModel(
+                        factory = PoiCategoryViewModelFactory(context)
+                    )
+
+                    val allPois by cityViewModel.allPois.collectAsState()
+
+                    if (isGameMaster) {
+
+                        GameMasterCategoryListScreen(
+                            categoryViewModel = categoryViewModel,
+                            cityViewModel = cityViewModel,
+                            allPois = allPois
+                        )
+
+                    } else {
+
+                        PlayerCategoryListScreen(
+                            cityViewModel = cityViewModel,
+                            categoryViewModel = categoryViewModel,
+                            persons = emptyList(),          // unverändert wie vorher
+                            personViewModel = personViewModel
+                        )
+                    }
+                }
+
+
+
+
+                composable(Route.FRAKTIONEN) {
+                    FraktionenTab(
+                        cityViewModel = cityViewModel,
+                        isGameMaster = isGameMaster
+                    )
+                }
+            }
         }
     }
 }
 
 /* -------------------------------------------------------
- * Stadtgeschichte (Platzhalter)
+ * Stadt-Tabs
  * ----------------------------------------------------- */
 
 @Composable
-private fun StadtgeschichteContent() {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Stadtgeschichte", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
-        Text("Allgemeine Geschichte der Stadt.")
-    }
-}
+private fun StadtTabs(
+    navController: NavController
+) {
+    val backStackEntry =
+        navController.currentBackStackEntryAsState().value
 
-/* -------------------------------------------------------
- * Platzhalter
- * ----------------------------------------------------- */
+    val currentRoute = backStackEntry?.destination?.route
 
-@Composable
-private fun ScreenPlaceholder(title: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    val tabs = listOf(
+        Route.STADTKARTE to "Stadtkarte",
+        Route.STADTVIERTEL_LIST to "Stadtviertel",
+        Route.STADTGESCHICHTE to "Stadtgeschichte"
+    )
+
+    TabRow(
+        selectedTabIndex =
+            tabs.indexOfFirst { it.first == currentRoute }.coerceAtLeast(0)
     ) {
-        Text("$title – Inhalt (Platzhalter)")
+        tabs.forEach { (route, title) ->
+            Tab(
+                selected = currentRoute == route,
+                onClick = {
+                    if (currentRoute != route) {
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                text = { Text(title) }
+            )
+        }
     }
 }

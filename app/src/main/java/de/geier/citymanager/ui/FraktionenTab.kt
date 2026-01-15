@@ -19,7 +19,6 @@ fun FraktionenTab(
     isGameMaster: Boolean
 ) {
     val factions by cityViewModel.factions.collectAsState()
-    val allPois by cityViewModel.allPois.collectAsState()
 
     var selectedFaction by remember { mutableStateOf<Faction?>(null) }
 
@@ -27,13 +26,13 @@ fun FraktionenTab(
         if (isGameMaster) factions else factions.filter { it.visible }
 
     if (selectedFaction == null) {
-        /* ---------- LISTENANSICHT ---------- */
+        /* ---------- LISTE ---------- */
 
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(visibleFactions) { faction ->
                 Row(
@@ -64,18 +63,9 @@ fun FraktionenTab(
         }
 
     } else {
-        /* ---------- DETAILANSICHT ---------- */
+        /* ---------- DETAIL ---------- */
 
         val faction = selectedFaction!!
-
-        val factionPois =
-            if (isGameMaster) {
-                allPois.filter { it.factionId == faction.id }
-            } else {
-                allPois.filter {
-                    it.factionId == faction.id && it.visible
-                }
-            }
 
         Column(
             modifier = Modifier
@@ -95,26 +85,6 @@ fun FraktionenTab(
                     text = faction.description,
                     style = MaterialTheme.typography.bodyMedium
                 )
-            }
-
-            Text(
-                text = "Zugeordnete POIs",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-
-            if (factionPois.isEmpty()) {
-                Text(
-                    text = "Keine zugeordneten POIs",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            } else {
-                factionPois.forEach { poi ->
-                    Text(
-                        text = "• ${poi.name}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
             }
         }
     }
