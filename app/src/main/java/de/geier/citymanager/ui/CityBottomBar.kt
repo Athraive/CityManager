@@ -1,54 +1,47 @@
 package de.geier.citymanager.ui
 
-import androidx.compose.material3.*
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import de.geier.citymanager.ui.navigation.Route
 
+/**
+ * Reine Tab-Bar ohne Navigation.
+ * Sie setzt ausschließlich den aktiven Tab.
+ */
 @Composable
 fun CityBottomBar(
-    navController: NavController,
-    isGameMaster: Boolean
+    activeTab: CityTab,
+    isGameMaster: Boolean,
+    onTabSelected: (CityTab) -> Unit
 ) {
-    val currentRoute =
-        navController.currentBackStackEntryAsState().value?.destination?.route
-
-    fun go(route: String) {
-        if (currentRoute == route) return
-        navController.navigate(route) {
-            launchSingleTop = true
-            popUpTo(route) { inclusive = false }
-        }
-    }
-
     NavigationBar {
 
         NavigationBarItem(
-            selected = currentRoute == Route.STADTKARTE,
-            onClick = { go(Route.STADTKARTE) },
+            selected = activeTab == CityTab.CITY,
+            onClick = { onTabSelected(CityTab.CITY) },
             icon = {},
             label = { Text("Über die Stadt") }
         )
 
         NavigationBarItem(
-            selected = currentRoute == Route.PERSONEN,
-            onClick = { go(Route.PERSONEN) },
+            selected = activeTab == CityTab.PERSONS,
+            onClick = { onTabSelected(CityTab.PERSONS) },
             icon = {},
             label = { Text("Personen") }
         )
 
         NavigationBarItem(
-            selected = currentRoute == Route.POIS,
-            onClick = { go(Route.POIS) },
+            selected = activeTab == CityTab.POIS,
+            onClick = { onTabSelected(CityTab.POIS) },
             icon = {},
             label = { Text("POIs") }
         )
 
         if (isGameMaster) {
             NavigationBarItem(
-                selected = currentRoute == Route.FRAKTIONEN,
-                onClick = { go(Route.FRAKTIONEN) },
+                selected = activeTab == CityTab.FACTIONS,
+                onClick = { onTabSelected(CityTab.FACTIONS) },
                 icon = {},
                 label = { Text("Fraktionen") }
             )

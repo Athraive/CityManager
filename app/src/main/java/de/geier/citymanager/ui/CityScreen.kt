@@ -1,190 +1,108 @@
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 
+/**
+ * Zentrale Tab-Definition für die CityScreen-Navigation.
+ * Jeder Tab ist ein logischer Root.
+ */
+enum class CityTab {
+    CITY,
+    PERSONS,
+    POIS,
+    FACTIONS
+}
 
 @Composable
 fun CityScreen(
     cityViewModel: CityViewModel,
     isGameMaster: Boolean
 ) {
-    val navController = rememberNavController()
-    val context = LocalContext.current
-    val cityId = "default"
+    /* ---------------- Tab-State ---------------- */
+
+    var activeTab by remember { mutableStateOf(CityTab.CITY) }
 
     /* ---------------- ViewModels ---------------- */
+
+    val context = LocalContext.current
 
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(context)
     )
 
+    /* ---------------- Layout ---------------- */
+
     Scaffold(
         bottomBar = {
             CityBottomBar(
-                navController = navController,
-                isGameMaster = isGameMaster
+                activeTab = activeTab,
+                isGameMaster = isGameMaster,
+                onTabSelected = { tab ->
+                    activeTab = tab
+
+                    // expliziter Reset beim Tab-Wechsel
+                    if (tab == CityTab.PERSONS) {
+                        personViewModel.clearSelection()
+                    }
+                }
             )
         }
     ) { padding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            when (activeTab) {
 
-            /* ---------------- Stadt-Tabs ---------------- */
+                /* ---------------- Über die Stadt ---------------- */
 
-            StadtTabs(navController)
-
-            /* ---------------- Content ---------------- */
-
-            NavHost(
-                navController = navController,
-                startDestination = Route.STADTKARTE,
-                modifier = Modifier.weight(1f)
-            ) {
-
-                composable(Route.STADTKARTE) {
-                    // Stadtkarte folgt später
-                }
-
-                composable(Route.STADTVIERTEL_LIST) {
-                    CityDistrictListScreen(
-                        cityId = cityId,
-                        cityViewModel = cityViewModel,
-                        onDistrictSelected = { id ->
-                            navController.navigate("stadtviertel/$id")
-                        }
-                    )
-                }
-
-                composable(Route.STADTVIERTEL_DETAIL) { backStackEntry ->
-                    val id =
-                        backStackEntry.arguments?.getString("districtId")
-                            ?: return@composable
-
-                    CityDistrictDetailScreen(
-                        districtId = id,
+                CityTab.CITY -> {
+                    CityOverviewTab(
                         cityViewModel = cityViewModel
                     )
                 }
 
-                composable(Route.STADTGESCHICHTE) {
-                    StadtgeschichteScreen(
-                        cityId = cityId,
-                        cityViewModel = cityViewModel
-                    )
-                }
+                /* ---------------- Personen ---------------- */
 
-                /* ---------------- Fach-Tabs ---------------- */
-
-                composable(Route.PERSONEN) {
+                CityTab.PERSONS -> {
                     PersonenTab(
                         viewModel = personViewModel,
                         pois = emptyList(),
                         categories = emptyList(),
                         isGameMaster = isGameMaster
                     )
-
                 }
 
-                composable(Route.POIS) {
+                /* ---------------- POIs ---------------- */
 
-                    val categoryViewModel: PoiCategoryViewModel = viewModel(
-                        factory = PoiCategoryViewModelFactory(context)
+                CityTab.POIS -> {
+                    PoiTab(
+                        cityViewModel = cityViewModel,
+                        personViewModel = personViewModel,
+                        isGameMaster = isGameMaster
                     )
-
-                    val allPois by cityViewModel.allPois.collectAsState()
-
-                    if (isGameMaster) {
-
-                        GameMasterCategoryListScreen(
-                            categoryViewModel = categoryViewModel,
-                            cityViewModel = cityViewModel,
-                            allPois = allPois
-                        )
-
-                    } else {
-
-                        PlayerCategoryListScreen(
-                            cityViewModel = cityViewModel,
-                            categoryViewModel = categoryViewModel,
-                            persons = emptyList(),          // unverändert wie vorher
-                            personViewModel = personViewModel
-                        )
-                    }
                 }
 
+                /* ---------------- Fraktionen ---------------- */
 
-
-
-                composable(Route.FRAKTIONEN) {
+                CityTab.FACTIONS -> {
                     FraktionenTab(
                         cityViewModel = cityViewModel,
                         isGameMaster = isGameMaster
                     )
                 }
             }
-        }
-    }
-}
-
-/* -------------------------------------------------------
- * Stadt-Tabs
- * ----------------------------------------------------- */
-
-@Composable
-private fun StadtTabs(
-    navController: NavController
-) {
-    val backStackEntry =
-        navController.currentBackStackEntryAsState().value
-
-    val currentRoute = backStackEntry?.destination?.route
-
-    val tabs = listOf(
-        Route.STADTKARTE to "Stadtkarte",
-        Route.STADTVIERTEL_LIST to "Stadtviertel",
-        Route.STADTGESCHICHTE to "Stadtgeschichte"
-    )
-
-    TabRow(
-        selectedTabIndex =
-            tabs.indexOfFirst { it.first == currentRoute }.coerceAtLeast(0)
-    ) {
-        tabs.forEach { (route, title) ->
-            Tab(
-                selected = currentRoute == route,
-                onClick = {
-                    if (currentRoute != route) {
-                        navController.navigate(route) {
-                            launchSingleTop = true
-                        }
-                    }
-                },
-                text = { Text(title) }
-            )
         }
     }
 }
