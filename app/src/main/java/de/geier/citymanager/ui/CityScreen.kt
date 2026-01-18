@@ -10,6 +10,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
+import de.geier.citymanager.ui.viewmodel.FactionViewModel
+import de.geier.citymanager.ui.viewmodel.FactionViewModelFactory
 
 /**
  * Zentrale Tab-Definition für die CityScreen-Navigation.
@@ -39,6 +41,15 @@ fun CityScreen(
         factory = PersonViewModelFactory(context)
     )
 
+    // ✅ EINZIGE Quelle für Fraktionen
+    val factionViewModel: FactionViewModel = viewModel(
+        factory = FactionViewModelFactory()
+    )
+
+    /* ---------------- Gemeinsame States ---------------- */
+
+    val factions by factionViewModel.factions.collectAsState()
+
     /* ---------------- Layout ---------------- */
 
     Scaffold(
@@ -49,7 +60,6 @@ fun CityScreen(
                 onTabSelected = { tab ->
                     activeTab = tab
 
-                    // expliziter Reset beim Tab-Wechsel
                     if (tab == CityTab.PERSONS) {
                         personViewModel.clearSelection()
                     }
@@ -65,26 +75,21 @@ fun CityScreen(
         ) {
             when (activeTab) {
 
-                /* ---------------- Über die Stadt ---------------- */
-
                 CityTab.CITY -> {
                     CityOverviewTab(
                         cityViewModel = cityViewModel
                     )
                 }
 
-                /* ---------------- Personen ---------------- */
-
                 CityTab.PERSONS -> {
                     PersonenTab(
                         viewModel = personViewModel,
+                        factions = factions,      // ✅ jetzt dynamisch
                         pois = emptyList(),
                         categories = emptyList(),
                         isGameMaster = isGameMaster
                     )
                 }
-
-                /* ---------------- POIs ---------------- */
 
                 CityTab.POIS -> {
                     PoiTab(
@@ -94,11 +99,9 @@ fun CityScreen(
                     )
                 }
 
-                /* ---------------- Fraktionen ---------------- */
-
                 CityTab.FACTIONS -> {
+                    // ✅ KEIN eigenes ViewModel mehr im Tab
                     FraktionenTab(
-                        cityViewModel = cityViewModel,
                         isGameMaster = isGameMaster
                     )
                 }

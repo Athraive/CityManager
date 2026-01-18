@@ -1,6 +1,7 @@
 package de.geier.citymanager.ui.navigation
 
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -18,8 +19,8 @@ fun CityNavHost() {
 
     val navController = rememberNavController()
 
-    // 🔹 globale Rollen-Info
-    val isGameMasterState = remember { mutableStateOf(false) }
+    // 🔹 globale Rollen-Info (konfigurationssicher)
+    val isGameMasterState = rememberSaveable { mutableStateOf(false) }
 
     // 🔹 CityViewModel zentral erzeugen
     val context = LocalContext.current
@@ -29,22 +30,22 @@ fun CityNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = "start"
+        startDestination = Screen.Start.route
     ) {
 
-        composable("start") {
+        composable(Screen.Start.route) {
             StartScreen {
-                navController.navigate("role") {
-                    popUpTo("start") { inclusive = true }
+                navController.navigate(Screen.RoleSelect.route) {
+                    popUpTo(Screen.Start.route) { inclusive = true }
                 }
             }
         }
 
-        composable("role") {
+        composable(Screen.RoleSelect.route) {
             RoleSelectScreen { isGameMaster ->
                 isGameMasterState.value = isGameMaster
                 navController.navigate("city") {
-                    popUpTo("role") { inclusive = true }
+                    popUpTo(Screen.RoleSelect.route) { inclusive = true }
                 }
             }
         }
