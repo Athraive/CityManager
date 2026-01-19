@@ -7,6 +7,7 @@ package de.geier.citymanager.ui
  * Es enthält keine Persistenz- oder UI-Logik.
  */
 data class Person(
+
     /**
      * Eindeutige ID der Person.
      */
@@ -18,9 +19,13 @@ data class Person(
     val name: String,
 
     /**
-     * Optionale Beschreibung der Person.
+     * Öffentliche Beschreibung der Person.
+     *
+     * - vom Spielleiter gepflegt
+     * - für Spieler sichtbar
+     * - editierbar (kein reines Anlagefeld!)
      */
-    val description: String? = null,
+    val description: String = "",
 
     /**
      * Optionale URI zu einem Portraitbild.
@@ -38,7 +43,19 @@ data class Person(
     val factionId: String? = null,
 
     /**
-     * Gemeinsamer Notizbereich für SL und Spieler.
+     * Spieler-Notizen zur Person.
+     *
+     * - von Spielern gepflegt
+     * - für Spieler sichtbar
+     * - für SL ebenfalls sichtbar
      */
-    val sharedNotes: String = ""
+    val playerNotes: String = "",
+
+    /**
+     * Interne Spielleiter-Notizen zur Person.
+     *
+     * - nur für den Spielleiter sichtbar
+     * - enthält Meta-, Plot- oder Geheim-Informationen
+     */
+    val gameMasterNotes: String = ""
 )

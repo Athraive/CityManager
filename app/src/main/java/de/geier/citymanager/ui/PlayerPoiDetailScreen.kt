@@ -19,6 +19,7 @@ import de.geier.citymanager.data.repository.PersonPoiRepository
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     persons: List<Person>,
+    factions: List<Faction>,            // ✅ NEU
     onPersonClick: (Person) -> Unit,
     onBack: () -> Unit
 ) {
@@ -44,6 +45,12 @@ fun PlayerPoiDetailScreen(
     val visiblePersons = remember(persons, personIds) {
         persons.filter { person ->
             person.visible && personIds.contains(person.id)
+        }
+    }
+
+    val visibleFaction = remember(poi.factionId, factions) {
+        factions.firstOrNull { faction ->
+            faction.id == poi.factionId && faction.visible
         }
     }
 
@@ -80,6 +87,24 @@ fun PlayerPoiDetailScreen(
             if (poi.description.isNotBlank()) {
                 Text(text = poi.description)
             }
+
+            /* ---------------- Fraktion (Spieler) ---------------- */
+
+            if (visibleFaction != null) {
+                HorizontalDivider()
+
+                Text(
+                    text = "Fraktion",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = visibleFaction.name,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            /* ---------------- Personen ---------------- */
 
             if (visiblePersons.isNotEmpty()) {
 

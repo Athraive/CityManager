@@ -35,7 +35,7 @@ fun PersonenTab(
         }
     }
 
-    /* ---------------- POI-Härtung (Kategorie + POI sichtbar) ---------------- */
+    /* ---------------- POI-Härtung ---------------- */
 
     val visibleCategoryIds = remember(categories) {
         categories.filter { it.visible }.map { it.id }.toSet()
@@ -126,7 +126,7 @@ fun PersonenTab(
                             )
                         }
 
-                        if (!person.description.isNullOrBlank()) {
+                        if (person.description.isNotBlank()) {
                             Text(
                                 text = person.description,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -148,9 +148,11 @@ fun PersonenTab(
                     Person(
                         id = UUID.randomUUID().toString(),
                         name = name,
-                        description = description,
+                        description = description ?: "",
                         visible = true,
-                        sharedNotes = ""
+                        factionId = null,
+                        playerNotes = "",
+                        gameMasterNotes = ""
                     )
                 )
                 showCreateDialog = false

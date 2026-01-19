@@ -17,6 +17,7 @@ fun PlayerCategoryListScreen(
     cityViewModel: CityViewModel,
     categoryViewModel: PoiCategoryViewModel,
     persons: List<Person>,
+    factions: List<Faction>,              // ✅ NEU
     personViewModel: PersonViewModel
 ) {
     val categories by categoryViewModel.categories.collectAsState()
@@ -88,6 +89,7 @@ fun PlayerCategoryListScreen(
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             persons = persons,
+            factions = factions,            // ✅ DURCHGEREICHT
             onPersonClick = { personViewModel.selectPerson(it) },
             onBack = { selectedPoi = null }
         )

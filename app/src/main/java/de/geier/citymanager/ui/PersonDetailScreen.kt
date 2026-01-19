@@ -9,7 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import de.geier.citymanager.ui.viewmodel.PersonViewModel   // ✅ FIX
+import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,14 +22,19 @@ fun PersonDetailScreen(
     pois: List<PointOfInterest> = emptyList(),
     categories: List<PoiCategory> = emptyList()
 ) {
-    var notes by remember(person.id) { mutableStateOf(person.sharedNotes) }
+    /* ---------------- lokaler Edit-State ---------------- */
+
+    var description by remember(person.id) { mutableStateOf(person.description) }
+    var playerNotes by remember(person.id) { mutableStateOf(person.playerNotes) }
+    var gameMasterNotes by remember(person.id) { mutableStateOf(person.gameMasterNotes) }
+
     var selectedFactionId by remember(person.id) { mutableStateOf(person.factionId) }
     var visible by remember(person.id) { mutableStateOf(person.visible) }
     var factionDropdownExpanded by remember { mutableStateOf(false) }
 
     val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
 
-    /* ---------------- POI-Härtung ---------------- */
+    /* ---------------- POI-Sichtbarkeit ---------------- */
 
     val visibleCategoryIds = remember(categories) {
         categories.filter { it.visible }.map { it.id }.toSet()
@@ -51,6 +56,8 @@ fun PersonDetailScreen(
             }
         }
     }
+
+    /* ---------------- Layout ---------------- */
 
     Scaffold(
         topBar = {
@@ -79,9 +86,22 @@ fun PersonDetailScreen(
 
             Text(text = person.name, fontSize = 24.sp)
 
-            if (!person.description.isNullOrBlank()) {
-                Text(text = person.description)
+            /* ---------- Beschreibung ---------- */
+
+            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
+
+            if (isGameMaster) {
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            } else if (description.isNotBlank()) {
+                Text(description)
             }
+
+            /* ---------- Sichtbarkeit ---------- */
 
             if (isGameMaster) {
                 HorizontalDivider()
@@ -94,6 +114,8 @@ fun PersonDetailScreen(
                     Text("Für Spieler sichtbar")
                 }
             }
+
+            /* ---------- Fraktion ---------- */
 
             HorizontalDivider()
             Text("Fraktion", style = MaterialTheme.typography.titleMedium)
@@ -151,6 +173,8 @@ fun PersonDetailScreen(
                 }
             }
 
+            /* ---------- POI-Zuordnung ---------- */
+
             if (isGameMaster && pois.isNotEmpty()) {
                 HorizontalDivider()
                 Text("Zugeordnete Orte (POIs)", style = MaterialTheme.typography.titleMedium)
@@ -175,21 +199,39 @@ fun PersonDetailScreen(
                 }
             }
 
+            /* ---------- Notizen ---------- */
+
             HorizontalDivider()
             Text("Notizen", style = MaterialTheme.typography.titleMedium)
 
+            Text("Spieler-Notizen")
             OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
+                value = playerNotes,
+                onValueChange = { playerNotes = it },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 4
             )
+
+            if (isGameMaster) {
+                Spacer(Modifier.height(8.dp))
+                Text("SL-Notizen")
+                OutlinedTextField(
+                    value = gameMasterNotes,
+                    onValueChange = { gameMasterNotes = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4
+                )
+            }
+
+            /* ---------- Speichern ---------- */
 
             Button(
                 onClick = {
                     viewModel.save(
                         person.copy(
-                            sharedNotes = notes,
+                            description = description,
+                            playerNotes = playerNotes,
+                            gameMasterNotes = gameMasterNotes,
                             factionId = selectedFactionId,
                             visible = visible
                         )

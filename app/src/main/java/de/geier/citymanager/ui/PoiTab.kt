@@ -7,6 +7,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
+import de.geier.citymanager.ui.viewmodel.FactionViewModel
+import de.geier.citymanager.ui.viewmodel.FactionViewModelFactory
 
 /**
  * Root für den POI-Tab.
@@ -32,6 +34,12 @@ fun PoiTab(
         factory = PoiCategoryViewModelFactory(context)
     )
 
+    // ✅ zentrale Fraktionen (identisch zu CityScreen)
+    val factionViewModel: FactionViewModel = viewModel(
+        factory = FactionViewModelFactory()
+    )
+    val factions by factionViewModel.factions.collectAsState()
+
     // ✔ expliziter Import für Release-Build
     val allPois by cityViewModel.allPois.collectAsState(initial = emptyList())
 
@@ -51,6 +59,7 @@ fun PoiTab(
             cityViewModel = cityViewModel,
             categoryViewModel = categoryViewModel,
             persons = emptyList(),
+            factions = factions,          // ✅ DURCHGEREICHT
             personViewModel = personViewModel
         )
     }

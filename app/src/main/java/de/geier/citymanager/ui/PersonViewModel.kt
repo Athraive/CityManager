@@ -8,12 +8,18 @@ import de.geier.citymanager.ui.Person
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel für Personen (NPCs).
+ *
+ * - Enthält KEINE UI- oder Rollenlogik
+ * - Reicht Domain-Objekte unverändert durch
+ */
 class PersonViewModel(
     private val personRepository: PersonRepository,
     private val personPoiRepository: PersonPoiRepository
 ) : ViewModel() {
 
-    /* ---------------- SL ---------------- */
+    /* ---------------- Spielleiter ---------------- */
 
     val persons: StateFlow<List<Person>> =
         personRepository.getAll()
@@ -36,7 +42,7 @@ class PersonViewModel(
     /* ---------------- Auswahl ---------------- */
 
     private val _selectedPerson = MutableStateFlow<Person?>(null)
-    val selectedPerson: StateFlow<Person?> = _selectedPerson
+    val selectedPerson: StateFlow<Person?> = _selectedPerson.asStateFlow()
 
     fun selectPerson(person: Person) {
         _selectedPerson.value = person
@@ -46,11 +52,14 @@ class PersonViewModel(
         _selectedPerson.value = null
     }
 
-    /* ---------------- Persistenz (SL) ---------------- */
+    /* ---------------- Persistenz ---------------- */
 
     fun save(person: Person) {
         viewModelScope.launch {
             personRepository.save(person)
+
+            // Falls die aktuell selektierte Person gespeichert wurde,
+            // aktualisieren wir auch den lokalen State
             if (_selectedPerson.value?.id == person.id) {
                 _selectedPerson.value = person
             }
