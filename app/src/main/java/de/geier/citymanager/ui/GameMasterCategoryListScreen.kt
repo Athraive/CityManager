@@ -14,8 +14,6 @@ import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
-
 @Composable
 fun GameMasterCategoryListScreen(
     categoryViewModel: PoiCategoryViewModel,
@@ -27,10 +25,13 @@ fun GameMasterCategoryListScreen(
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var editCategory by remember { mutableStateOf<PoiCategory?>(null) }
-    var showCreatePoi by remember { mutableStateOf(false) }
+    var createPoiForCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var editPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
+    /* ---------------- Kategorien ---------------- */
+
     if (selectedCategory == null) {
+
         Column(modifier = Modifier.fillMaxSize()) {
 
             Button(
@@ -44,24 +45,28 @@ fun GameMasterCategoryListScreen(
                         )
                     )
                 },
-                modifier = Modifier.padding(16.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
             ) {
                 Text("➕ Kategorie hinzufügen")
             }
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(categories) { category ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "${category.icon} ${category.title}",
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
                                 .clickable { selectedCategory = category }
                         )
                         Text(
@@ -72,20 +77,28 @@ fun GameMasterCategoryListScreen(
                 }
             }
         }
+
     } else {
-        val poisInCategory = allPois.filter { it.categoryId == selectedCategory!!.id }
+
+        /* ---------------- POIs ---------------- */
+
+        val poisInCategory =
+            allPois.filter { it.categoryId == selectedCategory!!.id }
 
         Column {
 
             Text(
                 text = "← ${selectedCategory!!.title}",
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier
+                    .padding(16.dp)
                     .clickable { selectedCategory = null }
             )
 
             Button(
-                onClick = { showCreatePoi = true },
-                modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+                onClick = { createPoiForCategory = selectedCategory },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
             ) {
                 Text("➕ POI hinzufügen")
             }
@@ -99,7 +112,10 @@ fun GameMasterCategoryListScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "• ${poi.name}", modifier = Modifier.weight(1f))
+                        Text(
+                            text = "• ${poi.name}",
+                            modifier = Modifier.weight(1f)
+                        )
                         Text(
                             text = "✏",
                             modifier = Modifier.clickable { editPoi = poi }
@@ -110,44 +126,46 @@ fun GameMasterCategoryListScreen(
         }
     }
 
-    /* -------- Dialoge -------- */
+    /* ---------------- Dialoge ---------------- */
 
-    editCategory?.let {
+    editCategory?.let { category ->
         EditCategoryDialog(
-            category = it,
+            category = category,
             onDismiss = { editCategory = null },
-            onSave = { updated ->
-                categoryViewModel.save(updated)
+            onSave = {
+                categoryViewModel.save(it)
                 editCategory = null
             }
         )
     }
 
-    if (showCreatePoi && selectedCategory != null) {
+    createPoiForCategory?.let { category ->
         CreatePoiDialog(
-            categoryId = selectedCategory!!.id,
-            onDismiss = { showCreatePoi = false },
+            categoryId = category.id,
+            onDismiss = { createPoiForCategory = null },
             onSave = {
                 cityViewModel.savePoi(it)
-                showCreatePoi = false
+                createPoiForCategory = null
             }
         )
     }
 
-    editPoi?.let {
+    editPoi?.let { poi ->
         EditPoiDialog(
-            poi = it,
+            poi = poi,
             factions = factions,
             onDismiss = { editPoi = null },
-            onSave = { updated ->
-                cityViewModel.savePoi(updated)
+            onSave = {
+                cityViewModel.savePoi(it)
                 editPoi = null
             }
         )
     }
 }
 
-/* ---------------- Dialoge ---------------- */
+/* ========================================================================== */
+/*                                   DIALOGE                                  */
+/* ========================================================================== */
 
 @Composable
 private fun EditCategoryDialog(
@@ -174,9 +192,16 @@ private fun EditCategoryDialog(
         title = { Text("Kategorie bearbeiten") },
         text = {
             Column {
-                OutlinedTextField(value = title, onValueChange = { title = it })
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Titel") }
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = visible, onCheckedChange = { visible = it })
+                    Checkbox(
+                        checked = visible,
+                        onCheckedChange = { visible = it }
+                    )
                     Text("Für Spieler sichtbar")
                 }
             }
@@ -191,8 +216,6 @@ private fun CreatePoiDialog(
     onSave: (PointOfInterest) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var visible by remember { mutableStateOf(true) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -204,28 +227,23 @@ private fun CreatePoiDialog(
                         PointOfInterest(
                             id = UUID.randomUUID().toString(),
                             name = name,
-                            description = description,
                             categoryId = categoryId,
-                            type = PoiType.LOCATION,
-                            visible = visible
+                            type = PoiType.LOCATION
                         )
                     )
                 }
-            ) { Text("Speichern") }
+            ) { Text("Anlegen") }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss) { Text("Abbrechen") }
         },
         title = { Text("POI anlegen") },
         text = {
-            Column {
-                OutlinedTextField(value = name, onValueChange = { name = it })
-                OutlinedTextField(value = description, onValueChange = { description = it })
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = visible, onCheckedChange = { visible = it })
-                    Text("Für Spieler sichtbar")
-                }
-            }
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") }
+            )
         }
     )
 }
@@ -239,6 +257,8 @@ private fun EditPoiDialog(
 ) {
     var name by remember { mutableStateOf(poi.name) }
     var description by remember { mutableStateOf(poi.description) }
+    var playerNotes by remember { mutableStateOf(poi.playerNotes) }
+    var gmNotes by remember { mutableStateOf(poi.gameMasterNotes) }
     var visible by remember { mutableStateOf(poi.visible) }
     var factionId by remember { mutableStateOf(poi.factionId) }
     var expanded by remember { mutableStateOf(false) }
@@ -257,7 +277,9 @@ private fun EditPoiDialog(
                             name = name,
                             description = description,
                             visible = visible,
-                            factionId = factionId
+                            factionId = factionId,
+                            playerNotes = playerNotes,
+                            gameMasterNotes = gmNotes
                         )
                     )
                 }
@@ -268,10 +290,20 @@ private fun EditPoiDialog(
         },
         title = { Text("POI bearbeiten") },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-                OutlinedTextField(value = name, onValueChange = { name = it })
-                OutlinedTextField(value = description, onValueChange = { description = it })
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") }
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Öffentliche Beschreibung") },
+                    minLines = 3
+                )
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -281,11 +313,11 @@ private fun EditPoiDialog(
                         value = factionName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Fraktion (optional)") },
+                        label = { Text("Fraktion") },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                         },
-                        modifier = Modifier.menuAnchor()
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
@@ -311,8 +343,25 @@ private fun EditPoiDialog(
                     }
                 }
 
+                OutlinedTextField(
+                    value = playerNotes,
+                    onValueChange = { playerNotes = it },
+                    label = { Text("Spieler-Notizen") },
+                    minLines = 3
+                )
+
+                OutlinedTextField(
+                    value = gmNotes,
+                    onValueChange = { gmNotes = it },
+                    label = { Text("SL-Notizen (intern)") },
+                    minLines = 3
+                )
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = visible, onCheckedChange = { visible = it })
+                    Checkbox(
+                        checked = visible,
+                        onCheckedChange = { visible = it }
+                    )
                     Text("Für Spieler sichtbar")
                 }
             }

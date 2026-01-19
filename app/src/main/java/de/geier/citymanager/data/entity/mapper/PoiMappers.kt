@@ -4,6 +4,12 @@ import de.geier.citymanager.data.entity.PointOfInterestEntity
 import de.geier.citymanager.ui.PointOfInterest
 import de.geier.citymanager.ui.PoiType
 
+/**
+ * Mapper zwischen Persistenz-Entity und Domain-Modell für POIs.
+ */
+
+/* ---------------- Entity → Domain ---------------- */
+
 fun PointOfInterestEntity.toDomain(): PointOfInterest =
     PointOfInterest(
         id = id,
@@ -12,8 +18,12 @@ fun PointOfInterestEntity.toDomain(): PointOfInterest =
         description = description,
         type = PoiType.valueOf(type),
         visible = visible,
-        factionId = factionId          // 🔹 NEU
+        factionId = factionId,
+        playerNotes = playerNotes,
+        gameMasterNotes = gameMasterNotes
     )
+
+/* ---------------- Domain → Entity ---------------- */
 
 fun PointOfInterest.toEntity(): PointOfInterestEntity =
     PointOfInterestEntity(
@@ -23,5 +33,7 @@ fun PointOfInterest.toEntity(): PointOfInterestEntity =
         description = description,
         type = type.name,
         visible = visible,
-        factionId = factionId          // 🔹 NEU
+        factionId = factionId,
+        playerNotes = playerNotes,
+        gameMasterNotes = gameMasterNotes
     )

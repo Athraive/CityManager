@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.clickable
@@ -7,50 +9,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import de.geier.citymanager.data.DatabaseProvider
-import de.geier.citymanager.data.repository.PersonPoiRepository
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
-    persons: List<Person>,
-    factions: List<Faction>,            // ✅ NEU
-    onPersonClick: (Person) -> Unit,
+    factions: List<Faction>,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
+    /* ---------------- Fraktion (Spielersicht) ---------------- */
 
-    val poiViewModel: PlayerPoiViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                val db = DatabaseProvider.getDatabase(context)
-                return PlayerPoiViewModel(
-                    poiId = poi.id,
-                    personPoiRepository = PersonPoiRepository(db.personPoiDao())
-                ) as T
-            }
-        }
-    )
-
-    val personIds by poiViewModel.personIdsForPoi.collectAsState()
-
-    /* ---------------- Sichtbarkeit (gehärtet) ---------------- */
-
-    val visiblePersons = remember(persons, personIds) {
-        persons.filter { person ->
-            person.visible && personIds.contains(person.id)
-        }
-    }
-
-    val visibleFaction = remember(poi.factionId, factions) {
-        factions.firstOrNull { faction ->
-            faction.id == poi.factionId && faction.visible
+    val faction = remember(factions, poi.factionId) {
+        factions.firstOrNull {
+            it.id == poi.factionId && it.visible
         }
     }
 
@@ -79,18 +51,25 @@ fun PlayerPoiDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
+            /* ---------------- Titel ---------------- */
+
             Text(
                 text = poi.name,
                 fontSize = 24.sp
             )
 
+            /* ---------------- Öffentliche Beschreibung ---------------- */
+
             if (poi.description.isNotBlank()) {
-                Text(text = poi.description)
+                Text(
+                    text = poi.description,
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
 
-            /* ---------------- Fraktion (Spieler) ---------------- */
+            /* ---------------- Fraktion ---------------- */
 
-            if (visibleFaction != null) {
+            faction?.let {
                 HorizontalDivider()
 
                 Text(
@@ -99,33 +78,36 @@ fun PlayerPoiDetailScreen(
                 )
 
                 Text(
-                    text = visibleFaction.name,
+                    text = it.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            /* ---------------- Spieler-Notizen ---------------- */
+
+            if (poi.playerNotes.isNotBlank()) {
+                HorizontalDivider()
+
+                Text(
+                    text = "Notizen",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = poi.playerNotes,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
 
-            /* ---------------- Personen ---------------- */
-
-            if (visiblePersons.isNotEmpty()) {
-
-                HorizontalDivider()
-
-                Text(
-                    text = "Personen",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                visiblePersons.forEach { person ->
-                    Text(
-                        text = "• ${person.name}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPersonClick(person) }
-                            .padding(vertical = 4.dp)
-                    )
-                }
-            }
+            /* ----------------
+             * Personen absichtlich NICHT angezeigt
+             *
+             * Begründung:
+             * - Personen ↔ POI ist ein internes SL-Werkzeug
+             * - Spieler-UX soll aktuell nicht damit belastet werden
+             * - Reaktivierung später problemlos möglich
+             * ---------------- */
         }
     }
 }

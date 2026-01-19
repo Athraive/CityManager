@@ -7,6 +7,7 @@ package de.geier.citymanager.ui
  * Wenn factionId == null, gehört der POI zu keiner Fraktion.
  */
 data class PointOfInterest(
+
     /**
      * Eindeutige ID des POI.
      */
@@ -18,10 +19,13 @@ data class PointOfInterest(
     val name: String,
 
     /**
-     * Beschreibung des POI.
-     * Inhalt ist optional, darf leer sein.
+     * Öffentliche Beschreibung des POI.
+     *
+     * - vom Spielleiter gepflegt
+     * - für Spieler sichtbar
+     * - editierbar
      */
-    val description: String,
+    val description: String = "",
 
     /**
      * Kategorie-ID, zu der dieser POI gehört.
@@ -36,7 +40,7 @@ data class PointOfInterest(
     /**
      * Gibt an, ob der POI für Spieler sichtbar ist.
      */
-    val visible: Boolean,
+    val visible: Boolean = true,
 
     /**
      * Optionale Zuordnung zu einer Fraktion.
@@ -44,5 +48,22 @@ data class PointOfInterest(
      * - null  → keine Fraktion
      * - sonst → ID einer Faction
      */
-    val factionId: String? = null
+    val factionId: String? = null,
+
+    /**
+     * Spieler-Notizen zum POI.
+     *
+     * - von Spielern gepflegt
+     * - für Spieler sichtbar
+     * - für SL ebenfalls sichtbar
+     */
+    val playerNotes: String = "",
+
+    /**
+     * Interne Spielleiter-Notizen zum POI.
+     *
+     * - nur für den Spielleiter sichtbar
+     * - enthält Meta-, Plot- oder Geheim-Informationen
+     */
+    val gameMasterNotes: String = ""
 )

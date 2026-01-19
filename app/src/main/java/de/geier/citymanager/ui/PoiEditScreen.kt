@@ -1,6 +1,8 @@
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,7 +20,10 @@ fun PoiEditScreen(
     var description by remember { mutableStateOf(poi.description) }
     var visible by remember { mutableStateOf(poi.visible) }
 
-    // 🔹 Fraktionsauswahl
+    // 🔹 Notizen
+    var gameMasterNotes by remember { mutableStateOf(poi.gameMasterNotes) }
+
+    // 🔹 Fraktion
     var selectedFactionId by remember { mutableStateOf(poi.factionId) }
     var factionDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -28,14 +33,17 @@ fun PoiEditScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
         Text(
             text = "✏ POI bearbeiten",
             style = MaterialTheme.typography.headlineSmall
         )
+
+        /* ---------- Basisdaten ---------- */
 
         OutlinedTextField(
             value = name,
@@ -47,11 +55,13 @@ fun PoiEditScreen(
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text("Beschreibung") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Öffentliche Beschreibung (für Spieler sichtbar)") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
         )
 
-        // 🔹 Fraktions-Dropdown
+        /* ---------- Fraktion ---------- */
+
         ExposedDropdownMenuBox(
             expanded = factionDropdownExpanded,
             onExpandedChange = { factionDropdownExpanded = !factionDropdownExpanded }
@@ -93,9 +103,7 @@ fun PoiEditScreen(
             }
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Checkbox(
                 checked = visible,
                 onCheckedChange = { visible = it }
@@ -103,11 +111,26 @@ fun PoiEditScreen(
             Text("Für Spieler sichtbar")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider()
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        /* ---------- Spielleiter-Notizen ---------- */
+
+        Text(
+            text = "Spielleiter-Notizen",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        OutlinedTextField(
+            value = gameMasterNotes,
+            onValueChange = { gameMasterNotes = it },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 4,
+            label = { Text("Nur für den Spielleiter sichtbar") }
+        )
+
+        /* ---------- Aktionen ---------- */
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(
                 enabled = name.isNotBlank(),
                 onClick = {
@@ -116,7 +139,8 @@ fun PoiEditScreen(
                             name = name,
                             description = description,
                             visible = visible,
-                            factionId = selectedFactionId
+                            factionId = selectedFactionId,
+                            gameMasterNotes = gameMasterNotes
                         )
                     )
                 }

@@ -41,7 +41,7 @@ fun CityScreen(
         factory = PersonViewModelFactory(context)
     )
 
-    // ✅ EINZIGE Quelle für Fraktionen
+    // ✅ EINZIGE Quelle für Fraktionen (App-weit)
     val factionViewModel: FactionViewModel = viewModel(
         factory = FactionViewModelFactory()
     )
@@ -60,6 +60,7 @@ fun CityScreen(
                 onTabSelected = { tab ->
                     activeTab = tab
 
+                    // expliziter Reset beim Wechsel in Personen
                     if (tab == CityTab.PERSONS) {
                         personViewModel.clearSelection()
                     }
@@ -75,32 +76,39 @@ fun CityScreen(
         ) {
             when (activeTab) {
 
+                /* ---------------- Über die Stadt ---------------- */
+
                 CityTab.CITY -> {
                     CityOverviewTab(
                         cityViewModel = cityViewModel
                     )
                 }
 
+                /* ---------------- Personen ---------------- */
+
                 CityTab.PERSONS -> {
                     PersonenTab(
                         viewModel = personViewModel,
-                        factions = factions,      // ✅ jetzt dynamisch
+                        factions = factions,
                         pois = emptyList(),
                         categories = emptyList(),
                         isGameMaster = isGameMaster
                     )
                 }
 
+                /* ---------------- POIs ---------------- */
+
                 CityTab.POIS -> {
                     PoiTab(
                         cityViewModel = cityViewModel,
-                        personViewModel = personViewModel,
+                        factions = factions,
                         isGameMaster = isGameMaster
                     )
                 }
 
+                /* ---------------- Fraktionen ---------------- */
+
                 CityTab.FACTIONS -> {
-                    // ✅ KEIN eigenes ViewModel mehr im Tab
                     FraktionenTab(
                         isGameMaster = isGameMaster
                     )

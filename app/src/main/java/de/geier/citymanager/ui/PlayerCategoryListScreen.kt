@@ -10,15 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.CityViewModel
-import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 @Composable
 fun PlayerCategoryListScreen(
     cityViewModel: CityViewModel,
     categoryViewModel: PoiCategoryViewModel,
-    persons: List<Person>,
-    factions: List<Faction>,              // ✅ NEU
-    personViewModel: PersonViewModel
+    factions: List<Faction>
 ) {
     val categories by categoryViewModel.categories.collectAsState()
 
@@ -46,7 +43,7 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------------- POIs (Spieler-Flow) ---------------- */
+        /* ---------------- POIs ---------------- */
 
     } else if (selectedPoi == null) {
 
@@ -88,9 +85,7 @@ fun PlayerCategoryListScreen(
 
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
-            persons = persons,
-            factions = factions,            // ✅ DURCHGEREICHT
-            onPersonClick = { personViewModel.selectPerson(it) },
+            factions = factions,
             onBack = { selectedPoi = null }
         )
     }
