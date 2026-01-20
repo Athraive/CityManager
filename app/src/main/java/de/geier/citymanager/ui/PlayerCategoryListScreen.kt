@@ -79,13 +79,16 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------------- POI-Detail ---------------- */
+        /* ---------------- POI-Detail (Spieler) ---------------- */
 
     } else {
 
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
+            onSave = { updatedPoi ->
+                cityViewModel.savePoi(updatedPoi)
+            },
             onBack = { selectedPoi = null }
         )
     }

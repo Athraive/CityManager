@@ -16,15 +16,24 @@ import androidx.compose.ui.unit.sp
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     factions: List<Faction>,
+    onSave: (PointOfInterest) -> Unit,
     onBack: () -> Unit
 ) {
-    /* ---------------- Fraktion (Spielersicht) ---------------- */
+    /* ---------------- State ---------------- */
+
+    var playerNotes by remember(poi.id) {
+        mutableStateOf(poi.playerNotes)
+    }
+
+    /* ---------------- Fraktion (nur sichtbar) ---------------- */
 
     val faction = remember(factions, poi.factionId) {
         factions.firstOrNull {
             it.id == poi.factionId && it.visible
         }
     }
+
+    /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
@@ -35,7 +44,13 @@ fun PlayerPoiDetailScreen(
                         text = "←",
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
+                            .clickable {
+                                // ✅ explizites Speichern beim Verlassen
+                                onSave(
+                                    poi.copy(playerNotes = playerNotes)
+                                )
+                                onBack()
+                            }
                     )
                 }
             )
@@ -86,28 +101,22 @@ fun PlayerPoiDetailScreen(
 
             /* ---------------- Spieler-Notizen ---------------- */
 
-            if (poi.playerNotes.isNotBlank()) {
-                HorizontalDivider()
+            HorizontalDivider()
 
-                Text(
-                    text = "Notizen",
-                    style = MaterialTheme.typography.titleMedium
-                )
+            Text(
+                text = "Notizen",
+                style = MaterialTheme.typography.titleMedium
+            )
 
-                Text(
-                    text = poi.playerNotes,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-
-            /* ----------------
-             * Personen absichtlich NICHT angezeigt
-             *
-             * Begründung:
-             * - Personen ↔ POI ist ein internes SL-Werkzeug
-             * - Spieler-UX soll aktuell nicht damit belastet werden
-             * - Reaktivierung später problemlos möglich
-             * ---------------- */
+            OutlinedTextField(
+                value = playerNotes,
+                onValueChange = { playerNotes = it },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 4,
+                placeholder = {
+                    Text("Deine Notizen zu diesem Ort …")
+                }
+            )
         }
     }
 }

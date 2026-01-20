@@ -1,14 +1,13 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PoiEditScreen(
     poi: PointOfInterest,
@@ -16,30 +15,38 @@ fun PoiEditScreen(
     onSave: (PointOfInterest) -> Unit,
     onCancel: () -> Unit
 ) {
-    var name by remember { mutableStateOf(poi.name) }
-    var description by remember { mutableStateOf(poi.description) }
-    var visible by remember { mutableStateOf(poi.visible) }
+    /* ---------------- State ---------------- */
 
-    // 🔹 Notizen
-    var gameMasterNotes by remember { mutableStateOf(poi.gameMasterNotes) }
+    var name by remember(poi.id) { mutableStateOf(poi.name) }
+    var description by remember(poi.id) { mutableStateOf(poi.description) }
+    var visible by remember(poi.id) { mutableStateOf(poi.visible) }
 
-    // 🔹 Fraktion
-    var selectedFactionId by remember { mutableStateOf(poi.factionId) }
+    var gameMasterNotes by remember(poi.id) {
+        mutableStateOf(poi.gameMasterNotes)
+    }
+
+    /* ---------------- Fraktion ---------------- */
+
+    var selectedFactionId by remember(poi.id) {
+        mutableStateOf(poi.factionId)
+    }
     var factionDropdownExpanded by remember { mutableStateOf(false) }
 
     val selectedFactionName =
-        factions.firstOrNull { it.id == selectedFactionId }?.name ?: "Keine Fraktion"
+        factions.firstOrNull { it.id == selectedFactionId }?.name
+            ?: "Keine Fraktion"
+
+    /* ---------------- UI ---------------- */
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
         Text(
-            text = "✏ POI bearbeiten",
+            text = "POI bearbeiten",
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -55,7 +62,7 @@ fun PoiEditScreen(
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text("Öffentliche Beschreibung (für Spieler sichtbar)") },
+            label = { Text("Öffentliche Beschreibung") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -113,10 +120,29 @@ fun PoiEditScreen(
 
         HorizontalDivider()
 
-        /* ---------- Spielleiter-Notizen ---------- */
+        /* ---------- Spieler-Notizen (read-only) ---------- */
+
+        if (poi.playerNotes.isNotBlank()) {
+            Text(
+                text = "Spieler-Notizen",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            OutlinedTextField(
+                value = poi.playerNotes,
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
+            )
+
+            HorizontalDivider()
+        }
+
+        /* ---------- SL-Notizen ---------- */
 
         Text(
-            text = "Spielleiter-Notizen",
+            text = "SL-Notizen",
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -125,8 +151,12 @@ fun PoiEditScreen(
             onValueChange = { gameMasterNotes = it },
             modifier = Modifier.fillMaxWidth(),
             minLines = 4,
-            label = { Text("Nur für den Spielleiter sichtbar") }
+            placeholder = {
+                Text("Interne Notizen, Plot-Hinweise, Geheimnisse …")
+            }
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         /* ---------- Aktionen ---------- */
 
