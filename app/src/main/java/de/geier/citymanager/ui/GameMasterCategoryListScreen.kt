@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,31 +30,39 @@ fun GameMasterCategoryListScreen(
     var createPoiForCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var editPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
-    /* ---------------- Kategorien ---------------- */
+    /* ---------------- Scaffold ---------------- */
 
-    if (selectedCategory == null) {
-
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            Button(
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
                 onClick = {
-                    categoryViewModel.save(
-                        PoiCategory(
-                            id = UUID.randomUUID().toString(),
-                            title = "Neue Kategorie",
-                            icon = "📁",
-                            visible = true
+                    if (selectedCategory == null) {
+                        categoryViewModel.save(
+                            PoiCategory(
+                                id = UUID.randomUUID().toString(),
+                                title = "Neue Kategorie",
+                                icon = "📁",
+                                visible = true
+                            )
                         )
-                    )
-                },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
+                    } else {
+                        createPoiForCategory = selectedCategory
+                    }
+                }
             ) {
-                Text("➕ Kategorie hinzufügen")
+                Icon(Icons.Default.Add, contentDescription = "Hinzufügen")
             }
+        }
+    ) { padding ->
+
+        if (selectedCategory == null) {
+
+            /* ---------------- Kategorien ---------------- */
 
             LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -76,50 +86,45 @@ fun GameMasterCategoryListScreen(
                     }
                 }
             }
-        }
 
-    } else {
+        } else {
 
-        /* ---------------- POIs ---------------- */
+            /* ---------------- POIs ---------------- */
 
-        val poisInCategory =
-            allPois.filter { it.categoryId == selectedCategory!!.id }
+            val poisInCategory =
+                allPois.filter { it.categoryId == selectedCategory!!.id }
 
-        Column {
-
-            Text(
-                text = "← ${selectedCategory!!.title}",
+            Column(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .clickable { selectedCategory = null }
-            )
-
-            Button(
-                onClick = { createPoiForCategory = selectedCategory },
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(padding)
             ) {
-                Text("➕ POI hinzufügen")
-            }
 
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(poisInCategory) { poi ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "• ${poi.name}",
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "✏",
-                            modifier = Modifier.clickable { editPoi = poi }
-                        )
+                Text(
+                    text = "← ${selectedCategory!!.title}",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .clickable { selectedCategory = null }
+                )
+
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(poisInCategory) { poi ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "• ${poi.name}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "✏",
+                                modifier = Modifier.clickable { editPoi = poi }
+                            )
+                        }
                     }
                 }
             }
@@ -132,8 +137,8 @@ fun GameMasterCategoryListScreen(
         EditCategoryDialog(
             category = category,
             onDismiss = { editCategory = null },
-            onSave = {
-                categoryViewModel.save(it)
+            onSave = { updated ->
+                categoryViewModel.save(updated)
                 editCategory = null
             }
         )
@@ -143,8 +148,8 @@ fun GameMasterCategoryListScreen(
         CreatePoiDialog(
             categoryId = category.id,
             onDismiss = { createPoiForCategory = null },
-            onSave = {
-                cityViewModel.savePoi(it)
+            onSave = { poi ->
+                cityViewModel.savePoi(poi)
                 createPoiForCategory = null
             }
         )
@@ -155,8 +160,8 @@ fun GameMasterCategoryListScreen(
             poi = poi,
             factions = factions,
             onDismiss = { editPoi = null },
-            onSave = {
-                cityViewModel.savePoi(it)
+            onSave = { updated ->
+                cityViewModel.savePoi(updated)
                 editPoi = null
             }
         )

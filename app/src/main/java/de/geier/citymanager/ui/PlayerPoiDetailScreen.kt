@@ -2,15 +2,15 @@
 
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun PlayerPoiDetailScreen(
@@ -40,18 +40,12 @@ fun PlayerPoiDetailScreen(
             TopAppBar(
                 title = { Text(poi.name) },
                 navigationIcon = {
-                    Text(
-                        text = "←",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable {
-                                // ✅ explizites Speichern beim Verlassen
-                                onSave(
-                                    poi.copy(playerNotes = playerNotes)
-                                )
-                                onBack()
-                            }
-                    )
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
+                    }
                 }
             )
         }
@@ -66,43 +60,36 @@ fun PlayerPoiDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------------- Titel ---------------- */
-
-            Text(
-                text = poi.name,
-                fontSize = 24.sp
-            )
-
-            /* ---------------- Öffentliche Beschreibung ---------------- */
+            /* ---------- Beschreibung ---------- */
 
             if (poi.description.isNotBlank()) {
+                Text(
+                    text = "Beschreibung",
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Text(
                     text = poi.description,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
 
-            /* ---------------- Fraktion ---------------- */
+            /* ---------- Fraktion ---------- */
 
             faction?.let {
                 HorizontalDivider()
-
                 Text(
                     text = "Fraktion",
                     style = MaterialTheme.typography.titleMedium
                 )
-
                 Text(
                     text = it.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
 
-            /* ---------------- Spieler-Notizen ---------------- */
+            /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-
             Text(
                 text = "Notizen",
                 style = MaterialTheme.typography.titleMedium
@@ -117,6 +104,19 @@ fun PlayerPoiDetailScreen(
                     Text("Deine Notizen zu diesem Ort …")
                 }
             )
+
+            /* ---------- Speichern ---------- */
+
+            Button(
+                onClick = {
+                    onSave(
+                        poi.copy(playerNotes = playerNotes)
+                    )
+                    onBack()
+                }
+            ) {
+                Text("Speichern")
+            }
         }
     }
 }

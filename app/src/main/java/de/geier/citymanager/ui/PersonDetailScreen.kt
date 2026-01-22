@@ -1,17 +1,18 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonDetailScreen(
     person: Person,
@@ -57,19 +58,19 @@ fun PersonDetailScreen(
         }
     }
 
-    /* ---------------- Layout ---------------- */
+    /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(person.name) },
                 navigationIcon = {
-                    Text(
-                        text = "←",
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable { onBack() }
-                    )
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
+                    }
                 }
             )
         }
@@ -84,11 +85,12 @@ fun PersonDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            Text(text = person.name, fontSize = 24.sp)
-
             /* ---------- Beschreibung ---------- */
 
-            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Beschreibung",
+                style = MaterialTheme.typography.titleMedium
+            )
 
             if (isGameMaster) {
                 OutlinedTextField(
@@ -98,14 +100,15 @@ fun PersonDetailScreen(
                     minLines = 3
                 )
             } else if (description.isNotBlank()) {
-                Text(description)
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
 
-            /* ---------- Sichtbarkeit ---------- */
+            /* ---------- Sichtbarkeit (GM) ---------- */
 
             if (isGameMaster) {
-                HorizontalDivider()
-
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
                         checked = visible,
@@ -118,7 +121,10 @@ fun PersonDetailScreen(
             /* ---------- Fraktion ---------- */
 
             HorizontalDivider()
-            Text("Fraktion", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Fraktion",
+                style = MaterialTheme.typography.titleMedium
+            )
 
             if (isGameMaster) {
                 val selectedFactionName =
@@ -139,7 +145,9 @@ fun PersonDetailScreen(
                                 expanded = factionDropdownExpanded
                             )
                         },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
@@ -169,15 +177,21 @@ fun PersonDetailScreen(
                 factions.firstOrNull {
                     it.id == selectedFactionId && it.visible
                 }?.let {
-                    Text(it.name)
+                    Text(
+                        text = it.name,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
 
-            /* ---------- POI-Zuordnung ---------- */
+            /* ---------- Beziehungen (POIs) ---------- */
 
             if (isGameMaster && pois.isNotEmpty()) {
                 HorizontalDivider()
-                Text("Zugeordnete Orte (POIs)", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "Zugeordnete Orte",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 pois.forEach { poi ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -192,7 +206,10 @@ fun PersonDetailScreen(
 
             if (!isGameMaster && visibleAssignedPois.isNotEmpty()) {
                 HorizontalDivider()
-                Text("Orte", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "Orte",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
                 visibleAssignedPois.forEach { poi ->
                     Text("• ${poi.name}")
@@ -202,7 +219,10 @@ fun PersonDetailScreen(
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-            Text("Notizen", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Notizen",
+                style = MaterialTheme.typography.titleMedium
+            )
 
             Text("Spieler-Notizen")
             OutlinedTextField(
@@ -213,7 +233,6 @@ fun PersonDetailScreen(
             )
 
             if (isGameMaster) {
-                Spacer(Modifier.height(8.dp))
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,
@@ -236,6 +255,7 @@ fun PersonDetailScreen(
                             visible = visible
                         )
                     )
+                    onBack()
                 }
             ) {
                 Text("Speichern")
