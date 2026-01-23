@@ -63,7 +63,10 @@ fun PersonenTab(
             onBack = { viewModel.clearSelection() },
             isGameMaster = isGameMaster,
             pois = hardenedPois,
-            categories = categories
+            categories = categories,
+            onDelete = { personToDelete ->
+                viewModel.delete(personToDelete)
+            }
         )
         return
     }
@@ -100,7 +103,10 @@ fun PersonenTab(
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(persons) { person ->
+                items(
+                    items = persons,
+                    key = { it.id } // ✅ WICHTIG: stabiler Key für korrektes Löschen
+                ) { person ->
 
                     val faction = factions.firstOrNull { it.id == person.factionId }
                     val showFaction =
