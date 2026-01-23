@@ -26,17 +26,41 @@ fun GameMasterCategoryListScreen(
     val factions by cityViewModel.factions.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
+    var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
     var editCategory by remember { mutableStateOf<PoiCategory?>(null) }
-    var createPoiForCategory by remember { mutableStateOf<PoiCategory?>(null) }
-    var editPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
-    /* ---------------- Scaffold ---------------- */
+    /* ------------------------------------------------------------------ */
+    /* POI DETAIL (SL)                                                     */
+    /* ------------------------------------------------------------------ */
+
+    if (selectedPoi != null) {
+        PlayerPoiDetailScreen(
+            poi = selectedPoi!!,
+            factions = factions,
+            isGameMaster = true,
+            categoryTitle = selectedCategory?.title, // 👈 DAS FEHLTE
+            onSave = { updated ->
+                cityViewModel.savePoi(updated)
+            },
+            onDelete = { poi ->
+                cityViewModel.deletePoi(poi)
+            },
+            onBack = { selectedPoi = null }
+        )
+
+        return
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* LIST / KATEGORIEN                                                   */
+    /* ------------------------------------------------------------------ */
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     if (selectedCategory == null) {
+                        // Neue Kategorie
                         categoryViewModel.save(
                             PoiCategory(
                                 id = UUID.randomUUID().toString(),
@@ -46,7 +70,18 @@ fun GameMasterCategoryListScreen(
                             )
                         )
                     } else {
-                        createPoiForCategory = selectedCategory
+                        // Neuer POI → DIREKT Detail-Screen
+                        selectedPoi = PointOfInterest(
+                            id = UUID.randomUUID().toString(),
+                            name = "",
+                            description = "",
+                            categoryId = selectedCategory!!.id,
+                            visible = true,
+                            factionId = null,
+                            playerNotes = "",
+                            gameMasterNotes = "",
+                            type = PoiType.LOCATION
+                        )
                     }
                 }
             ) {
@@ -81,7 +116,9 @@ fun GameMasterCategoryListScreen(
                         )
                         Text(
                             text = "✏",
-                            modifier = Modifier.clickable { editCategory = category }
+                            modifier = Modifier.clickable {
+                                editCategory = category
+                            }
                         )
                     }
                 }
@@ -113,17 +150,12 @@ fun GameMasterCategoryListScreen(
                 ) {
                     items(poisInCategory) { poi ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedPoi = poi }
+                                .padding(vertical = 8.dp)
                         ) {
-                            Text(
-                                text = "• ${poi.name}",
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = "✏",
-                                modifier = Modifier.clickable { editPoi = poi }
-                            )
+                            Text("• ${poi.name}")
                         }
                     }
                 }
@@ -131,7 +163,9 @@ fun GameMasterCategoryListScreen(
         }
     }
 
-    /* ---------------- Dialoge ---------------- */
+    /* ------------------------------------------------------------------ */
+    /* DIALOGE                                                            */
+    /* ------------------------------------------------------------------ */
 
     editCategory?.let { category ->
         EditCategoryDialog(
@@ -143,34 +177,11 @@ fun GameMasterCategoryListScreen(
             }
         )
     }
-
-    createPoiForCategory?.let { category ->
-        CreatePoiDialog(
-            categoryId = category.id,
-            onDismiss = { createPoiForCategory = null },
-            onSave = { poi ->
-                cityViewModel.savePoi(poi)
-                createPoiForCategory = null
-            }
-        )
-    }
-
-    editPoi?.let { poi ->
-        EditPoiDialog(
-            poi = poi,
-            factions = factions,
-            onDismiss = { editPoi = null },
-            onSave = { updated ->
-                cityViewModel.savePoi(updated)
-                editPoi = null
-            }
-        )
-    }
 }
 
-/* ========================================================================== */
-/*                                   DIALOGE                                  */
-/* ========================================================================== */
+/* ====================================================================== */
+/* DIALOGE                                                                */
+/* ====================================================================== */
 
 @Composable
 private fun EditCategoryDialog(
@@ -183,17 +194,6 @@ private fun EditCategoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(
-                enabled = title.isNotBlank(),
-                onClick = {
-                    onSave(category.copy(title = title, visible = visible))
-                }
-            ) { Text("Speichern") }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Abbrechen") }
-        },
         title = { Text("Kategorie bearbeiten") },
         text = {
             Column {
@@ -210,165 +210,18 @@ private fun EditCategoryDialog(
                     Text("Für Spieler sichtbar")
                 }
             }
-        }
-    )
-}
-
-@Composable
-private fun CreatePoiDialog(
-    categoryId: String,
-    onDismiss: () -> Unit,
-    onSave: (PointOfInterest) -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
+        },
         confirmButton = {
             Button(
-                enabled = name.isNotBlank(),
+                enabled = title.isNotBlank(),
                 onClick = {
-                    onSave(
-                        PointOfInterest(
-                            id = UUID.randomUUID().toString(),
-                            name = name,
-                            categoryId = categoryId,
-                            type = PoiType.LOCATION
-                        )
-                    )
-                }
-            ) { Text("Anlegen") }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Abbrechen") }
-        },
-        title = { Text("POI anlegen") },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") }
-            )
-        }
-    )
-}
-
-@Composable
-private fun EditPoiDialog(
-    poi: PointOfInterest,
-    factions: List<Faction>,
-    onDismiss: () -> Unit,
-    onSave: (PointOfInterest) -> Unit
-) {
-    var name by remember { mutableStateOf(poi.name) }
-    var description by remember { mutableStateOf(poi.description) }
-    var playerNotes by remember { mutableStateOf(poi.playerNotes) }
-    var gmNotes by remember { mutableStateOf(poi.gameMasterNotes) }
-    var visible by remember { mutableStateOf(poi.visible) }
-    var factionId by remember { mutableStateOf(poi.factionId) }
-    var expanded by remember { mutableStateOf(false) }
-
-    val factionName =
-        factions.firstOrNull { it.id == factionId }?.name ?: "Keine Fraktion"
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            Button(
-                enabled = name.isNotBlank(),
-                onClick = {
-                    onSave(
-                        poi.copy(
-                            name = name,
-                            description = description,
-                            visible = visible,
-                            factionId = factionId,
-                            playerNotes = playerNotes,
-                            gameMasterNotes = gmNotes
-                        )
-                    )
+                    onSave(category.copy(title = title, visible = visible))
                 }
             ) { Text("Speichern") }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Abbrechen") }
-        },
-        title = { Text("POI bearbeiten") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") }
-                )
-
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Öffentliche Beschreibung") },
-                    minLines = 3
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = factionName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Fraktion") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                        },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Keine Fraktion") },
-                            onClick = {
-                                factionId = null
-                                expanded = false
-                            }
-                        )
-                        factions.forEach { faction ->
-                            DropdownMenuItem(
-                                text = { Text(faction.name) },
-                                onClick = {
-                                    factionId = faction.id
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = playerNotes,
-                    onValueChange = { playerNotes = it },
-                    label = { Text("Spieler-Notizen") },
-                    minLines = 3
-                )
-
-                OutlinedTextField(
-                    value = gmNotes,
-                    onValueChange = { gmNotes = it },
-                    label = { Text("SL-Notizen (intern)") },
-                    minLines = 3
-                )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = visible,
-                        onCheckedChange = { visible = it }
-                    )
-                    Text("Für Spieler sichtbar")
-                }
+            OutlinedButton(onClick = onDismiss) {
+                Text("Abbrechen")
             }
         }
     )

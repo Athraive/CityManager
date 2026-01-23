@@ -86,9 +86,11 @@ fun PlayerCategoryListScreen(
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
+            isGameMaster = false,          // ✅ explizit Spieler
             onSave = { updatedPoi ->
                 cityViewModel.savePoi(updatedPoi)
             },
+            onDelete = {},                 // ✅ Spieler können nicht löschen
             onBack = { selectedPoi = null }
         )
     }
