@@ -4,11 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
-import de.geier.citymanager.data.repository.CityDistrictRepositoryImpl
-import de.geier.citymanager.data.repository.CityLoreRepository
-import de.geier.citymanager.data.repository.PoiCategoryRepository
-import de.geier.citymanager.data.repository.PointOfInterestRepository
-import de.geier.citymanager.ui.FactionRepository
+import de.geier.citymanager.data.repository.*
 
 class CityViewModelFactory(
     private val context: Context
@@ -16,7 +12,6 @@ class CityViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-
         if (modelClass.isAssignableFrom(CityViewModel::class.java)) {
 
             val database = DatabaseProvider.getDatabase(context)
@@ -29,7 +24,7 @@ class CityViewModelFactory(
                     PointOfInterestRepository(database.pointOfInterestDao()),
 
                 factionRepository =
-                    FactionRepository(),
+                    FactionRepositoryImpl(database.factionDao()),
 
                 cityDistrictRepository =
                     CityDistrictRepositoryImpl(database.cityDistrictDao()),
@@ -39,8 +34,6 @@ class CityViewModelFactory(
             ) as T
         }
 
-        throw IllegalArgumentException(
-            "Unknown ViewModel class: ${modelClass.name}"
-        )
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

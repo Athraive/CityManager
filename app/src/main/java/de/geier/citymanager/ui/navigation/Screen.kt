@@ -1,20 +1,17 @@
 package de.geier.citymanager.ui.navigation
 
-/**
- * Zentrale Screen-Definition für echte NavHost-Wechsel.
- *
- * Hinweis:
- * - Fach-Tabs (Personen, POIs, Fraktionen, Stadt) sind bewusst
- *   NICHT hier modelliert.
- * - Diese werden state-basiert innerhalb von CityScreen gesteuert.
- */
 sealed class Screen(val route: String) {
 
-    // ─────────────────────────────
-    // App-Start & Kontextwahl
-    // ─────────────────────────────
-
     object Start : Screen("start")
+    object RoleSelect : Screen("role_select")
 
-    object RoleSelect : Screen("role")
+    object City : Screen("city")
+
+    object PersonDetail : Screen("person/{id}") {
+        fun createRoute(id: String) = "person/$id"
+    }
+
+    object PoiDetail : Screen("poi/{id}") {
+        fun createRoute(id: String) = "poi/$id"
+    }
 }

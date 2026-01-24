@@ -15,16 +15,14 @@ import de.geier.citymanager.data.entity.*
         PersonEntity::class,
         PersonPoiCrossRef::class,
 
-        // Fraktionen (neu)
+        // Fraktionen
         FactionEntity::class,
-        PersonFactionCrossRef::class,
-        PoiFactionCrossRef::class,
 
         // Stadt
         CityDistrictEntity::class,
         CityLoreEntity::class
     ],
-    version = 8,
+    version = 10, // 🔺 Version erhöhen (wichtig!)
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,10 +35,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun personDao(): PersonDao
     abstract fun personPoiDao(): PersonPoiDao
 
-    // Fraktionen (neu)
+    // Fraktionen
     abstract fun factionDao(): FactionDao
-    abstract fun personFactionDao(): PersonFactionDao
-    abstract fun poiFactionDao(): PoiFactionDao
 
     // Stadt
     abstract fun cityDistrictDao(): CityDistrictDao

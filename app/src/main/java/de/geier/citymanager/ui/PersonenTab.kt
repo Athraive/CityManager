@@ -28,11 +28,7 @@ fun PersonenTab(
     /* ---------------- Personenquelle ---------------- */
 
     val persons = remember(allPersons, visiblePersonsForPlayer, isGameMaster) {
-        if (isGameMaster) {
-            allPersons
-        } else {
-            visiblePersonsForPlayer
-        }
+        if (isGameMaster) allPersons else visiblePersonsForPlayer
     }
 
     /* ---------------- POI-Härtung ---------------- */
@@ -50,8 +46,6 @@ fun PersonenTab(
             }
         }
     }
-
-    var showCreateDialog by remember { mutableStateOf(false) }
 
     /* ---------------- DETAIL ---------------- */
 
@@ -77,12 +71,22 @@ fun PersonenTab(
         floatingActionButton = {
             if (isGameMaster) {
                 FloatingActionButton(
-                    onClick = { showCreateDialog = true }
+                    onClick = {
+                        viewModel.selectPerson(
+                            Person(
+                                id = UUID.randomUUID().toString(),
+                                name = "",
+                                description = "",
+                                portraitImageUri = null,
+                                visible = true,
+                                factionId = null,
+                                playerNotes = "",
+                                gameMasterNotes = ""
+                            )
+                        )
+                    }
                 ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Person anlegen"
-                    )
+                    Icon(Icons.Default.Add, contentDescription = "Person anlegen")
                 }
             }
         }
@@ -105,9 +109,8 @@ fun PersonenTab(
             ) {
                 items(
                     items = persons,
-                    key = { it.id } // ✅ WICHTIG: stabiler Key für korrektes Löschen
+                    key = { it.id }
                 ) { person ->
-
                     val faction = factions.firstOrNull { it.id == person.factionId }
                     val showFaction =
                         faction != null && (isGameMaster || faction.visible)
@@ -118,9 +121,8 @@ fun PersonenTab(
                             .clickable { viewModel.selectPerson(person) }
                             .padding(16.dp)
                     ) {
-
                         Text(
-                            text = person.name,
+                            text = person.name.ifBlank { "Unbenannte Person" },
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -144,77 +146,4 @@ fun PersonenTab(
             }
         }
     }
-
-    /* ---------------- CREATE (SL only) ---------------- */
-
-    if (showCreateDialog) {
-        CreatePersonDialog(
-            onCreate = { name, description ->
-                viewModel.save(
-                    Person(
-                        id = UUID.randomUUID().toString(),
-                        name = name,
-                        description = description ?: "",
-                        visible = true,
-                        factionId = null,
-                        playerNotes = "",
-                        gameMasterNotes = ""
-                    )
-                )
-                showCreateDialog = false
-            },
-            onDismiss = { showCreateDialog = false }
-        )
-    }
-}
-
-/* ---------------- Dialog ---------------- */
-
-@Composable
-private fun CreatePersonDialog(
-    onCreate: (name: String, description: String?) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Neue Person") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name*") },
-                    singleLine = true
-                )
-
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Beschreibung") },
-                    minLines = 3
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank(),
-                onClick = {
-                    onCreate(
-                        name.trim(),
-                        description.takeIf { it.isNotBlank() }
-                    )
-                }
-            ) {
-                Text("Anlegen")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
-            }
-        }
-    )
 }

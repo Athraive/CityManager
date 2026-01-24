@@ -1,21 +1,23 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import de.geier.citymanager.ui.components.AppTopBar
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
-import de.geier.citymanager.ui.viewmodel.FactionViewModel
-import de.geier.citymanager.ui.viewmodel.FactionViewModelFactory
+import de.geier.citymanager.ui.PersonViewModelFactory
 
 /**
  * Zentrale Tab-Definition für die CityScreen-Navigation.
- * Jeder Tab ist ein logischer Root.
  */
 enum class CityTab {
     CITY,
@@ -29,38 +31,39 @@ fun CityScreen(
     cityViewModel: CityViewModel,
     isGameMaster: Boolean
 ) {
+    /* ---------------- Context ---------------- */
+
+    val context = LocalContext.current
+
     /* ---------------- Tab-State ---------------- */
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
 
     /* ---------------- ViewModels ---------------- */
 
-    val context = LocalContext.current
-
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(context)
     )
 
-    // ✅ EINZIGE Quelle für Fraktionen (App-weit)
-    val factionViewModel: FactionViewModel = viewModel(
-        factory = FactionViewModelFactory()
-    )
-
     /* ---------------- Gemeinsame States ---------------- */
 
-    val factions by factionViewModel.factions.collectAsState()
+    val factions by cityViewModel.factions.collectAsState()
 
     /* ---------------- Layout ---------------- */
 
     Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "CityManager",
+                isGameMaster = isGameMaster
+            )
+        },
         bottomBar = {
             CityBottomBar(
                 activeTab = activeTab,
                 isGameMaster = isGameMaster,
                 onTabSelected = { tab ->
                     activeTab = tab
-
-                    // expliziter Reset beim Wechsel in Personen
                     if (tab == CityTab.PERSONS) {
                         personViewModel.clearSelection()
                     }
@@ -76,15 +79,9 @@ fun CityScreen(
         ) {
             when (activeTab) {
 
-                /* ---------------- Über die Stadt ---------------- */
-
                 CityTab.CITY -> {
-                    CityOverviewTab(
-                        cityViewModel = cityViewModel
-                    )
+                    CityOverviewTab(cityViewModel)
                 }
-
-                /* ---------------- Personen ---------------- */
 
                 CityTab.PERSONS -> {
                     PersonenTab(
@@ -96,8 +93,6 @@ fun CityScreen(
                     )
                 }
 
-                /* ---------------- POIs ---------------- */
-
                 CityTab.POIS -> {
                     PoiTab(
                         cityViewModel = cityViewModel,
@@ -106,11 +101,12 @@ fun CityScreen(
                     )
                 }
 
-                /* ---------------- Fraktionen ---------------- */
-
                 CityTab.FACTIONS -> {
                     FraktionenTab(
-                        isGameMaster = isGameMaster
+                        isGameMaster = isGameMaster,
+                        factions = factions,
+                        onSave = { cityViewModel.saveFaction(it) },
+                        onDelete = { cityViewModel.deleteFaction(it) }
                     )
                 }
             }

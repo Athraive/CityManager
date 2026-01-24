@@ -8,18 +8,18 @@ import de.geier.citymanager.data.repository.CityDistrictRepository
 import de.geier.citymanager.data.repository.CityLoreRepository
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
+import de.geier.citymanager.data.repository.FactionRepositoryImpl
 import de.geier.citymanager.ui.Faction
-import de.geier.citymanager.ui.FactionRepository
+import de.geier.citymanager.ui.PointOfInterest
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import de.geier.citymanager.ui.PointOfInterest
 
 class CityViewModel(
     private val poiCategoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
-    private val factionRepository: FactionRepository,
+    private val factionRepository: FactionRepositoryImpl,
     private val cityDistrictRepository: CityDistrictRepository,
     private val cityLoreRepository: CityLoreRepository
 ) : ViewModel() {
@@ -52,11 +52,11 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- Stadtviertel (KORREKT) ---------------- */
+    /* ---------------- Stadtviertel ---------------- */
 
     fun districtsForCity(cityId: String): StateFlow<List<CityDistrictEntity>> =
         cityDistrictRepository
-            .getDistrictsForCity(cityId)   // ✅ exakt dein Interface
+            .getDistrictsForCity(cityId)
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -65,7 +65,7 @@ class CityViewModel(
 
     fun districtById(districtId: String): StateFlow<CityDistrictEntity?> =
         cityDistrictRepository
-            .getDistrictById(districtId)   // ✅ exakt dein Interface
+            .getDistrictById(districtId)
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -84,19 +84,29 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- Fraktionen ---------------- */
-
-    fun saveFaction(faction: Faction) {
-        factionRepository.save(faction)
-    }
+    /* ---------------- Fraktionen (ROOM) ---------------- */
 
     val factions: StateFlow<List<Faction>> =
-        factionRepository.factions
+        factionRepository
+            .getAll()
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
+
+    fun saveFaction(faction: Faction) {
+        viewModelScope.launch {
+            factionRepository.save(faction)
+        }
+    }
+
+    fun deleteFaction(faction: Faction) {
+        viewModelScope.launch {
+            factionRepository.delete(faction)
+        }
+    }
+
     /* ---------------- POIs ---------------- */
 
     fun savePoi(poi: PointOfInterest) {
@@ -110,6 +120,7 @@ class CityViewModel(
             poiRepository.delete(poi)
         }
     }
+
     fun visiblePoisForPlayerByCategory(
         categoryId: String
     ): StateFlow<List<PointOfInterest>> =
@@ -120,14 +131,13 @@ class CityViewModel(
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
-    /* ---------------- POIs ---------------- */
 
     val allPois: StateFlow<List<PointOfInterest>> =
-        poiRepository.getAll()
+        poiRepository
+            .getAll()
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
-
 }

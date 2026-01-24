@@ -12,41 +12,56 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.geier.citymanager.ui.viewmodel.PoiDetailViewModel
 
 @Composable
-fun FactionDetailScreen(
-    faction: Faction,
+fun PoiDetailScreen(
+    poi: PointOfInterest,
+    persons: List<Person>,
+    viewModel: PoiDetailViewModel,
     onBack: () -> Unit,
     isGameMaster: Boolean,
-    onSave: (Faction) -> Unit,
-    onDelete: (Faction) -> Unit
+    onDelete: (PointOfInterest) -> Unit
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
 
-    var name by remember(faction.id) { mutableStateOf(faction.name) }
-    var description by remember(faction.id) { mutableStateOf(faction.description ?: "") }
-    var visible by remember(faction.id) { mutableStateOf(faction.visible) }
-
-    var playerNotes by remember(faction.id) { mutableStateOf(faction.playerNotes) }
-    var gameMasterNotes by remember(faction.id) { mutableStateOf(faction.gameMasterNotes) }
+    var name by remember(poi.id) { mutableStateOf(poi.name) }
+    var description by remember(poi.id) { mutableStateOf(poi.description) }
+    var visible by remember(poi.id) { mutableStateOf(poi.visible) }
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    /* ---------------- Auswahl setzen ---------------- */
+
+    LaunchedEffect(poi.id) {
+        viewModel.selectPoi(poi)
+    }
+
+    val assignedPersonIds by viewModel
+        .personIdsForSelectedPoi
+        .collectAsState()
 
     /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(name.ifBlank { "Neue Fraktion" }) },
+                title = { Text(name.ifBlank { "Ort bearbeiten" }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.Close, contentDescription = "Schließen")
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
                     }
                 },
                 actions = {
                     if (isGameMaster) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Löschen")
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Löschen"
+                            )
                         }
                     }
                 }
@@ -69,9 +84,9 @@ fun FactionDetailScreen(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
+                    modifier = Modifier.fillMaxWidth(),
                     label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    singleLine = true
                 )
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
@@ -85,8 +100,8 @@ fun FactionDetailScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
                 )
             } else if (description.isNotBlank()) {
                 Text(description)
@@ -104,27 +119,19 @@ fun FactionDetailScreen(
                 }
             }
 
-            /* ---------- Notizen ---------- */
+            /* ---------- Zugeordnete Personen ---------- */
 
             HorizontalDivider()
-            Text("Notizen", style = MaterialTheme.typography.titleMedium)
+            Text("Zugeordnete Personen", style = MaterialTheme.typography.titleMedium)
 
-            Text("Spieler-Notizen")
-            OutlinedTextField(
-                value = playerNotes,
-                onValueChange = { playerNotes = it },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 4
-            )
-
-            if (isGameMaster) {
-                Text("SL-Notizen")
-                OutlinedTextField(
-                    value = gameMasterNotes,
-                    onValueChange = { gameMasterNotes = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 4
-                )
+            if (assignedPersonIds.isEmpty()) {
+                Text("Keine Personen zugeordnet")
+            } else {
+                persons
+                    .filter { assignedPersonIds.contains(it.id) }
+                    .forEach { person ->
+                        Text("• ${person.name}")
+                    }
             }
 
             /* ---------- Speichern ---------- */
@@ -133,13 +140,11 @@ fun FactionDetailScreen(
                 Button(
                     enabled = name.isNotBlank(),
                     onClick = {
-                        onSave(
-                            faction.copy(
+                        viewModel.save(
+                            poi.copy(
                                 name = name,
-                                description = description.takeIf { it.isNotBlank() },
-                                visible = visible,
-                                playerNotes = playerNotes,
-                                gameMasterNotes = gameMasterNotes
+                                description = description,
+                                visible = visible
                             )
                         )
                         onBack()
@@ -156,9 +161,12 @@ fun FactionDetailScreen(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Fraktion löschen?") },
+            title = { Text("Ort löschen?") },
             text = {
-                Text("Möchtest du diese Fraktion wirklich löschen?")
+                Text(
+                    "Möchtest du den Ort „${name.ifBlank { "ohne Namen" }}“ wirklich löschen? " +
+                            "Diese Aktion kann nicht rückgängig gemacht werden."
+                )
             },
             confirmButton = {
                 Button(
@@ -166,7 +174,7 @@ fun FactionDetailScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     ),
                     onClick = {
-                        onDelete(faction)
+                        onDelete(poi)
                         showDeleteConfirm = false
                         onBack()
                     }

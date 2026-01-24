@@ -1,46 +1,35 @@
 package de.geier.citymanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import de.geier.citymanager.data.repository.FactionRepositoryImpl
 import de.geier.citymanager.ui.Faction
-import de.geier.citymanager.ui.FactionRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-/**
- * ViewModel für Fraktionen.
- *
- * - Stellt Fraktionen als StateFlow bereit
- * - Reicht Speicher- und Löschoperationen weiter
- * - Enthält KEINE UI-Logik
- */
 class FactionViewModel(
-    private val repository: FactionRepository
+    private val repository: FactionRepositoryImpl
 ) : ViewModel() {
 
-    /**
-     * Öffentlicher Zugriff auf alle Fraktionen.
-     *
-     * UI kann dieses StateFlow beobachten.
-     */
-    val factions: StateFlow<List<Faction>> = repository.factions
+    val factions: StateFlow<List<Faction>> =
+        repository.getAll()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
 
-    /**
-     * Speichert eine Fraktion (neu oder Update).
-     */
     fun save(faction: Faction) {
-        repository.save(faction)
+        viewModelScope.launch {
+            repository.save(faction)
+        }
     }
 
-    /**
-     * Löscht eine Fraktion anhand ihrer ID.
-     */
-    fun delete(factionId: String) {
-        repository.delete(factionId)
-    }
-
-    /**
-     * Liefert eine Fraktion anhand ihrer ID oder null.
-     */
-    fun getById(factionId: String): Faction? {
-        return repository.getById(factionId)
+    fun delete(faction: Faction) {
+        viewModelScope.launch {
+            repository.delete(faction)
+        }
     }
 }

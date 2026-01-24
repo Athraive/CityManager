@@ -14,11 +14,21 @@ class PersonViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        val db = DatabaseProvider.getDatabase(context)
 
-        return PersonViewModel(
-            personRepository = PersonRepository(db.personDao()),
-            personPoiRepository = PersonPoiRepository(db.personPoiDao())
-        ) as T
+        if (modelClass.isAssignableFrom(PersonViewModel::class.java)) {
+
+            val database = DatabaseProvider.getDatabase(context)
+
+            return PersonViewModel(
+                personRepository =
+                    PersonRepository(database.personDao()),
+                personPoiRepository =
+                    PersonPoiRepository(database.personPoiDao())
+            ) as T
+        }
+
+        throw IllegalArgumentException(
+            "Unknown ViewModel class: ${modelClass.name}"
+        )
     }
 }
