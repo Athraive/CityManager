@@ -25,7 +25,8 @@ fun PersonDetailScreen(
     pois: List<PointOfInterest> = emptyList(),
     categories: List<PoiCategory> = emptyList(),
     onDelete: (Person) -> Unit = {},
-    onOpenPoi: (String) -> Unit = {}
+    onOpenPoi: (String) -> Unit = {},
+    onAssignPois: (personId: String) -> Unit
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
 
@@ -162,7 +163,9 @@ fun PersonDetailScreen(
                                 expanded = factionDropdownExpanded
                             )
                         },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
@@ -199,6 +202,14 @@ fun PersonDetailScreen(
 
             HorizontalDivider()
             Text("Orte", style = MaterialTheme.typography.titleMedium)
+
+            if (isGameMaster) {
+                TextButton(
+                    onClick = { onAssignPois(person.id) }
+                ) {
+                    Text("Orte zuweisen")
+                }
+            }
 
             if (visibleAssignedPois.isEmpty()) {
                 Text(

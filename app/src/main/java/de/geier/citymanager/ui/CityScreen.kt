@@ -16,9 +16,6 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
 import de.geier.citymanager.ui.PersonViewModelFactory
 
-/**
- * Zentrale Tab-Definition für die CityScreen-Navigation.
- */
 enum class CityTab {
     CITY,
     PERSONS,

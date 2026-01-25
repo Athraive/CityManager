@@ -27,7 +27,7 @@ fun GameMasterCategoryListScreen(
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
-    var editCategory by remember { mutableStateOf<PoiCategory?>(null) }
+    var editingCategory by remember { mutableStateOf<PoiCategory?>(null) }
 
     /* ------------------------------------------------------------------ */
     /* POI DETAIL (SL)                                                     */
@@ -38,16 +38,38 @@ fun GameMasterCategoryListScreen(
             poi = selectedPoi!!,
             factions = factions,
             isGameMaster = true,
-            categoryTitle = selectedCategory?.title, // 👈 DAS FEHLTE
-            onSave = { updated ->
-                cityViewModel.savePoi(updated)
-            },
-            onDelete = { poi ->
-                cityViewModel.deletePoi(poi)
-            },
+            categoryTitle = selectedCategory?.title,
+            onSave = { cityViewModel.savePoi(it) },
+            onDelete = { cityViewModel.deletePoi(it) },
             onBack = { selectedPoi = null }
         )
+        return
+    }
 
+    /* ------------------------------------------------------------------ */
+    /* CATEGORY DETAIL (SL)                                                */
+    /* ------------------------------------------------------------------ */
+
+    if (editingCategory != null) {
+        val poiCount =
+            allPois.count { it.categoryId == editingCategory!!.id }
+
+        CategoryDetailScreen(
+            category = editingCategory!!,
+            poiCountInCategory = poiCount,
+            onBack = { editingCategory = null },
+            isGameMaster = true,
+            onSave = {
+                categoryViewModel.save(it)
+                editingCategory = null
+            },
+            onDelete = { category ->
+                if (poiCount == 0) {
+                    categoryViewModel.delete(category)
+                    editingCategory = null
+                }
+            }
+        )
         return
     }
 
@@ -60,17 +82,15 @@ fun GameMasterCategoryListScreen(
             FloatingActionButton(
                 onClick = {
                     if (selectedCategory == null) {
-                        // Neue Kategorie
-                        categoryViewModel.save(
-                            PoiCategory(
-                                id = UUID.randomUUID().toString(),
-                                title = "Neue Kategorie",
-                                icon = "📁",
-                                visible = true
-                            )
+                        // Neue Kategorie → sofort Detail
+                        editingCategory = PoiCategory(
+                            id = UUID.randomUUID().toString(),
+                            title = "",
+                            icon = "📁",
+                            visible = true
                         )
                     } else {
-                        // Neuer POI → DIREKT Detail-Screen
+                        // Neuer POI → direkt Detail
                         selectedPoi = PointOfInterest(
                             id = UUID.randomUUID().toString(),
                             name = "",
@@ -117,7 +137,7 @@ fun GameMasterCategoryListScreen(
                         Text(
                             text = "✏",
                             modifier = Modifier.clickable {
-                                editCategory = category
+                                editingCategory = category
                             }
                         )
                     }
@@ -162,67 +182,4 @@ fun GameMasterCategoryListScreen(
             }
         }
     }
-
-    /* ------------------------------------------------------------------ */
-    /* DIALOGE                                                            */
-    /* ------------------------------------------------------------------ */
-
-    editCategory?.let { category ->
-        EditCategoryDialog(
-            category = category,
-            onDismiss = { editCategory = null },
-            onSave = { updated ->
-                categoryViewModel.save(updated)
-                editCategory = null
-            }
-        )
-    }
-}
-
-/* ====================================================================== */
-/* DIALOGE                                                                */
-/* ====================================================================== */
-
-@Composable
-private fun EditCategoryDialog(
-    category: PoiCategory,
-    onDismiss: () -> Unit,
-    onSave: (PoiCategory) -> Unit
-) {
-    var title by remember { mutableStateOf(category.title) }
-    var visible by remember { mutableStateOf(category.visible) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Kategorie bearbeiten") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Titel") }
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = visible,
-                        onCheckedChange = { visible = it }
-                    )
-                    Text("Für Spieler sichtbar")
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                enabled = title.isNotBlank(),
-                onClick = {
-                    onSave(category.copy(title = title, visible = visible))
-                }
-            ) { Text("Speichern") }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Abbrechen")
-            }
-        }
-    )
 }

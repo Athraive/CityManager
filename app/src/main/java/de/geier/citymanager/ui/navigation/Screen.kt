@@ -14,4 +14,8 @@ sealed class Screen(val route: String) {
     object PoiDetail : Screen("poi/{id}") {
         fun createRoute(id: String) = "poi/$id"
     }
+
+    object AssignPoisToPerson : Screen("person/{id}/assign_pois") {
+        fun createRoute(id: String) = "person/$id/assign_pois"
+    }
 }
