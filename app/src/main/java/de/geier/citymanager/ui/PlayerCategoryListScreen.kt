@@ -57,7 +57,7 @@ fun PlayerCategoryListScreen(
 
         val poisInCategory: List<PointOfInterest> by
         cityViewModel
-            .visiblePoisForPlayerByCategory(selectedCategory!!.id)
+            .poisByCategory(selectedCategory!!.id)
             .collectAsState(initial = emptyList())
 
         Column(modifier = Modifier.fillMaxSize()) {

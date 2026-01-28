@@ -23,17 +23,21 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
 fun PoiTab(
     cityViewModel: CityViewModel,
     factions: List<Faction>,
-    isGameMaster: Boolean
+    accessContext: AccessContext
 ) {
     val context = LocalContext.current
 
+    // ✅ AccessContext korrekt in die Factory injiziert
     val categoryViewModel: PoiCategoryViewModel = viewModel(
-        factory = PoiCategoryViewModelFactory(context)
+        factory = PoiCategoryViewModelFactory(
+            context = context,
+            accessContext = accessContext
+        )
     )
 
     val allPois by cityViewModel.allPois.collectAsState(initial = emptyList())
 
-    if (isGameMaster) {
+    if (accessContext.canEdit()) {
         /* -------- Spielleiter -------- */
 
         GameMasterCategoryListScreen(

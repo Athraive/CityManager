@@ -1,9 +1,12 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package de.geier.citymanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
+import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.PointOfInterest
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -11,11 +14,12 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel für POI-Details.
  *
- * - Enthält KEINE UI- oder Rollenlogik
- * - Spiegelt PersonViewModel logisch
+ * - Enthält KEINE UI-Logik
+ * - Mutationen sind rollenbewusst abgesichert
  * - Kapselt Person ↔ POI Zuweisungen
  */
 class PoiDetailViewModel(
+    private val accessContext: AccessContext,
     private val poiRepository: PointOfInterestRepository,
     private val personPoiRepository: PersonPoiRepository
 ) : ViewModel() {
@@ -33,11 +37,13 @@ class PoiDetailViewModel(
         _selectedPoi.value = null
     }
 
-    /* ---------------- Persistenz ---------------- */
+    /* ---------------- Persistenz (SL) ---------------- */
 
     fun save(poi: PointOfInterest) {
+        if (!accessContext.canEdit()) return
+
         viewModelScope.launch {
-            poiRepository.save(poi)
+            poiRepository.save(poi, accessContext)
 
             if (_selectedPoi.value?.id == poi.id) {
                 _selectedPoi.value = poi
@@ -46,8 +52,10 @@ class PoiDetailViewModel(
     }
 
     fun delete(poi: PointOfInterest) {
+        if (!accessContext.canEdit()) return
+
         viewModelScope.launch {
-            poiRepository.delete(poi)
+            poiRepository.delete(poi, accessContext)
             clearSelection()
         }
     }
@@ -71,6 +79,8 @@ class PoiDetailViewModel(
             )
 
     fun togglePersonAssignment(personId: String) {
+        if (!accessContext.canEdit()) return
+
         val poi = selectedPoi.value ?: return
         val current = personIdsForSelectedPoi.value
 

@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.*
+import de.geier.citymanager.ui.AccessContext
 
 class CityViewModelFactory(
-    private val context: Context
+    private val context: Context,
+    private val accessContext: AccessContext
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -17,6 +19,8 @@ class CityViewModelFactory(
             val database = DatabaseProvider.getDatabase(context)
 
             return CityViewModel(
+                accessContext = accessContext,
+
                 poiCategoryRepository =
                     PoiCategoryRepository(database.poiCategoryDao()),
 

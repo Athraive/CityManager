@@ -1,6 +1,7 @@
 package de.geier.citymanager.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.AccessContext
@@ -18,13 +19,21 @@ fun CityScreenGate(
     if (role == null || cityId == null) return
 
     val context = LocalContext.current
-    val cityViewModel: CityViewModel = viewModel(
-        factory = CityViewModelFactory(context)
-    )
 
-    val accessContext = AccessContext(
-        role = role,
-        cityId = cityId
+    // ✅ AccessContext ZUERST erzeugen
+    val accessContext = remember {
+        AccessContext(
+            role = role,
+            cityId = cityId
+        )
+    }
+
+    // ✅ Dann korrekt in die Factory injizieren
+    val cityViewModel: CityViewModel = viewModel(
+        factory = CityViewModelFactory(
+            context = context,
+            accessContext = accessContext
+        )
     )
 
     CityScreen(

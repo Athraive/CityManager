@@ -20,16 +20,22 @@ fun NavGraphBuilder.cityNavGraph(
     composable(Screen.City.route) {
 
         val context = LocalContext.current
-        val cityViewModel: CityViewModel = viewModel(
-            factory = CityViewModelFactory(context)
-        )
 
+        // ✅ AccessContext ZUERST erzeugen
         val accessContext = remember {
             AccessContext(
                 role = role,
                 cityId = cityId
             )
         }
+
+        // ✅ Dann korrekt in die Factory injizieren
+        val cityViewModel: CityViewModel = viewModel(
+            factory = CityViewModelFactory(
+                context = context,
+                accessContext = accessContext
+            )
+        )
 
         CityScreen(
             cityViewModel = cityViewModel,

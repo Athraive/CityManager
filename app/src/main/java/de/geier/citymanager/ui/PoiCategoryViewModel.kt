@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class PoiCategoryViewModel(
+    private val accessContext: AccessContext,
     private val repository: PoiCategoryRepository
 ) : ViewModel() {
 
@@ -19,12 +20,16 @@ class PoiCategoryViewModel(
         )
 
     fun save(category: PoiCategory) {
+        if (!accessContext.canEdit()) return
+
         viewModelScope.launch {
             repository.save(category)
         }
     }
 
     fun delete(category: PoiCategory) {
+        if (!accessContext.canEdit()) return
+
         viewModelScope.launch {
             repository.delete(category)
         }

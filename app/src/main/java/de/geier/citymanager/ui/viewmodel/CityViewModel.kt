@@ -6,9 +6,10 @@ import de.geier.citymanager.data.entity.CityDistrictEntity
 import de.geier.citymanager.data.entity.CityLoreEntity
 import de.geier.citymanager.data.repository.CityDistrictRepository
 import de.geier.citymanager.data.repository.CityLoreRepository
+import de.geier.citymanager.data.repository.FactionRepositoryImpl
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
-import de.geier.citymanager.data.repository.FactionRepositoryImpl
+import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.Faction
 import de.geier.citymanager.ui.PointOfInterest
 import de.geier.citymanager.ui.PoiCategory
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CityViewModel(
+    private val accessContext: AccessContext,
     private val poiCategoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
     private val factionRepository: FactionRepositoryImpl,
@@ -119,41 +121,37 @@ class CityViewModel(
                 emptyList()
             )
 
-    /* ---------------- POIs (alle) ---------------- */
+    /* ---------------- POIs (rollenbewusst) ---------------- */
 
     val allPois: StateFlow<List<PointOfInterest>> =
         poiRepository
-            .getAll()
+            .getPois(accessContext)
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
 
-    /* ---------------- POIs (Spieler, sichtbar, nach Kategorie) ---------------- */
-
-    fun visiblePoisForPlayerByCategory(
-        categoryId: String
-    ): StateFlow<List<PointOfInterest>> =
+    fun poisByCategory(categoryId: String): StateFlow<List<PointOfInterest>> =
         poiRepository
-            .getVisibleForPlayerByCategory(categoryId)
+            .getPoisByCategory(categoryId, accessContext)
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
 
-    /* ---------------- POI-CRUD ---------------- */
+    /* ---------------- POI-CRUD (SL) ---------------- */
 
     fun savePoi(poi: PointOfInterest) {
         viewModelScope.launch {
-            poiRepository.save(poi)
+            poiRepository.save(poi, accessContext)
         }
     }
 
     fun deletePoi(poi: PointOfInterest) {
         viewModelScope.launch {
-            poiRepository.delete(poi)
+            poiRepository.delete(poi, accessContext)
         }
     }
 }

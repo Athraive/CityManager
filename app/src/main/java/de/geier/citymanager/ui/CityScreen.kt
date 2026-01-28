@@ -91,9 +91,10 @@ fun CityScreen(
                     PoiTab(
                         cityViewModel = cityViewModel,
                         factions = factions,
-                        isGameMaster = accessContext.canEdit()
+                        accessContext = accessContext
                     )
                 }
+
 
                 CityTab.FACTIONS -> {
                     FraktionenTab(
