@@ -2,7 +2,6 @@
 
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,12 +20,12 @@ fun PersonDetailScreen(
     factions: List<Faction>,
     viewModel: PersonViewModel,
     onBack: () -> Unit,
-    isGameMaster: Boolean = false,
-    pois: List<PointOfInterest> = emptyList(),
-    categories: List<PoiCategory> = emptyList(),
-    onDelete: (Person) -> Unit = {},
-    onOpenPoi: (String) -> Unit = {},
-    onAssignPois: (personId: String) -> Unit
+    isGameMaster: Boolean,
+    pois: List<PointOfInterest>,
+    categories: List<PoiCategory>,
+    onDelete: (Person) -> Unit,
+    onAssignPois: () -> Unit,
+    onAssignFactions: () -> Unit
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
 
@@ -34,36 +33,30 @@ fun PersonDetailScreen(
     var description by remember(person.id) { mutableStateOf(person.description) }
     var playerNotes by remember(person.id) { mutableStateOf(person.playerNotes) }
     var gameMasterNotes by remember(person.id) { mutableStateOf(person.gameMasterNotes) }
-
-    var selectedFactionId by remember(person.id) { mutableStateOf(person.factionId) }
     var visible by remember(person.id) { mutableStateOf(person.visible) }
-    var factionDropdownExpanded by remember { mutableStateOf(false) }
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
+    /* ---------------- Zuweisungen ---------------- */
 
-    /* ---------------- POI-Sichtbarkeit ---------------- */
+    val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
+    val assignedFactionIds by viewModel.factionIdsForSelectedPerson.collectAsState()
 
     val visibleCategoryIds = remember(categories) {
         categories.filter { it.visible }.map { it.id }.toSet()
     }
 
-    val assignedPois = remember(pois, assignedPoiIds) {
-        pois.filter { assignedPoiIds.contains(it.id) }
+    val visiblePois = remember(pois, assignedPoiIds, visibleCategoryIds, isGameMaster) {
+        pois.filter { poi ->
+            assignedPoiIds.contains(poi.id) &&
+                    (isGameMaster || (poi.visible && visibleCategoryIds.contains(poi.categoryId)))
+        }
     }
 
-    val visibleAssignedPois = remember(
-        assignedPois,
-        visibleCategoryIds,
-        isGameMaster
-    ) {
-        if (isGameMaster) {
-            assignedPois
-        } else {
-            assignedPois.filter { poi ->
-                poi.visible && visibleCategoryIds.contains(poi.categoryId)
-            }
+    val visibleFactions = remember(factions, assignedFactionIds, isGameMaster) {
+        factions.filter { faction ->
+            assignedFactionIds.contains(faction.id) &&
+                    (isGameMaster || faction.visible)
         }
     }
 
@@ -72,9 +65,7 @@ fun PersonDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(name.ifBlank { "Neue Person anlegen" })
-                },
+                title = { Text(name.ifBlank { "Person" }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Schließen")
@@ -106,10 +97,12 @@ fun PersonDetailScreen(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    modifier = Modifier.fillMaxWidth(),
                     label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+            } else {
+                Text(name, style = MaterialTheme.typography.titleLarge)
             }
 
             /* ---------- Beschreibung ---------- */
@@ -124,7 +117,7 @@ fun PersonDetailScreen(
                     minLines = 3
                 )
             } else if (description.isNotBlank()) {
-                Text(description, style = MaterialTheme.typography.bodyLarge)
+                Text(description)
             }
 
             /* ---------- Sichtbarkeit ---------- */
@@ -139,93 +132,49 @@ fun PersonDetailScreen(
                 }
             }
 
-            /* ---------- Fraktion ---------- */
+            /* ---------- Fraktionen ---------- */
 
             HorizontalDivider()
-            Text("Fraktion", style = MaterialTheme.typography.titleMedium)
+            Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
 
-            if (isGameMaster) {
-                val selectedFactionName =
-                    factions.firstOrNull { it.id == selectedFactionId }?.name
-                        ?: "Keine Fraktion"
-
-                ExposedDropdownMenuBox(
-                    expanded = factionDropdownExpanded,
-                    onExpandedChange = { factionDropdownExpanded = !factionDropdownExpanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedFactionName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Fraktion") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = factionDropdownExpanded
-                            )
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = factionDropdownExpanded,
-                        onDismissRequest = { factionDropdownExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Keine Fraktion") },
-                            onClick = {
-                                selectedFactionId = null
-                                factionDropdownExpanded = false
-                            }
-                        )
-                        factions.forEach { faction ->
-                            DropdownMenuItem(
-                                text = { Text(faction.name) },
-                                onClick = {
-                                    selectedFactionId = faction.id
-                                    factionDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-            } else {
-                factions.firstOrNull {
-                    it.id == selectedFactionId && it.visible
-                }?.let {
-                    Text(it.name, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-
-            /* ---------- Zugeordnete Orte ---------- */
-
-            HorizontalDivider()
-            Text("Orte", style = MaterialTheme.typography.titleMedium)
-
-            if (isGameMaster) {
-                TextButton(
-                    onClick = { onAssignPois(person.id) }
-                ) {
-                    Text("Orte zuweisen")
-                }
-            }
-
-            if (visibleAssignedPois.isEmpty()) {
+            if (visibleFactions.isEmpty()) {
                 Text(
-                    text = "Keine Orte zugewiesen",
+                    "Keine Fraktionen zugewiesen",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                visibleAssignedPois.forEach { poi ->
-                    Text(
-                        text = "• ${poi.name}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.clickable {
-                            onOpenPoi(poi.id)
-                        }
-                    )
+                visibleFactions.forEach { faction ->
+                    Text("• ${faction.name}")
+                }
+            }
+
+            if (isGameMaster) {
+                Button(onClick = onAssignFactions) {
+                    Text("Fraktionen zuweisen")
+                }
+            }
+
+            /* ---------- Orte ---------- */
+
+            HorizontalDivider()
+            Text("Orte", style = MaterialTheme.typography.titleMedium)
+
+            if (visiblePois.isEmpty()) {
+                Text(
+                    "Keine Orte zugewiesen",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                visiblePois.forEach { poi ->
+                    Text("• ${poi.name}")
+                }
+            }
+
+            if (isGameMaster) {
+                Button(onClick = onAssignPois) {
+                    Text("Orte zuweisen")
                 }
             }
 
@@ -263,7 +212,6 @@ fun PersonDetailScreen(
                             description = description,
                             playerNotes = playerNotes,
                             gameMasterNotes = gameMasterNotes,
-                            factionId = selectedFactionId,
                             visible = visible
                         )
                     )
@@ -281,11 +229,7 @@ fun PersonDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("Person löschen?") },
-            text = {
-                Text(
-                    "Möchtest du die Person „${name.ifBlank { "ohne Namen" }}“ wirklich löschen?"
-                )
-            },
+            text = { Text("Möchtest du diese Person wirklich löschen?") },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(

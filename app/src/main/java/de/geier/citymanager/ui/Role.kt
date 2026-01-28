@@ -2,5 +2,5 @@ package de.geier.citymanager.ui
 
 enum class Role {
     PLAYER,
-    GAMEMASTER
+    GAME_MASTER
 }

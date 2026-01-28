@@ -11,6 +11,7 @@ import de.geier.citymanager.data.repository.PointOfInterestRepository
 import de.geier.citymanager.data.repository.FactionRepositoryImpl
 import de.geier.citymanager.ui.Faction
 import de.geier.citymanager.ui.PointOfInterest
+import de.geier.citymanager.ui.PoiCategory
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -84,7 +85,7 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- Fraktionen (ROOM) ---------------- */
+    /* ---------------- Fraktionen ---------------- */
 
     val factions: StateFlow<List<Faction>> =
         factionRepository
@@ -107,19 +108,29 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- POIs ---------------- */
+    /* ---------------- POI-Kategorien ---------------- */
 
-    fun savePoi(poi: PointOfInterest) {
-        viewModelScope.launch {
-            poiRepository.save(poi)
-        }
-    }
+    val poiCategories: StateFlow<List<PoiCategory>> =
+        poiCategoryRepository
+            .categories
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
 
-    fun deletePoi(poi: PointOfInterest) {
-        viewModelScope.launch {
-            poiRepository.delete(poi)
-        }
-    }
+    /* ---------------- POIs (alle) ---------------- */
+
+    val allPois: StateFlow<List<PointOfInterest>> =
+        poiRepository
+            .getAll()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
+    /* ---------------- POIs (Spieler, sichtbar, nach Kategorie) ---------------- */
 
     fun visiblePoisForPlayerByCategory(
         categoryId: String
@@ -132,12 +143,17 @@ class CityViewModel(
                 emptyList()
             )
 
-    val allPois: StateFlow<List<PointOfInterest>> =
-        poiRepository
-            .getAll()
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
+    /* ---------------- POI-CRUD ---------------- */
+
+    fun savePoi(poi: PointOfInterest) {
+        viewModelScope.launch {
+            poiRepository.save(poi)
+        }
+    }
+
+    fun deletePoi(poi: PointOfInterest) {
+        viewModelScope.launch {
+            poiRepository.delete(poi)
+        }
+    }
 }

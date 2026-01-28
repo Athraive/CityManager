@@ -17,12 +17,15 @@ fun PlayerCategoryListScreen(
     categoryViewModel: PoiCategoryViewModel,
     factions: List<Faction>
 ) {
-    val categories by categoryViewModel.categories.collectAsState()
+    val categories: List<PoiCategory> by
+    categoryViewModel.categories.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
-    /* ---------------- Kategorien ---------------- */
+    /* =====================================================
+     * KATEGORIEN (Spieler)
+     * ===================================================== */
 
     if (selectedCategory == null) {
 
@@ -31,7 +34,10 @@ fun PlayerCategoryListScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(categories.filter { it.visible }) { category ->
+            items(
+                items = categories.filter { it.visible },
+                key = { it.id }
+            ) { category ->
                 Text(
                     text = "${category.icon} ${category.title}",
                     style = MaterialTheme.typography.titleMedium,
@@ -43,11 +49,14 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------------- POIs ---------------- */
+        /* =====================================================
+         * POIs DER KATEGORIE (Spieler)
+         * ===================================================== */
 
     } else if (selectedPoi == null) {
 
-        val poisInCategory by cityViewModel
+        val poisInCategory: List<PointOfInterest> by
+        cityViewModel
             .visiblePoisForPlayerByCategory(selectedCategory!!.id)
             .collectAsState(initial = emptyList())
 
@@ -66,7 +75,10 @@ fun PlayerCategoryListScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(poisInCategory) { poi ->
+                items(
+                    items = poisInCategory,
+                    key = { it.id }
+                ) { poi ->
                     Text(
                         text = "• ${poi.name}",
                         style = MaterialTheme.typography.bodyMedium,
@@ -79,18 +91,20 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* ---------------- POI-Detail (Spieler) ---------------- */
+        /* =====================================================
+         * POI-DETAIL (Spieler)
+         * ===================================================== */
 
     } else {
 
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
-            isGameMaster = false,          // ✅ explizit Spieler
+            isGameMaster = false,      // Spieler
             onSave = { updatedPoi ->
                 cityViewModel.savePoi(updatedPoi)
             },
-            onDelete = {},                 // ✅ Spieler können nicht löschen
+            onDelete = {},             // Spieler dürfen nicht löschen
             onBack = { selectedPoi = null }
         )
     }

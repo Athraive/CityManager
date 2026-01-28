@@ -13,19 +13,21 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun CitySelectScreen(
-    onCitySelected: () -> Unit
+    onCitySelected: (Long) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Text(
             text = "Stadt auswählen",
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Button(onClick = onCitySelected) {
+        // Platzhalter-Stadt
+        Button(onClick = { onCitySelected(1L) }) {
             Text("Beispielstadt betreten")
         }
     }

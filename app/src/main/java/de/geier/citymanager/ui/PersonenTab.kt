@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.clickable
@@ -9,16 +11,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
+import java.util.Locale
 import java.util.UUID
-
-enum class PersonTabMode {
-    LIST,
-    DETAIL,
-    ASSIGN_POI_CATEGORY,
-    ASSIGN_POIS
-}
 
 @Composable
 fun PersonenTab(
@@ -28,179 +25,173 @@ fun PersonenTab(
     categories: List<PoiCategory>,
     isGameMaster: Boolean
 ) {
-    /* ---------------- ViewModel-State ---------------- */
-
-    val allPersons by viewModel.persons.collectAsState()
-    val visiblePersonsForPlayer by viewModel.visiblePersonsForPlayer.collectAsState()
+    // ✅ EINZIGE Personenquelle
+    val persons by viewModel.persons.collectAsState()
     val selectedPerson by viewModel.selectedPerson.collectAsState()
 
-    /* ---------------- UI-State ---------------- */
+    var showAssignPois by remember { mutableStateOf(false) }
+    var showAssignFactions by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
-    var mode by remember { mutableStateOf(PersonTabMode.LIST) }
-    var selectedPoiCategoryId by remember { mutableStateOf<String?>(null) }
+    /* ---------------- Suche ---------------- */
 
-    /* ---------------- Personenquelle ---------------- */
-
-    val persons = remember(allPersons, visiblePersonsForPlayer, isGameMaster) {
-        if (isGameMaster) allPersons else visiblePersonsForPlayer
-    }
-
-    /* ---------------- Modus-Synchronisation ---------------- */
-
-    LaunchedEffect(selectedPerson) {
-        if (selectedPerson == null) {
-            mode = PersonTabMode.LIST
-            selectedPoiCategoryId = null
+    val filteredPersons = remember(persons, searchQuery) {
+        if (searchQuery.isBlank()) {
+            persons
+        } else {
+            val q = searchQuery.lowercase(Locale.getDefault())
+            persons.filter {
+                it.name.lowercase(Locale.getDefault()).contains(q)
+            }
         }
     }
 
-    /* ======================================================
-     * LISTE
-     * ====================================================== */
+    /* ---------------- Gruppierung ---------------- */
 
-    if (mode == PersonTabMode.LIST) {
-        Scaffold(
-            floatingActionButton = {
-                if (isGameMaster) {
-                    FloatingActionButton(
-                        onClick = {
-                            viewModel.selectPerson(
-                                Person(
-                                    id = UUID.randomUUID().toString(),
-                                    name = "",
-                                    description = "",
-                                    portraitImageUri = null,
-                                    visible = true,
-                                    factionId = null,
-                                    playerNotes = "",
-                                    gameMasterNotes = ""
-                                )
-                            )
-                            mode = PersonTabMode.DETAIL
-                        }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Person anlegen")
-                    }
-                }
+    val groupedPersons = remember(filteredPersons) {
+        filteredPersons
+            .sortedBy { it.name.lowercase(Locale.getDefault()) }
+            .groupBy {
+                it.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
             }
-        ) { padding ->
+            .toSortedMap()
+    }
 
-            if (persons.isEmpty()) {
-                Text(
-                    text = "Keine Personen vorhanden",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier
-                        .padding(padding)
-                        .padding(24.dp)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(padding)
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(
-                        items = persons,
-                        key = { it.id }
-                    ) { person ->
-                        val faction = factions.firstOrNull { it.id == person.factionId }
-                        val showFaction =
-                            faction != null && (isGameMaster || faction.visible)
+    /* ---------------- Navigation ---------------- */
 
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.selectPerson(person)
-                                    mode = PersonTabMode.DETAIL
-                                }
-                                .padding(16.dp)
+    when {
+        selectedPerson != null && showAssignPois -> {
+            AssignPoisToPersonScreen(
+                person = selectedPerson!!,
+                pois = pois,
+                viewModel = viewModel,
+                onClose = { showAssignPois = false }
+            )
+        }
+
+        selectedPerson != null && showAssignFactions -> {
+            AssignFactionsToPersonScreen(
+                factions = factions,
+                viewModel = viewModel,
+                onClose = { showAssignFactions = false }
+            )
+        }
+
+        selectedPerson != null -> {
+            PersonDetailScreen(
+                person = selectedPerson!!,
+                factions = factions,
+                viewModel = viewModel,
+                onBack = { viewModel.clearSelection() },
+                isGameMaster = isGameMaster,
+                pois = pois,
+                categories = categories,
+                onDelete = { viewModel.delete(it) },
+                onAssignPois = { showAssignPois = true },
+                onAssignFactions = { showAssignFactions = true }
+            )
+        }
+
+        else -> {
+            Scaffold(
+                floatingActionButton = {
+                    if (isGameMaster) {
+                        FloatingActionButton(
+                            onClick = {
+                                viewModel.selectPerson(
+                                    Person(
+                                        id = UUID.randomUUID().toString(),
+                                        name = "",
+                                        description = "",
+                                        portraitImageUri = null,
+                                        visible = true,
+                                        playerNotes = "",
+                                        gameMasterNotes = ""
+                                    )
+                                )
+                            }
                         ) {
-                            Text(
-                                text = person.name.ifBlank { "Unbenannte Person" },
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                            Icon(Icons.Default.Add, contentDescription = "Person anlegen")
+                        }
+                    }
+                }
+            ) { padding ->
 
-                            if (showFaction) {
-                                Text(
-                                    text = faction!!.name,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
 
-                            if (person.description.isNotBlank()) {
-                                Text(
-                                    text = person.description,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 2
-                                )
+                    /* ---------- Suche ---------- */
+
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        label = { Text("Person suchen") },
+                        singleLine = true
+                    )
+
+                    if (groupedPersons.isEmpty()) {
+                        Text(
+                            text = "Keine Personen gefunden",
+                            modifier = Modifier.padding(24.dp)
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 16.dp)
+                        ) {
+                            groupedPersons.forEach { (letter, personsInGroup) ->
+
+                                item {
+                                    Text(
+                                        text = letter,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(
+                                                horizontal = 16.dp,
+                                                vertical = 8.dp
+                                            ),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleSmall
+                                    )
+                                }
+
+                                items(personsInGroup, key = { it.id }) { person ->
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                viewModel.selectPerson(person)
+                                            }
+                                            .padding(
+                                                horizontal = 16.dp,
+                                                vertical = 12.dp
+                                            )
+                                    ) {
+                                        Text(
+                                            text = person.name.ifBlank { "Unbenannte Person" },
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+
+                                        if (person.description.isNotBlank()) {
+                                            Text(
+                                                text = person.description,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                maxLines = 2
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        return
-    }
-
-    /* ======================================================
-     * DETAIL
-     * ====================================================== */
-
-    if (mode == PersonTabMode.DETAIL && selectedPerson != null) {
-        PersonDetailScreen(
-            person = selectedPerson!!,
-            factions = factions,
-            viewModel = viewModel,
-            onBack = {
-                viewModel.clearSelection()
-                mode = PersonTabMode.LIST
-            },
-            isGameMaster = isGameMaster,
-            pois = pois,
-            categories = categories,
-            onDelete = {
-                viewModel.delete(it)
-                mode = PersonTabMode.LIST
-            },
-            onAssignPois = {
-                if (isGameMaster) {
-                    mode = PersonTabMode.ASSIGN_POI_CATEGORY
-                }
-            }
-        )
-        return
-    }
-
-    /* ======================================================
-     * ASSIGN_POI_CATEGORY (Platzhalter)
-     * ====================================================== */
-
-    if (mode == PersonTabMode.ASSIGN_POI_CATEGORY && selectedPerson != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-        ) {
-            Text("POI-Kategorien auswählen (kommt als Nächstes)")
-        }
-        return
-    }
-
-    /* ======================================================
-     * ASSIGN_POIS (Platzhalter)
-     * ====================================================== */
-
-    if (mode == PersonTabMode.ASSIGN_POIS && selectedPerson != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-        ) {
-            Text("POIs zuweisen (kommt als Nächstes)")
-        }
-        return
     }
 }

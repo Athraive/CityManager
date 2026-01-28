@@ -5,9 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.remember
-import androidx.navigation.compose.rememberNavController
-import de.geier.citymanager.ui.navigation.CityNavHost
+import de.geier.citymanager.ui.navigation.AppNavHost
 import de.geier.citymanager.ui.theme.CityManagerTheme
 
 class MainActivity : ComponentActivity() {
@@ -16,19 +14,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-
             CityManagerTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-
-                    val navController = rememberNavController()
-
-                    // 🔑 TEMPORÄR / später aus Login, Settings o.ä.
-                    val isGameMaster = true
-
-                    CityNavHost(
-                        navController = navController,
-                        isGameMaster = isGameMaster
-                    )
+                    AppNavHost()
                 }
             }
         }

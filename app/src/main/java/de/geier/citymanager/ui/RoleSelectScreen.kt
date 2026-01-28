@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun RoleSelectScreen(
-    onRoleSelected: (isGameMaster: Boolean) -> Unit
+    onRoleSelected: (Role) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -26,11 +26,11 @@ fun RoleSelectScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Button(onClick = { onRoleSelected(false) }) {
+        Button(onClick = { onRoleSelected(Role.PLAYER) }) {
             Text("Spieler")
         }
 
-        Button(onClick = { onRoleSelected(true) }) {
+        Button(onClick = { onRoleSelected(Role.GAME_MASTER) }) {
             Text("Spielleiter")
         }
     }

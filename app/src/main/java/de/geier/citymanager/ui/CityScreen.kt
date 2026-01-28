@@ -14,7 +14,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.components.AppTopBar
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
-import de.geier.citymanager.ui.PersonViewModelFactory
 
 enum class CityTab {
     CITY,
@@ -26,39 +25,37 @@ enum class CityTab {
 @Composable
 fun CityScreen(
     cityViewModel: CityViewModel,
-    isGameMaster: Boolean
+    accessContext: AccessContext
 ) {
-    /* ---------------- Context ---------------- */
-
     val context = LocalContext.current
-
-    /* ---------------- Tab-State ---------------- */
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
 
-    /* ---------------- ViewModels ---------------- */
-
+    // ✅ AccessContext korrekt in die Factory injiziert
     val personViewModel: PersonViewModel = viewModel(
-        factory = PersonViewModelFactory(context)
+        factory = PersonViewModelFactory(
+            context = context,
+            accessContext = accessContext
+        )
     )
 
     /* ---------------- Gemeinsame States ---------------- */
 
     val factions by cityViewModel.factions.collectAsState()
-
-    /* ---------------- Layout ---------------- */
+    val allPois by cityViewModel.allPois.collectAsState()
+    val categories by cityViewModel.poiCategories.collectAsState()
 
     Scaffold(
         topBar = {
             AppTopBar(
                 title = "CityManager",
-                isGameMaster = isGameMaster
+                isGameMaster = accessContext.canEdit()
             )
         },
         bottomBar = {
             CityBottomBar(
                 activeTab = activeTab,
-                isGameMaster = isGameMaster,
+                isGameMaster = accessContext.canEdit(),
                 onTabSelected = { tab ->
                     activeTab = tab
                     if (tab == CityTab.PERSONS) {
@@ -84,9 +81,9 @@ fun CityScreen(
                     PersonenTab(
                         viewModel = personViewModel,
                         factions = factions,
-                        pois = emptyList(),
-                        categories = emptyList(),
-                        isGameMaster = isGameMaster
+                        pois = allPois,
+                        categories = categories,
+                        isGameMaster = accessContext.canEdit()
                     )
                 }
 
@@ -94,13 +91,13 @@ fun CityScreen(
                     PoiTab(
                         cityViewModel = cityViewModel,
                         factions = factions,
-                        isGameMaster = isGameMaster
+                        isGameMaster = accessContext.canEdit()
                     )
                 }
 
                 CityTab.FACTIONS -> {
                     FraktionenTab(
-                        isGameMaster = isGameMaster,
+                        isGameMaster = accessContext.canEdit(),
                         factions = factions,
                         onSave = { cityViewModel.saveFaction(it) },
                         onDelete = { cityViewModel.deleteFaction(it) }
