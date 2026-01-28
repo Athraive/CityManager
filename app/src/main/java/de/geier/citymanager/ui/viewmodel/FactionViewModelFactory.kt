@@ -12,7 +12,6 @@ class FactionViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-
         if (modelClass.isAssignableFrom(FactionViewModel::class.java)) {
 
             val database = DatabaseProvider.getDatabase(context)
@@ -24,8 +23,6 @@ class FactionViewModelFactory(
             ) as T
         }
 
-        throw IllegalArgumentException(
-            "Unknown ViewModel class: ${modelClass.name}"
-        )
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

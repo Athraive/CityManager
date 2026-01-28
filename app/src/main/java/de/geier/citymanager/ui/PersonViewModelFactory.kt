@@ -10,31 +10,27 @@ import de.geier.citymanager.data.repository.PersonRepository
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 class PersonViewModelFactory(
-    context: Context,
+    private val context: Context,
     private val accessContext: AccessContext
 ) : ViewModelProvider.Factory {
-
-    private val database = DatabaseProvider.getDatabase(context)
-
-    private val personRepository =
-        PersonRepository(database.personDao())
-
-    private val personPoiRepository =
-        PersonPoiRepository(database.personPoiDao())
-
-    private val personFactionRepository =
-        PersonFactionRepository(database.personFactionDao())
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(PersonViewModel::class.java)) {
+
+            val database = DatabaseProvider.getDatabase(context)
+
             return PersonViewModel(
                 accessContext = accessContext,
-                personRepository = personRepository,
-                personPoiRepository = personPoiRepository,
-                personFactionRepository = personFactionRepository
+                personRepository =
+                    PersonRepository(database.personDao()),
+                personPoiRepository =
+                    PersonPoiRepository(database.personPoiDao()),
+                personFactionRepository =
+                    PersonFactionRepository(database.personFactionDao())
             ) as T
         }
+
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

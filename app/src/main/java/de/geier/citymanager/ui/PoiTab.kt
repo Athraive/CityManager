@@ -27,11 +27,10 @@ fun PoiTab(
 ) {
     val context = LocalContext.current
 
-    // ✅ AccessContext korrekt in die Factory injiziert
+    // ✅ Rollenfreies ViewModel, Factory ohne AccessContext
     val categoryViewModel: PoiCategoryViewModel = viewModel(
         factory = PoiCategoryViewModelFactory(
-            context = context,
-            accessContext = accessContext
+            context = context
         )
     )
 
