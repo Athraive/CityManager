@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FactionDetailScreen(
     faction: Faction,
+    accessContext: AccessContext,
     onBack: () -> Unit,
-    isGameMaster: Boolean,
     onSave: (Faction) -> Unit,
     onDelete: (Faction) -> Unit
 ) {
@@ -32,6 +32,8 @@ fun FactionDetailScreen(
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
+    val canEdit = accessContext.canEdit()
+
     /* ---------------- UI ---------------- */
 
     Scaffold(
@@ -44,7 +46,7 @@ fun FactionDetailScreen(
                     }
                 },
                 actions = {
-                    if (isGameMaster) {
+                    if (canEdit) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Löschen")
                         }
@@ -65,7 +67,7 @@ fun FactionDetailScreen(
 
             /* ---------- Name ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -81,7 +83,7 @@ fun FactionDetailScreen(
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
-            if (isGameMaster) {
+            if (canEdit) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -94,7 +96,7 @@ fun FactionDetailScreen(
 
             /* ---------- Sichtbarkeit ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
                         checked = visible,
@@ -117,7 +119,7 @@ fun FactionDetailScreen(
                 minLines = 4
             )
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,
@@ -129,7 +131,7 @@ fun FactionDetailScreen(
 
             /* ---------- Speichern ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Button(
                     enabled = name.isNotBlank(),
                     onClick = {

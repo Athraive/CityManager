@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.components.AppTopBar
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
+import de.geier.citymanager.ui.PersonViewModelFactory
 
 enum class CityTab {
     CITY,
@@ -31,7 +32,6 @@ fun CityScreen(
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
 
-    // ✅ AccessContext korrekt in die Factory injiziert
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(
             context = context,
@@ -95,10 +95,9 @@ fun CityScreen(
                     )
                 }
 
-
                 CityTab.FACTIONS -> {
                     FraktionenTab(
-                        isGameMaster = accessContext.canEdit(),
+                        accessContext = accessContext,
                         factions = factions,
                         onSave = { cityViewModel.saveFaction(it) },
                         onDelete = { cityViewModel.deleteFaction(it) }

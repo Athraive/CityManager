@@ -1,6 +1,7 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,75 +9,75 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import java.util.UUID
 
 @Composable
 fun FraktionenTab(
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     factions: List<Faction>,
     onSave: (Faction) -> Unit,
     onDelete: (Faction) -> Unit
 ) {
-    var selectedFaction by remember { mutableStateOf<Faction?>(null) }
+    var activeFaction by remember { mutableStateOf<Faction?>(null) }
 
-    val visibleFactions =
-        if (isGameMaster) factions else factions.filter { it.visible }
+    activeFaction?.let { faction ->
+        FactionDetailScreen(
+            faction = faction,
+            onBack = { activeFaction = null },
+            accessContext = accessContext,
+            onSave = onSave,
+            onDelete = onDelete
+        )
+        return
+    }
 
-    if (selectedFaction == null) {
+    Scaffold(
+        floatingActionButton = {
+            if (accessContext.canEdit()) {
+                FloatingActionButton(
+                    onClick = {
+                        activeFaction = Faction(
+                            id = "",
+                            name = "",
+                            description = null,
+                            visible = true,
+                            playerNotes = "",
+                            gameMasterNotes = ""
+                        )
 
-        Scaffold(
-            floatingActionButton = {
-                if (isGameMaster) {
-                    FloatingActionButton(
-                        onClick = {
-                            selectedFaction = Faction(
-                                id = UUID.randomUUID().toString(),
-                                name = "",
-                                description = null,
-                                visible = true
-                            )
-                        }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Fraktion anlegen")
                     }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Fraktion anlegen")
                 }
             }
-        ) { padding ->
+        }
+    ) { padding ->
 
-            LazyColumn(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(visibleFactions) { faction ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedFaction = faction }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+        val visibleFactions =
+            if (accessContext.canEdit()) factions
+            else factions.filter { it.visible }
+
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(visibleFactions) { faction ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { activeFaction = faction }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = faction.name,
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Text(faction.name, style = MaterialTheme.typography.titleMedium)
+                        faction.description?.let { Text(it) }
                     }
                 }
             }
         }
-
-    } else {
-
-        FactionDetailScreen(
-            faction = selectedFaction!!,
-            isGameMaster = isGameMaster,
-            onBack = { selectedFaction = null },
-            onSave = onSave,
-            onDelete = onDelete
-        )
     }
 }
