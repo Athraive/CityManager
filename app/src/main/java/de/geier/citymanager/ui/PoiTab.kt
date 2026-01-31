@@ -6,9 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
-import de.geier.citymanager.ui.PoiCategoryViewModel
-import de.geier.citymanager.ui.PoiCategoryViewModelFactory
-
 
 /**
  * Root für den POI-Tab.
@@ -32,15 +29,30 @@ fun PoiTab(
         )
     )
 
-    // Aktuell noch nicht genutzt, aber bewusst hier gelassen
-    // für kommende Schritte (POI-Listen / Details)
-    val allPois by cityViewModel.allPois.collectAsState(initial = emptyList())
+    val allPois by cityViewModel
+        .allPois
+        .collectAsState(initial = emptyList())
 
-    // 🔑 EINZIGER Entry-Point für Kategorien
-    CategoryListScreen(
-        categoryViewModel = categoryViewModel,
-        cityViewModel = cityViewModel,
-        factions = factions,
-        accessContext = accessContext
-    )
+    if (accessContext.canEdit()) {
+
+        /* ---------------- Spielleiter ---------------- */
+
+        GameMasterCategoryListScreen(
+            categoryViewModel = categoryViewModel,
+            cityViewModel = cityViewModel,
+            allPois = allPois,
+            accessContext = accessContext
+        )
+
+    } else {
+
+        /* ---------------- Spieler ---------------- */
+
+        PlayerCategoryListScreen(
+            cityViewModel = cityViewModel,
+            categoryViewModel = categoryViewModel,
+            factions = factions,
+            accessContext = accessContext
+        )
+    }
 }

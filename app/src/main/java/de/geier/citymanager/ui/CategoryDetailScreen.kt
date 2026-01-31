@@ -18,7 +18,7 @@ fun CategoryDetailScreen(
     category: PoiCategory,
     poiCountInCategory: Int,
     onBack: () -> Unit,
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     onSave: (PoiCategory) -> Unit,
     onDelete: (PoiCategory) -> Unit
 ) {
@@ -32,6 +32,8 @@ fun CategoryDetailScreen(
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showDeleteBlocked by remember { mutableStateOf(false) }
+
+    val canEdit = accessContext.canEdit()
 
     /* ---------------- UI ---------------- */
 
@@ -47,7 +49,7 @@ fun CategoryDetailScreen(
                     }
                 },
                 actions = {
-                    if (isGameMaster) {
+                    if (canEdit) {
                         IconButton(onClick = {
                             if (poiCountInCategory == 0) {
                                 showDeleteConfirm = true
@@ -74,33 +76,43 @@ fun CategoryDetailScreen(
 
             /* ---------- Titel ---------- */
 
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (canEdit) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+            }
 
             /* ---------- Beschreibung ---------- */
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                minLines = 3,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (canEdit) {
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else if (description.isNotBlank()) {
+                Text(description)
+            }
 
             /* ---------- Sichtbarkeit ---------- */
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Checkbox(
-                    checked = visible,
-                    onCheckedChange = { visible = it }
-                )
-                Text("Für Spieler sichtbar")
+            if (canEdit) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Checkbox(
+                        checked = visible,
+                        onCheckedChange = { visible = it }
+                    )
+                    Text("Für Spieler sichtbar")
+                }
             }
 
             /* ---------- Hinweis bei nicht leer ---------- */
@@ -115,20 +127,22 @@ fun CategoryDetailScreen(
 
             /* ---------- Speichern ---------- */
 
-            Button(
-                enabled = title.isNotBlank(),
-                onClick = {
-                    onSave(
-                        category.copy(
-                            title = title,
-                            description = description.takeIf { it.isNotBlank() },
-                            visible = visible
+            if (canEdit) {
+                Button(
+                    enabled = title.isNotBlank(),
+                    onClick = {
+                        onSave(
+                            category.copy(
+                                title = title,
+                                description = description.takeIf { it.isNotBlank() },
+                                visible = visible
+                            )
                         )
-                    )
-                    onBack()
+                        onBack()
+                    }
+                ) {
+                    Text("Speichern")
                 }
-            ) {
-                Text("Speichern")
             }
         }
     }

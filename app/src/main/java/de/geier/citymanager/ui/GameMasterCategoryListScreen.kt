@@ -20,7 +20,8 @@ import java.util.UUID
 fun GameMasterCategoryListScreen(
     categoryViewModel: PoiCategoryViewModel,
     cityViewModel: CityViewModel,
-    allPois: List<PointOfInterest>
+    allPois: List<PointOfInterest>,
+    accessContext: AccessContext
 ) {
     val categories by categoryViewModel.categories.collectAsState()
     val factions by cityViewModel.factions.collectAsState()
@@ -37,7 +38,7 @@ fun GameMasterCategoryListScreen(
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
-            isGameMaster = true,
+            accessContext = accessContext,
             categoryTitle = selectedCategory?.title,
             onSave = { cityViewModel.savePoi(it) },
             onDelete = { cityViewModel.deletePoi(it) },
@@ -58,7 +59,7 @@ fun GameMasterCategoryListScreen(
             category = editingCategory!!,
             poiCountInCategory = poiCount,
             onBack = { editingCategory = null },
-            isGameMaster = true,
+            accessContext = accessContext,
             onSave = {
                 categoryViewModel.save(it)
                 editingCategory = null
@@ -82,7 +83,6 @@ fun GameMasterCategoryListScreen(
             FloatingActionButton(
                 onClick = {
                     if (selectedCategory == null) {
-                        // Neue Kategorie → sofort Detail
                         editingCategory = PoiCategory(
                             id = UUID.randomUUID().toString(),
                             title = "",
@@ -90,7 +90,6 @@ fun GameMasterCategoryListScreen(
                             visible = true
                         )
                     } else {
-                        // Neuer POI → direkt Detail
                         selectedPoi = PointOfInterest(
                             id = UUID.randomUUID().toString(),
                             name = "",

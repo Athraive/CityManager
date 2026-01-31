@@ -17,10 +17,10 @@ import androidx.compose.ui.unit.dp
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     factions: List<Faction>,
+    accessContext: AccessContext,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit = {},
     onBack: () -> Unit,
-    isGameMaster: Boolean = false,
     categoryTitle: String? = null
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
@@ -61,19 +61,13 @@ fun PlayerPoiDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Schließen"
-                        )
+                        Icon(Icons.Default.Close, contentDescription = "Schließen")
                     }
                 },
                 actions = {
-                    if (isGameMaster) {
+                    if (accessContext.canEdit()) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Löschen"
-                            )
+                            Icon(Icons.Default.Delete, contentDescription = "Löschen")
                         }
                     }
                 }
@@ -90,9 +84,9 @@ fun PlayerPoiDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- Name (nur SL) ---------- */
+            /* ---------- Name ---------- */
 
-            if (isGameMaster) {
+            if (accessContext.canEdit()) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -104,12 +98,9 @@ fun PlayerPoiDetailScreen(
 
             /* ---------- Beschreibung ---------- */
 
-            Text(
-                text = "Beschreibung",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
-            if (isGameMaster) {
+            if (accessContext.canEdit()) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -117,15 +108,12 @@ fun PlayerPoiDetailScreen(
                     minLines = 3
                 )
             } else if (description.isNotBlank()) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Text(description)
             }
 
-            /* ---------- Sichtbarkeit (SL) ---------- */
+            /* ---------- Sichtbarkeit ---------- */
 
-            if (isGameMaster) {
+            if (accessContext.canEdit()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
                         checked = visible,
@@ -138,12 +126,9 @@ fun PlayerPoiDetailScreen(
             /* ---------- Fraktion ---------- */
 
             HorizontalDivider()
-            Text(
-                text = "Fraktion",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text("Fraktion", style = MaterialTheme.typography.titleMedium)
 
-            if (isGameMaster) {
+            if (accessContext.canEdit()) {
                 val selectedFactionName =
                     factions.firstOrNull { it.id == factionId }?.name
                         ?: "Keine Fraktion"
@@ -192,20 +177,14 @@ fun PlayerPoiDetailScreen(
                 }
             } else {
                 visibleFaction?.let {
-                    Text(
-                        text = it.name,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Text(it.name)
                 }
             }
 
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-            Text(
-                text = "Notizen",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text("Notizen", style = MaterialTheme.typography.titleMedium)
 
             Text("Spieler-Notizen")
             OutlinedTextField(
@@ -215,7 +194,7 @@ fun PlayerPoiDetailScreen(
                 minLines = 4
             )
 
-            if (isGameMaster) {
+            if (accessContext.canViewSlNotes()) {
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,
@@ -227,23 +206,25 @@ fun PlayerPoiDetailScreen(
 
             /* ---------- Speichern ---------- */
 
-            Button(
-                enabled = name.isNotBlank(),
-                onClick = {
-                    onSave(
-                        poi.copy(
-                            name = name,
-                            description = description,
-                            visible = visible,
-                            factionId = factionId,
-                            playerNotes = playerNotes,
-                            gameMasterNotes = gameMasterNotes
+            if (accessContext.canEdit()) {
+                Button(
+                    enabled = name.isNotBlank(),
+                    onClick = {
+                        onSave(
+                            poi.copy(
+                                name = name,
+                                description = description,
+                                visible = visible,
+                                factionId = factionId,
+                                playerNotes = playerNotes,
+                                gameMasterNotes = gameMasterNotes
+                            )
                         )
-                    )
-                    onBack()
+                        onBack()
+                    }
+                ) {
+                    Text("Speichern")
                 }
-            ) {
-                Text("Speichern")
             }
         }
     }
@@ -256,8 +237,7 @@ fun PlayerPoiDetailScreen(
             title = { Text("POI löschen?") },
             text = {
                 Text(
-                    "Möchtest du den POI „${name.ifBlank { "Neuer POI" }}“ wirklich löschen?\n" +
-                            "Diese Aktion kann nicht rückgängig gemacht werden."
+                    "Möchtest du den POI „${name.ifBlank { "Neuer POI" }}“ wirklich löschen?"
                 )
             },
             confirmButton = {

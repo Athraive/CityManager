@@ -15,7 +15,8 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
 fun PlayerCategoryListScreen(
     cityViewModel: CityViewModel,
     categoryViewModel: PoiCategoryViewModel,
-    factions: List<Faction>
+    factions: List<Faction>,
+    accessContext: AccessContext
 ) {
     val categories: List<PoiCategory> by
     categoryViewModel.categories.collectAsState()
@@ -100,11 +101,10 @@ fun PlayerCategoryListScreen(
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
-            isGameMaster = false,      // Spieler
+            accessContext = accessContext,
             onSave = { updatedPoi ->
                 cityViewModel.savePoi(updatedPoi)
             },
-            onDelete = {},             // Spieler dürfen nicht löschen
             onBack = { selectedPoi = null }
         )
     }
