@@ -55,7 +55,7 @@ fun CityScreen(
         bottomBar = {
             CityBottomBar(
                 activeTab = activeTab,
-                isGameMaster = accessContext.canEdit(),
+                accessContext = accessContext,
                 onTabSelected = { tab ->
                     activeTab = tab
                     if (tab == CityTab.PERSONS) {
@@ -83,7 +83,7 @@ fun CityScreen(
                         factions = factions,
                         pois = allPois,
                         categories = categories,
-                        isGameMaster = accessContext.canEdit()
+                        isGameMaster = accessContext.canEdit() // bewusst noch alt
                     )
                 }
 

@@ -7,12 +7,13 @@ import androidx.compose.runtime.Composable
 
 /**
  * Reine Tab-Bar ohne Navigation.
- * Sie setzt ausschließlich den aktiven Tab.
+ * Sichtbarkeit und Verhalten erfolgen ausschließlich
+ * über AccessContext.
  */
 @Composable
 fun CityBottomBar(
     activeTab: CityTab,
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     onTabSelected: (CityTab) -> Unit
 ) {
     NavigationBar {
@@ -38,7 +39,7 @@ fun CityBottomBar(
             label = { Text("POIs") }
         )
 
-        if (isGameMaster) {
+        if (accessContext.canEdit()) {
             NavigationBarItem(
                 selected = activeTab == CityTab.FACTIONS,
                 onClick = { onTabSelected(CityTab.FACTIONS) },
