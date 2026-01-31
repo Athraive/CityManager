@@ -6,18 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.PoiCategoryViewModel
+import de.geier.citymanager.ui.PoiCategoryViewModelFactory
+
 
 /**
  * Root für den POI-Tab.
  *
- * Spieler:
- *  - Kategorien → POIs → Detail
- *
- * Spielleiter:
- *  - Kategorien bearbeiten
- *  - POIs anlegen / bearbeiten
- *
- * KEIN NavController, reiner State-Flow.
+ * Einheitlicher Einstieg für Spieler und Spielleiter.
+ * Rollenlogik erfolgt ausschließlich über AccessContext
+ * innerhalb der nachgelagerten Screens.
  */
 @Composable
 fun PoiTab(
@@ -27,31 +25,22 @@ fun PoiTab(
 ) {
     val context = LocalContext.current
 
-    // ✅ Rollenfreies ViewModel, Factory ohne AccessContext
+    // Rollenfreies Category-ViewModel
     val categoryViewModel: PoiCategoryViewModel = viewModel(
         factory = PoiCategoryViewModelFactory(
             context = context
         )
     )
 
+    // Aktuell noch nicht genutzt, aber bewusst hier gelassen
+    // für kommende Schritte (POI-Listen / Details)
     val allPois by cityViewModel.allPois.collectAsState(initial = emptyList())
 
-    if (accessContext.canEdit()) {
-        /* -------- Spielleiter -------- */
-
-        GameMasterCategoryListScreen(
-            categoryViewModel = categoryViewModel,
-            cityViewModel = cityViewModel,
-            allPois = allPois
-        )
-
-    } else {
-        /* -------- Spieler -------- */
-
-        PlayerCategoryListScreen(
-            cityViewModel = cityViewModel,
-            categoryViewModel = categoryViewModel,
-            factions = factions
-        )
-    }
+    // 🔑 EINZIGER Entry-Point für Kategorien
+    CategoryListScreen(
+        categoryViewModel = categoryViewModel,
+        cityViewModel = cityViewModel,
+        factions = factions,
+        accessContext = accessContext
+    )
 }

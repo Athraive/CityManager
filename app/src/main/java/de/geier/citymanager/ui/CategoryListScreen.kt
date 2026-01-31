@@ -1,58 +1,48 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.geier.citymanager.ui.components.AppTopBar
+import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.PoiCategoryViewModel
+import de.geier.citymanager.ui.PoiCategoryViewModelFactory
+
+
 
 @Composable
 fun CategoryListScreen(
-    categories: List<PoiCategory>,
-    isGameMaster: Boolean,
-    onCategorySelected: (PoiCategory) -> Unit,
-    onBack: () -> Unit
+    categoryViewModel: PoiCategoryViewModel,
+    cityViewModel: CityViewModel,
+    factions: List<Faction>,
+    accessContext: AccessContext
 ) {
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "Kategorien",
-                isGameMaster = isGameMaster,
-                onBack = onBack
-            )
-        }
-    ) { padding ->
+    val categories by categoryViewModel.categories.collectAsState()
 
-        if (categories.isEmpty()) {
-            Text(
-                text = "Keine Kategorien vorhanden",
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        items(categories) { category ->
+            Column(
                 modifier = Modifier
-                    .padding(padding)
-                    .padding(24.dp)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                        // Navigation kommt später – bewusst leer
+                    }
+                    .padding(vertical = 12.dp)
             ) {
-                items(categories) { category ->
-                    Text(
-                        text = "${category.icon} ${category.title}",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onCategorySelected(category) }
-                            .padding(12.dp)
-                    )
-                }
+                Text(
+                    text = category.title,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
     }

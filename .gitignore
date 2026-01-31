@@ -17,3 +17,4 @@ BackUp/
 # Kotlin / Gradle intern
 .kotlin/
 
+.cache/

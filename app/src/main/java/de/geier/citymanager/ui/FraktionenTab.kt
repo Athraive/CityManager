@@ -62,18 +62,8 @@ fun FraktionenTab(
                     ) {
                         Text(
                             text = faction.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.weight(1f)
+                            style = MaterialTheme.typography.titleMedium
                         )
-
-                        if (isGameMaster) {
-                            Checkbox(
-                                checked = faction.visible,
-                                onCheckedChange = {
-                                    onSave(faction.copy(visible = it))
-                                }
-                            )
-                        }
                     }
                 }
             }
