@@ -23,9 +23,10 @@ fun PersonenTab(
     factions: List<Faction>,
     pois: List<PointOfInterest>,
     categories: List<PoiCategory>,
-    isGameMaster: Boolean
+    accessContext: AccessContext
 ) {
-    // ✅ EINZIGE Personenquelle
+    /* ---------------- State ---------------- */
+
     val persons by viewModel.persons.collectAsState()
     val selectedPerson by viewModel.selectedPerson.collectAsState()
 
@@ -83,7 +84,7 @@ fun PersonenTab(
                 factions = factions,
                 viewModel = viewModel,
                 onBack = { viewModel.clearSelection() },
-                isGameMaster = isGameMaster,
+                isGameMaster = accessContext.canEdit(), // 🔁 Übergangsweise
                 pois = pois,
                 categories = categories,
                 onDelete = { viewModel.delete(it) },
@@ -95,7 +96,7 @@ fun PersonenTab(
         else -> {
             Scaffold(
                 floatingActionButton = {
-                    if (isGameMaster) {
+                    if (accessContext.canEdit()) {
                         FloatingActionButton(
                             onClick = {
                                 viewModel.selectPerson(
