@@ -19,8 +19,8 @@ fun PoiDetailScreen(
     poi: PointOfInterest,
     persons: List<Person>,
     viewModel: PoiDetailViewModel,
+    accessContext: AccessContext,
     onBack: () -> Unit,
-    isGameMaster: Boolean,
     onDelete: (PointOfInterest) -> Unit
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
@@ -41,12 +41,14 @@ fun PoiDetailScreen(
         .personIdsForSelectedPoi
         .collectAsState()
 
+    val canEdit = accessContext.canEdit()
+
     /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(name.ifBlank { "Ort bearbeiten" }) },
+                title = { Text(name.ifBlank { "Ort" }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -56,7 +58,7 @@ fun PoiDetailScreen(
                     }
                 },
                 actions = {
-                    if (isGameMaster) {
+                    if (canEdit) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -80,7 +82,7 @@ fun PoiDetailScreen(
 
             /* ---------- Name ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -96,7 +98,7 @@ fun PoiDetailScreen(
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
-            if (isGameMaster) {
+            if (canEdit) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -109,7 +111,7 @@ fun PoiDetailScreen(
 
             /* ---------- Sichtbarkeit ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
                         checked = visible,
@@ -124,19 +126,27 @@ fun PoiDetailScreen(
             HorizontalDivider()
             Text("Zugeordnete Personen", style = MaterialTheme.typography.titleMedium)
 
-            if (assignedPersonIds.isEmpty()) {
-                Text("Keine Personen zugeordnet")
+            val visiblePersons = remember(persons, assignedPersonIds, canEdit) {
+                persons.filter { person ->
+                    assignedPersonIds.contains(person.id) &&
+                            (canEdit || person.visible)
+                }
+            }
+
+            if (visiblePersons.isEmpty()) {
+                Text(
+                    text = "Keine Personen zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
-                persons
-                    .filter { assignedPersonIds.contains(it.id) }
-                    .forEach { person ->
-                        Text("• ${person.name}")
-                    }
+                visiblePersons.forEach { person ->
+                    Text("• ${person.name}")
+                }
             }
 
             /* ---------- Speichern ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Button(
                     enabled = name.isNotBlank(),
                     onClick = {
@@ -164,7 +174,7 @@ fun PoiDetailScreen(
             title = { Text("Ort löschen?") },
             text = {
                 Text(
-                    "Möchtest du den Ort „${name.ifBlank { "ohne Namen" }}“ wirklich löschen? " +
+                    "Möchtest du den Ort „${name.ifBlank { "ohne Namen" }}“ wirklich löschen?\n" +
                             "Diese Aktion kann nicht rückgängig gemacht werden."
                 )
             },

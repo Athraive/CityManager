@@ -84,13 +84,14 @@ fun PersonenTab(
                 factions = factions,
                 viewModel = viewModel,
                 onBack = { viewModel.clearSelection() },
-                isGameMaster = accessContext.canEdit(), // 🔁 Übergangsweise
+                accessContext = accessContext,
                 pois = pois,
                 categories = categories,
                 onDelete = { viewModel.delete(it) },
                 onAssignPois = { showAssignPois = true },
                 onAssignFactions = { showAssignFactions = true }
             )
+
         }
 
         else -> {

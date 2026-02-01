@@ -20,7 +20,7 @@ fun PersonDetailScreen(
     factions: List<Faction>,
     viewModel: PersonViewModel,
     onBack: () -> Unit,
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     pois: List<PointOfInterest>,
     categories: List<PoiCategory>,
     onDelete: (Person) -> Unit,
@@ -37,6 +37,8 @@ fun PersonDetailScreen(
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
+    val canEdit = accessContext.canEdit()
+
     /* ---------------- Zuweisungen ---------------- */
 
     val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
@@ -46,17 +48,17 @@ fun PersonDetailScreen(
         categories.filter { it.visible }.map { it.id }.toSet()
     }
 
-    val visiblePois = remember(pois, assignedPoiIds, visibleCategoryIds, isGameMaster) {
+    val visiblePois = remember(pois, assignedPoiIds, visibleCategoryIds, canEdit) {
         pois.filter { poi ->
             assignedPoiIds.contains(poi.id) &&
-                    (isGameMaster || (poi.visible && visibleCategoryIds.contains(poi.categoryId)))
+                    (canEdit || (poi.visible && visibleCategoryIds.contains(poi.categoryId)))
         }
     }
 
-    val visibleFactions = remember(factions, assignedFactionIds, isGameMaster) {
+    val visibleFactions = remember(factions, assignedFactionIds, canEdit) {
         factions.filter { faction ->
             assignedFactionIds.contains(faction.id) &&
-                    (isGameMaster || faction.visible)
+                    (canEdit || faction.visible)
         }
     }
 
@@ -72,7 +74,7 @@ fun PersonDetailScreen(
                     }
                 },
                 actions = {
-                    if (isGameMaster) {
+                    if (canEdit) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Löschen")
                         }
@@ -93,7 +95,7 @@ fun PersonDetailScreen(
 
             /* ---------- Name ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -109,7 +111,7 @@ fun PersonDetailScreen(
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
-            if (isGameMaster) {
+            if (canEdit) {
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -122,7 +124,7 @@ fun PersonDetailScreen(
 
             /* ---------- Sichtbarkeit ---------- */
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
                         checked = visible,
@@ -149,7 +151,7 @@ fun PersonDetailScreen(
                 }
             }
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Button(onClick = onAssignFactions) {
                     Text("Fraktionen zuweisen")
                 }
@@ -172,7 +174,7 @@ fun PersonDetailScreen(
                 }
             }
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Button(onClick = onAssignPois) {
                     Text("Orte zuweisen")
                 }
@@ -191,7 +193,7 @@ fun PersonDetailScreen(
                 minLines = 4
             )
 
-            if (isGameMaster) {
+            if (canEdit) {
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,
