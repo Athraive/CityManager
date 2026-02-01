@@ -19,11 +19,13 @@ import androidx.compose.ui.unit.dp
  * - Kein NavHost
  * - Kein Save
  * - ❌ Abbrechen verlässt den Zuweisungsmodus komplett
+ *
+ * Rollenlogik erfolgt ausschließlich über AccessContext.
  */
 @Composable
 fun AssignPoiCategoryScreen(
     categories: List<PoiCategory>,
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     onCategorySelected: (categoryId: String) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -65,7 +67,7 @@ fun AssignPoiCategoryScreen(
                 ) { category ->
 
                     // Spieler sehen nur sichtbare Kategorien
-                    if (isGameMaster || category.visible) {
+                    if (accessContext.canEdit() || category.visible) {
                         Surface(
                             tonalElevation = 1.dp,
                             shape = MaterialTheme.shapes.medium,
