@@ -119,7 +119,7 @@ fun FactionDetailScreen(
                 minLines = 4
             )
 
-            if (canEdit) {
+            if (accessContext.canViewSlNotes()) {
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,

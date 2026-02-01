@@ -39,13 +39,12 @@ fun CityBottomBar(
             label = { Text("POIs") }
         )
 
-        if (accessContext.canEdit()) {
-            NavigationBarItem(
-                selected = activeTab == CityTab.FACTIONS,
-                onClick = { onTabSelected(CityTab.FACTIONS) },
-                icon = {},
-                label = { Text("Fraktionen") }
-            )
-        }
+        // ✅ Fraktionen jetzt immer sichtbar
+        NavigationBarItem(
+            selected = activeTab == CityTab.FACTIONS,
+            onClick = { onTabSelected(CityTab.FACTIONS) },
+            icon = {},
+            label = { Text("Fraktionen") }
+        )
     }
 }
