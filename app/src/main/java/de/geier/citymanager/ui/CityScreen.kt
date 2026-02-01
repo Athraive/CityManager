@@ -49,8 +49,9 @@ fun CityScreen(
         topBar = {
             AppTopBar(
                 title = "CityManager",
-                isGameMaster = accessContext.canEdit()
+                accessContext = accessContext
             )
+
         },
         bottomBar = {
             CityBottomBar(
@@ -83,8 +84,9 @@ fun CityScreen(
                         factions = factions,
                         pois = allPois,
                         categories = categories,
-                        isGameMaster = accessContext.canEdit() // bewusst noch alt
+                        accessContext = accessContext
                     )
+
                 }
 
                 CityTab.POIS -> {

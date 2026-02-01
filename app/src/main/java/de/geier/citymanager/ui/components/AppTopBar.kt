@@ -4,16 +4,16 @@ package de.geier.citymanager.ui.components
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import de.geier.citymanager.ui.AccessContext
 
 @Composable
 fun AppTopBar(
     title: String,
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     onBack: (() -> Unit)? = null,
-    actions: @Composable () -> Unit = {}
+    actions: @Composable (AccessContext) -> Unit = {}
 ) {
     TopAppBar(
         title = { Text(title) },
@@ -28,7 +28,7 @@ fun AppTopBar(
             }
         },
         actions = {
-            actions()
+            actions(accessContext)
         }
     )
 }
