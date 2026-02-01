@@ -19,13 +19,15 @@ import androidx.compose.ui.unit.dp
  * - lokaler Edit-State
  * - 💾 Speichern bestätigt Änderungen
  * - ❌ Abbrechen verwirft Änderungen
+ *
+ * Rollenlogik ausschließlich über AccessContext
  */
 @Composable
 fun AssignPoisInCategoryScreen(
     category: PoiCategory,
     poisInCategory: List<PointOfInterest>,
     initiallyAssignedPoiIds: Set<String>,
-    isGameMaster: Boolean,
+    accessContext: AccessContext,
     onSave: (Set<String>) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -77,7 +79,7 @@ fun AssignPoisInCategoryScreen(
                 ) { poi ->
 
                     // Spieler sehen nur sichtbare POIs
-                    if (isGameMaster || poi.visible) {
+                    if (accessContext.canEdit() || poi.visible) {
                         val checked = selectedPoiIds.contains(poi.id)
 
                         Surface(
