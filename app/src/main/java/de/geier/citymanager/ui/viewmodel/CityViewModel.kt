@@ -13,9 +13,7 @@ import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.Faction
 import de.geier.citymanager.ui.PointOfInterest
 import de.geier.citymanager.ui.PoiCategory
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CityViewModel(
@@ -27,7 +25,9 @@ class CityViewModel(
     private val cityLoreRepository: CityLoreRepository
 ) : ViewModel() {
 
-    /* ---------------- Stadtgeschichte ---------------- */
+    /* =====================================================
+     * Stadtgeschichte & Metadaten
+     * ===================================================== */
 
     fun cityLore(cityId: String): StateFlow<CityLoreEntity?> =
         cityLoreRepository
@@ -38,24 +38,29 @@ class CityViewModel(
                 null
             )
 
-    fun seedCityLoreIfNeeded(cityId: String) {
+    fun saveCityMapUri(
+        cityId: String,
+        uri: String
+    ) {
         viewModelScope.launch {
-            cityLoreRepository.save(
-                CityLoreEntity(
-                    cityId = cityId,
-                    title = "Geschichte der Stadt",
-                    text = """
-                        Diese Stadt wurde vor Generationen gegründet.
+            val existing =
+                cityLoreRepository.loreForCity(cityId).first()
 
-                        Händler, Abenteurer und Machtgruppen haben sie geprägt.
-                        Ihre Geschichte ist reich an Intrigen, Umbrüchen und Legenden.
-                    """.trimIndent()
+            cityLoreRepository.save(
+                (existing ?: CityLoreEntity(
+                    cityId = cityId,
+                    title = "Über die Stadt",
+                    text = ""
+                )).copy(
+                    mapImageUri = uri
                 )
             )
         }
     }
 
-    /* ---------------- Stadtviertel ---------------- */
+    /* =====================================================
+     * Stadtviertel
+     * ===================================================== */
 
     fun districtsForCity(cityId: String): StateFlow<List<CityDistrictEntity>> =
         cityDistrictRepository
@@ -87,7 +92,9 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- Fraktionen ---------------- */
+    /* =====================================================
+     * Fraktionen
+     * ===================================================== */
 
     val factions: StateFlow<List<Faction>> =
         factionRepository
@@ -110,7 +117,9 @@ class CityViewModel(
         }
     }
 
-    /* ---------------- POI-Kategorien ---------------- */
+    /* =====================================================
+     * POI-Kategorien
+     * ===================================================== */
 
     val poiCategories: StateFlow<List<PoiCategory>> =
         poiCategoryRepository
@@ -121,7 +130,9 @@ class CityViewModel(
                 emptyList()
             )
 
-    /* ---------------- POIs (rollenbewusst) ---------------- */
+    /* =====================================================
+     * POIs (rollenbewusst)
+     * ===================================================== */
 
     val allPois: StateFlow<List<PointOfInterest>> =
         poiRepository
@@ -140,8 +151,6 @@ class CityViewModel(
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
-
-    /* ---------------- POI-CRUD (SL) ---------------- */
 
     fun savePoi(poi: PointOfInterest) {
         viewModelScope.launch {
