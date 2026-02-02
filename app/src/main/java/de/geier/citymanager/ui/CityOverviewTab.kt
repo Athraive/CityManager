@@ -2,7 +2,6 @@ package de.geier.citymanager.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -18,7 +17,7 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 /**
  * Eigener Root für den Stadt-Tab.
- * Enthält einen lokalen NavHost mit klaren Roots.
+ * Enthält einen lokalen NavHost mit gleichwertigen Unter-Tabs.
  */
 @Composable
 fun CityOverviewTab(
@@ -37,13 +36,12 @@ fun CityOverviewTab(
             modifier = Modifier.weight(1f)
         ) {
 
-            // 🆕 Einstieg: Stadtübersicht (noch leer)
             composable(Route.STADTUEBERSICHT) {
-                // absichtlich leer – Inhalt kommt später
+                CityIntroScreen()
             }
 
             composable(Route.STADTKARTE) {
-                // Stadtkarte (noch leer wie zuvor)
+                // Stadtkarte (kommt später)
             }
 
             composable(Route.STADTVIERTEL_LIST) {
@@ -78,7 +76,7 @@ fun CityOverviewTab(
 }
 
 /* -------------------------------------------------------
- * Interne Stadt-Tabs (lokal!)
+ * Interne Stadt-Tabs (lokal)
  * ----------------------------------------------------- */
 
 @Composable
@@ -91,6 +89,7 @@ private fun StadtTabs(
     val currentRoute = backStackEntry?.destination?.route
 
     val tabs = listOf(
+        Route.STADTUEBERSICHT to "Übersicht",
         Route.STADTKARTE to "Stadtkarte",
         Route.STADTVIERTEL_LIST to "Stadtviertel",
         Route.STADTGESCHICHTE to "Stadtgeschichte"
