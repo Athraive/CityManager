@@ -33,9 +33,14 @@ fun CityOverviewTab(
 
         NavHost(
             navController = navController,
-            startDestination = Route.STADTKARTE,
+            startDestination = Route.STADTUEBERSICHT,
             modifier = Modifier.weight(1f)
         ) {
+
+            // 🆕 Einstieg: Stadtübersicht (noch leer)
+            composable(Route.STADTUEBERSICHT) {
+                // absichtlich leer – Inhalt kommt später
+            }
 
             composable(Route.STADTKARTE) {
                 // Stadtkarte (noch leer wie zuvor)
@@ -102,7 +107,7 @@ private fun StadtTabs(
                     if (currentRoute != route) {
                         navController.navigate(route) {
                             launchSingleTop = true
-                            popUpTo(Route.STADTKARTE) {
+                            popUpTo(Route.STADTUEBERSICHT) {
                                 inclusive = false
                             }
                         }

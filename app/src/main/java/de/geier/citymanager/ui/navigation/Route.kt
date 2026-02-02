@@ -3,6 +3,7 @@ package de.geier.citymanager.ui.navigation
 object Route {
 
     // Über die Stadt
+    const val STADTUEBERSICHT = "stadtuebersicht"
     const val STADTKARTE = "stadtkarte"
     const val STADTVIERTEL_LIST = "stadtviertel"
     const val STADTVIERTEL_DETAIL = "stadtviertel/{districtId}"
