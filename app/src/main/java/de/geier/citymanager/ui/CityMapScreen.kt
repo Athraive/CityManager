@@ -3,7 +3,6 @@ package de.geier.citymanager.ui
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -13,16 +12,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 
 /**
- * Stadtkarte – minimal.
- * SL kann ein Kartenbild auswählen, Spieler sehen es read-only.
- * Noch keine Persistenz, keine Marker.
+ * Stadtkarte – aktuell ohne Marker.
+ * Marker folgen erst, wenn Koordinaten Teil des Datenmodells sind.
  */
 @Composable
 fun CityMapScreen(
-    accessContext: AccessContext
+    accessContext: AccessContext,
+    pois: List<PointOfInterest>
 ) {
     var mapUri by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -39,8 +38,8 @@ fun CityMapScreen(
     ) {
 
         if (mapUri != null) {
-            Image(
-                painter = rememberAsyncImagePainter(mapUri),
+            AsyncImage(
+                model = mapUri,
                 contentDescription = "Stadtkarte",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
