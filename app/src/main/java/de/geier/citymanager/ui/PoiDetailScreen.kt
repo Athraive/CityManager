@@ -26,10 +26,16 @@ fun PoiDetailScreen(
     /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
-    var description by remember(poi.id) { mutableStateOf(poi.description) }
-    var visible by remember(poi.id) { mutableStateOf(poi.visible) }
 
+    // WICHTIG: nullable -> non-null UI-State
+    var description by remember(poi.id) {
+        mutableStateOf(poi.description ?: "")
+    }
+
+    var visible by remember(poi.id) { mutableStateOf(poi.visible) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    val canEdit = accessContext.canEdit()
 
     /* ---------------- Auswahl setzen ---------------- */
 
@@ -40,8 +46,6 @@ fun PoiDetailScreen(
     val assignedPersonIds by viewModel
         .personIdsForSelectedPoi
         .collectAsState()
-
-    val canEdit = accessContext.canEdit()
 
     /* ---------------- UI ---------------- */
 
@@ -153,7 +157,7 @@ fun PoiDetailScreen(
                         viewModel.save(
                             poi.copy(
                                 name = name,
-                                description = description,
+                                description = description.takeIf { it.isNotBlank() },
                                 visible = visible
                             )
                         )

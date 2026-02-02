@@ -27,18 +27,21 @@ fun PlayerPoiListScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(pois) { poi ->
+        items(pois, key = { it.id }) { poi ->
             Column {
                 Text(
                     text = poi.name,
                     style = MaterialTheme.typography.titleMedium
                 )
-                if (poi.description.isNotBlank()) {
-                    Text(
-                        text = poi.description,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+
+                poi.description
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { description ->
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
             }
         }
     }

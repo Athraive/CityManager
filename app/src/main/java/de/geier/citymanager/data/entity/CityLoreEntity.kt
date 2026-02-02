@@ -11,5 +11,6 @@ data class CityLoreEntity(
     val title: String,
     val text: String,
 
-    val isVisibleToPlayers: Boolean = true
+    // NEU: Kartenbild der Stadt
+    val mapImageUri: String? = null
 )

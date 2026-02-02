@@ -7,28 +7,27 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import de.geier.citymanager.ui.viewmodel.CityViewModel
 
-/**
- * Stadtkarte – aktuell ohne Marker.
- * Marker folgen erst, wenn Koordinaten Teil des Datenmodells sind.
- */
 @Composable
 fun CityMapScreen(
-    accessContext: AccessContext,
-    pois: List<PointOfInterest>
+    cityId: String,
+    cityViewModel: CityViewModel,
+    accessContext: AccessContext
 ) {
-    var mapUri by rememberSaveable { mutableStateOf<String?>(null) }
+    val lore by cityViewModel.cityLore(cityId).collectAsState()
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        mapUri = uri?.toString()
+        uri?.let {
+            cityViewModel.saveCityMapUri(cityId, it.toString())
+        }
     }
 
     Box(
@@ -37,20 +36,17 @@ fun CityMapScreen(
             .background(MaterialTheme.colorScheme.surface)
     ) {
 
-        if (mapUri != null) {
+        lore?.mapImageUri?.let { uri ->
             AsyncImage(
-                model = mapUri,
+                model = uri,
                 contentDescription = "Stadtkarte",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
             )
-        } else {
-            Text(
-                text = "Keine Stadtkarte hinterlegt",
-                modifier = Modifier.align(Alignment.Center),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        } ?: Text(
+            text = "Keine Stadtkarte hinterlegt",
+            modifier = Modifier.align(Alignment.Center)
+        )
 
         if (accessContext.canEdit()) {
             FloatingActionButton(

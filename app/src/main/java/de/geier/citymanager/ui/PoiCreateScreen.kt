@@ -9,7 +9,6 @@ import java.util.UUID
 
 @Composable
 fun PoiCreateScreen(
-    poiType: PoiType,
     categoryId: String,
     onSave: (PointOfInterest) -> Unit,
     onCancel: () -> Unit
@@ -26,7 +25,7 @@ fun PoiCreateScreen(
     ) {
 
         Text(
-            text = "➕ Neuer Eintrag",
+            text = "➕ Neuer POI",
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -66,10 +65,12 @@ fun PoiCreateScreen(
                         PointOfInterest(
                             id = UUID.randomUUID().toString(),
                             name = name,
-                            description = description,
+                            description = description.takeIf { it.isNotBlank() },
                             categoryId = categoryId,
-                            type = poiType,
-                            visible = visible
+                            visible = visible,
+                            factionId = null,
+                            playerNotes = "",
+                            gameMasterNotes = ""
                         )
                     )
                 }

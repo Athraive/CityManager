@@ -26,7 +26,7 @@ fun PlayerPoiDetailScreen(
     /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
-    var description by remember(poi.id) { mutableStateOf(poi.description) }
+    var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
     var playerNotes by remember(poi.id) { mutableStateOf(poi.playerNotes) }
     var gameMasterNotes by remember(poi.id) { mutableStateOf(poi.gameMasterNotes) }
 
@@ -213,7 +213,7 @@ fun PlayerPoiDetailScreen(
                         onSave(
                             poi.copy(
                                 name = name,
-                                description = description,
+                                description = description.takeIf { it.isNotBlank() },
                                 visible = visible,
                                 factionId = factionId,
                                 playerNotes = playerNotes,

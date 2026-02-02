@@ -24,7 +24,6 @@ fun GameMasterCategoryListScreen(
     accessContext: AccessContext
 ) {
     val categories by categoryViewModel.categories.collectAsState()
-    val factions by cityViewModel.factions.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
@@ -37,7 +36,7 @@ fun GameMasterCategoryListScreen(
     if (selectedPoi != null) {
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
-            factions = factions,
+            factions = cityViewModel.factions.collectAsState().value,
             accessContext = accessContext,
             categoryTitle = selectedCategory?.title,
             onSave = { cityViewModel.savePoi(it) },
@@ -46,6 +45,7 @@ fun GameMasterCategoryListScreen(
         )
         return
     }
+
 
     /* ------------------------------------------------------------------ */
     /* CATEGORY DETAIL (SL)                                                */
@@ -98,8 +98,7 @@ fun GameMasterCategoryListScreen(
                             visible = true,
                             factionId = null,
                             playerNotes = "",
-                            gameMasterNotes = "",
-                            type = PoiType.LOCATION
+                            gameMasterNotes = ""
                         )
                     }
                 }

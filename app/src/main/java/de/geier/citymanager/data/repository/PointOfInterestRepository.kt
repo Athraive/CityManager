@@ -1,8 +1,8 @@
 package de.geier.citymanager.data.repository
 
 import de.geier.citymanager.data.dao.PointOfInterestDao
-import de.geier.citymanager.data.entity.mapper.toDomain
 import de.geier.citymanager.data.entity.mapper.toEntity
+import de.geier.citymanager.data.entity.mapper.toUi
 import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.PointOfInterest
 import kotlinx.coroutines.flow.Flow
@@ -12,53 +12,51 @@ class PointOfInterestRepository(
     private val dao: PointOfInterestDao
 ) {
 
-    /* ---------------- Lesen ---------------- */
+    fun getPois(accessContext: AccessContext): Flow<List<PointOfInterest>> =
+        when {
+            accessContext.canEdit() ->
+                dao.getAll().map { list ->
+                    list.map { it.toUi() }
+                }
 
-    fun getPois(accessContext: AccessContext): Flow<List<PointOfInterest>> {
-        val source = if (accessContext.canEdit()) {
-            dao.getAll()
-        } else {
-            dao.getVisibleForPlayer()
+            else ->
+                dao.getVisibleForPlayer().map { list ->
+                    list.map { it.toUi() }
+                }
         }
-
-        return source.map { list ->
-            list.map { it.toDomain() }
-        }
-    }
 
     fun getPoisByCategory(
         categoryId: String,
         accessContext: AccessContext
-    ): Flow<List<PointOfInterest>> {
-        val source = if (accessContext.canEdit()) {
-            dao.getByCategory(categoryId)
-        } else {
-            dao.getVisibleForPlayerByCategory(categoryId)
-        }
+    ): Flow<List<PointOfInterest>> =
+        when {
+            accessContext.canEdit() ->
+                dao.getByCategory(categoryId).map { list ->
+                    list.map { it.toUi() }
+                }
 
-        return source.map { list ->
-            list.map { it.toDomain() }
+            else ->
+                dao.getVisibleForPlayerByCategory(categoryId).map { list ->
+                    list.map { it.toUi() }
+                }
         }
-    }
-
-    /* ---------------- Einzel ---------------- */
 
     suspend fun getById(id: String): PointOfInterest? =
-        dao.getById(id)?.toDomain()
+        dao.getById(id)?.toUi()
 
-    /* ---------------- Mutationen (SL) ---------------- */
-
-    suspend fun save(poi: PointOfInterest, accessContext: AccessContext) {
-        require(accessContext.canEdit()) {
-            "Player is not allowed to save POIs"
-        }
+    suspend fun save(
+        poi: PointOfInterest,
+        accessContext: AccessContext
+    ) {
+        if (!accessContext.canEdit()) return
         dao.insert(poi.toEntity())
     }
 
-    suspend fun delete(poi: PointOfInterest, accessContext: AccessContext) {
-        require(accessContext.canEdit()) {
-            "Player is not allowed to delete POIs"
-        }
+    suspend fun delete(
+        poi: PointOfInterest,
+        accessContext: AccessContext
+    ) {
+        if (!accessContext.canEdit()) return
         dao.delete(poi.toEntity())
     }
 }

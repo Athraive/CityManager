@@ -23,7 +23,7 @@ import de.geier.citymanager.data.entity.*
         CityDistrictEntity::class,
         CityLoreEntity::class
     ],
-    version = 13,                     // 🔺 Version erhöhen!
+    version = 14,                     // 🔺 Version erhöhen!
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

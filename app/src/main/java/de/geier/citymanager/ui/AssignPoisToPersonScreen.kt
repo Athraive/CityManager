@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
-
 @Composable
 fun AssignPoisToPersonScreen(
     person: Person,
@@ -74,13 +73,16 @@ fun AssignPoisToPersonScreen(
                                 text = poi.name,
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            if (poi.description.isNotBlank()) {
-                                Text(
-                                    text = poi.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+
+                            poi.description
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { description ->
+                                    Text(
+                                        text = description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                         }
                     }
                 }

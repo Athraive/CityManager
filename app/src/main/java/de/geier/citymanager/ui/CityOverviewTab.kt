@@ -21,10 +21,13 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
  */
 @Composable
 fun CityOverviewTab(
-    cityViewModel: CityViewModel
+    cityViewModel: CityViewModel,
+    accessContext: AccessContext
 ) {
     val navController = rememberNavController()
     val cityId = "default"
+
+    val pois by cityViewModel.allPois.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -41,8 +44,13 @@ fun CityOverviewTab(
             }
 
             composable(Route.STADTKARTE) {
-                // Stadtkarte (kommt später)
+                CityMapScreen(
+                    cityId = cityId,
+                    cityViewModel = cityViewModel,
+                    accessContext = accessContext
+                )
             }
+
 
             composable(Route.STADTVIERTEL_LIST) {
                 CityDistrictListScreen(
@@ -76,7 +84,7 @@ fun CityOverviewTab(
 }
 
 /* -------------------------------------------------------
- * Interne Stadt-Tabs (lokal)
+ * Interne Stadt-Tabs
  * ----------------------------------------------------- */
 
 @Composable

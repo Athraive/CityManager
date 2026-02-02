@@ -51,7 +51,6 @@ fun CityScreen(
                 title = "CityManager",
                 accessContext = accessContext
             )
-
         },
         bottomBar = {
             CityBottomBar(
@@ -75,7 +74,10 @@ fun CityScreen(
             when (activeTab) {
 
                 CityTab.CITY -> {
-                    CityOverviewTab(cityViewModel)
+                    CityOverviewTab(
+                        cityViewModel = cityViewModel,
+                        accessContext = accessContext
+                    )
                 }
 
                 CityTab.PERSONS -> {
@@ -86,7 +88,6 @@ fun CityScreen(
                         categories = categories,
                         accessContext = accessContext
                     )
-
                 }
 
                 CityTab.POIS -> {
