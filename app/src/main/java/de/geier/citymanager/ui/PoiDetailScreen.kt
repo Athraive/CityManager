@@ -12,13 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.geier.citymanager.ui.viewmodel.PoiDetailViewModel
 
 @Composable
 fun PoiDetailScreen(
     poi: PointOfInterest,
-    persons: List<Person>,
-    viewModel: PoiDetailViewModel,
+    persons: List<Person>,   // aktuell nur für Anzeige / später
+    factions: List<Faction>, // aktuell nur für Anzeige / später
     accessContext: AccessContext,
     onBack: () -> Unit,
     onDelete: (PointOfInterest) -> Unit
@@ -26,48 +25,33 @@ fun PoiDetailScreen(
     /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
-
-    // WICHTIG: nullable -> non-null UI-State
-    var description by remember(poi.id) {
-        mutableStateOf(poi.description ?: "")
-    }
-
+    var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
     var visible by remember(poi.id) { mutableStateOf(poi.visible) }
+
+    var playerNotes by remember(poi.id) { mutableStateOf(poi.playerNotes) }
+    var gameMasterNotes by remember(poi.id) { mutableStateOf(poi.gameMasterNotes) }
+
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
-
-    /* ---------------- Auswahl setzen ---------------- */
-
-    LaunchedEffect(poi.id) {
-        viewModel.selectPoi(poi)
-    }
-
-    val assignedPersonIds by viewModel
-        .personIdsForSelectedPoi
-        .collectAsState()
 
     /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(name.ifBlank { "Ort" }) },
+                title = {
+                    Text(name.ifBlank { "Ort" })
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Schließen"
-                        )
+                        Icon(Icons.Default.Close, contentDescription = "Schließen")
                     }
                 },
                 actions = {
                     if (canEdit) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Löschen"
-                            )
+                            Icon(Icons.Default.Delete, contentDescription = "Löschen")
                         }
                     }
                 }
@@ -125,27 +109,27 @@ fun PoiDetailScreen(
                 }
             }
 
-            /* ---------- Zugeordnete Personen ---------- */
+            /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-            Text("Zugeordnete Personen", style = MaterialTheme.typography.titleMedium)
+            Text("Notizen", style = MaterialTheme.typography.titleMedium)
 
-            val visiblePersons = remember(persons, assignedPersonIds, canEdit) {
-                persons.filter { person ->
-                    assignedPersonIds.contains(person.id) &&
-                            (canEdit || person.visible)
-                }
-            }
+            Text("Spieler-Notizen")
+            OutlinedTextField(
+                value = playerNotes,
+                onValueChange = { playerNotes = it },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 4
+            )
 
-            if (visiblePersons.isEmpty()) {
-                Text(
-                    text = "Keine Personen zugeordnet",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            if (accessContext.canViewSlNotes()) {
+                Text("SL-Notizen")
+                OutlinedTextField(
+                    value = gameMasterNotes,
+                    onValueChange = { gameMasterNotes = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4
                 )
-            } else {
-                visiblePersons.forEach { person ->
-                    Text("• ${person.name}")
-                }
             }
 
             /* ---------- Speichern ---------- */
@@ -154,15 +138,18 @@ fun PoiDetailScreen(
                 Button(
                     enabled = name.isNotBlank(),
                     onClick = {
-                        viewModel.save(
+                        onDelete(
                             poi.copy(
                                 name = name,
                                 description = description.takeIf { it.isNotBlank() },
-                                visible = visible
+                                visible = visible,
+                                playerNotes = playerNotes,
+                                gameMasterNotes = gameMasterNotes
                             )
                         )
                         onBack()
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Speichern")
                 }

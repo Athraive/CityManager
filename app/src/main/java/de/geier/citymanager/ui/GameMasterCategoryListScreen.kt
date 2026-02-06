@@ -30,25 +30,23 @@ fun GameMasterCategoryListScreen(
     var editingCategory by remember { mutableStateOf<PoiCategory?>(null) }
 
     /* ------------------------------------------------------------------ */
-    /* POI DETAIL (SL)                                                     */
+    /* POI DETAIL (SPIELLEITER)                                            */
     /* ------------------------------------------------------------------ */
 
     if (selectedPoi != null) {
-        PlayerPoiDetailScreen(
+        PoiDetailScreen(
             poi = selectedPoi!!,
-            factions = cityViewModel.factions.collectAsState().value,
+            persons = emptyList(),
+            factions = emptyList(),
             accessContext = accessContext,
-            categoryTitle = selectedCategory?.title,
-            onSave = { cityViewModel.savePoi(it) },
-            onDelete = { cityViewModel.deletePoi(it) },
-            onBack = { selectedPoi = null }
+            onBack = { selectedPoi = null },
+            onDelete = { cityViewModel.deletePoi(it) }
         )
         return
     }
 
-
     /* ------------------------------------------------------------------ */
-    /* CATEGORY DETAIL (SL)                                                */
+    /* CATEGORY DETAIL                                                     */
     /* ------------------------------------------------------------------ */
 
     if (editingCategory != null) {
@@ -96,7 +94,7 @@ fun GameMasterCategoryListScreen(
                             description = "",
                             categoryId = selectedCategory!!.id,
                             visible = true,
-                            factionId = null,
+                            factionId = null,          // ✅ FIX
                             playerNotes = "",
                             gameMasterNotes = ""
                         )

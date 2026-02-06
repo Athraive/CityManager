@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import java.util.UUID
 
 @Composable
 fun FraktionenTab(
@@ -37,15 +38,15 @@ fun FraktionenTab(
             if (accessContext.canEdit()) {
                 FloatingActionButton(
                     onClick = {
+                        // 🔑 EINZIGE ENTSCHEIDENDE ZEILE
                         activeFaction = Faction(
-                            id = "",
+                            id = UUID.randomUUID().toString(),
                             name = "",
                             description = null,
                             visible = true,
                             playerNotes = "",
                             gameMasterNotes = ""
                         )
-
                     }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Fraktion anlegen")
@@ -64,15 +65,17 @@ fun FraktionenTab(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(visibleFactions) { faction ->
+            items(
+                items = visibleFactions,
+                key = { it.id }
+            ) { faction ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { activeFaction = faction }
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                        modifier = Modifier.padding(16.dp))
+                    {
                         Text(faction.name, style = MaterialTheme.typography.titleMedium)
                         faction.description?.let { Text(it) }
                     }

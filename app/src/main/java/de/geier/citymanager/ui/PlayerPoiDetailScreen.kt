@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     factions: List<Faction>,
+    assignedFactionIds: Set<String>, // 👈 WICHTIG
     accessContext: AccessContext,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit = {},
@@ -29,18 +30,15 @@ fun PlayerPoiDetailScreen(
     var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
     var playerNotes by remember(poi.id) { mutableStateOf(poi.playerNotes) }
     var gameMasterNotes by remember(poi.id) { mutableStateOf(poi.gameMasterNotes) }
-
     var visible by remember(poi.id) { mutableStateOf(poi.visible) }
-    var factionId by remember(poi.id) { mutableStateOf(poi.factionId) }
-    var factionDropdownExpanded by remember { mutableStateOf(false) }
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    /* ---------------- sichtbare Fraktion (Spieler) ---------------- */
+    /* ---------------- zugeordnete & sichtbare Fraktionen ---------------- */
 
-    val visibleFaction = remember(factions, factionId) {
-        factions.firstOrNull {
-            it.id == factionId && it.visible
+    val visibleAssignedFactions = remember(factions, assignedFactionIds) {
+        factions.filter { faction ->
+            faction.visible && assignedFactionIds.contains(faction.id)
         }
     }
 
@@ -123,61 +121,19 @@ fun PlayerPoiDetailScreen(
                 }
             }
 
-            /* ---------- Fraktion ---------- */
+            /* ---------- Fraktionen (read-only, korrekt gefiltert) ---------- */
 
             HorizontalDivider()
-            Text("Fraktion", style = MaterialTheme.typography.titleMedium)
+            Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
 
-            if (accessContext.canEdit()) {
-                val selectedFactionName =
-                    factions.firstOrNull { it.id == factionId }?.name
-                        ?: "Keine Fraktion"
-
-                ExposedDropdownMenuBox(
-                    expanded = factionDropdownExpanded,
-                    onExpandedChange = { factionDropdownExpanded = !factionDropdownExpanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedFactionName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Fraktion") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = factionDropdownExpanded
-                            )
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = factionDropdownExpanded,
-                        onDismissRequest = { factionDropdownExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Keine Fraktion") },
-                            onClick = {
-                                factionId = null
-                                factionDropdownExpanded = false
-                            }
-                        )
-
-                        factions.forEach { faction ->
-                            DropdownMenuItem(
-                                text = { Text(faction.name) },
-                                onClick = {
-                                    factionId = faction.id
-                                    factionDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
+            if (visibleAssignedFactions.isEmpty()) {
+                Text(
+                    "Keine Fraktionen zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
-                visibleFaction?.let {
-                    Text(it.name)
+                visibleAssignedFactions.forEach { faction ->
+                    Text("• ${faction.name}")
                 }
             }
 
@@ -215,7 +171,6 @@ fun PlayerPoiDetailScreen(
                                 name = name,
                                 description = description.takeIf { it.isNotBlank() },
                                 visible = visible,
-                                factionId = factionId,
                                 playerNotes = playerNotes,
                                 gameMasterNotes = gameMasterNotes
                             )

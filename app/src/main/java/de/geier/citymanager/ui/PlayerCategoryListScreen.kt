@@ -101,6 +101,7 @@ fun PlayerCategoryListScreen(
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
+            assignedFactionIds = emptySet(), // 👈 korrekt & bewusst
             accessContext = accessContext,
             onSave = { updatedPoi ->
                 cityViewModel.savePoi(updatedPoi)
