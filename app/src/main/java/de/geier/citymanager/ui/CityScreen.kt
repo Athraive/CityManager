@@ -86,7 +86,10 @@ fun CityScreen(
                         factions = factions,
                         pois = allPois,
                         categories = categories,
-                        accessContext = accessContext
+                        accessContext = accessContext,
+                        onFactionLinkClicked = {
+                            activeTab = CityTab.FACTIONS
+                        }
                     )
                 }
 

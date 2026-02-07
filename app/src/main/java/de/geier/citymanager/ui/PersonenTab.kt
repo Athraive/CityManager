@@ -23,7 +23,8 @@ fun PersonenTab(
     factions: List<Faction>,
     pois: List<PointOfInterest>,
     categories: List<PoiCategory>,
-    accessContext: AccessContext
+    accessContext: AccessContext,
+    onFactionLinkClicked: () -> Unit
 ) {
     /* ---------------- State ---------------- */
 
@@ -90,10 +91,8 @@ fun PersonenTab(
                 onDelete = { viewModel.delete(it) },
                 onAssignPois = { showAssignPois = true },
                 onAssignFactions = { showAssignFactions = true },
-                onFactionClick = { factionId ->
-                    // bewusst noch keine Navigation:
-                    // erste Kante ist UI-seitig umgesetzt,
-                    // Zielscreen-Anbindung folgt separat
+                onFactionClick = {
+                    onFactionLinkClicked()
                 }
             )
         }
@@ -128,8 +127,6 @@ fun PersonenTab(
                         .fillMaxSize()
                         .padding(padding)
                 ) {
-
-                    /* ---------- Suche ---------- */
 
                     OutlinedTextField(
                         value = searchQuery,
