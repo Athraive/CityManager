@@ -2,6 +2,7 @@
 
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,7 +26,8 @@ fun PersonDetailScreen(
     categories: List<PoiCategory>,
     onDelete: (Person) -> Unit,
     onAssignPois: () -> Unit,
-    onAssignFactions: () -> Unit
+    onAssignFactions: () -> Unit,
+    onFactionClick: (String) -> Unit
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
 
@@ -147,7 +149,12 @@ fun PersonDetailScreen(
                 )
             } else {
                 visibleFactions.forEach { faction ->
-                    Text("• ${faction.name}")
+                    Text(
+                        text = "• ${faction.name}",
+                        modifier = Modifier.clickable {
+                            onFactionClick(faction.id)
+                        }
+                    )
                 }
             }
 

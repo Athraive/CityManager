@@ -89,9 +89,13 @@ fun PersonenTab(
                 categories = categories,
                 onDelete = { viewModel.delete(it) },
                 onAssignPois = { showAssignPois = true },
-                onAssignFactions = { showAssignFactions = true }
+                onAssignFactions = { showAssignFactions = true },
+                onFactionClick = { factionId ->
+                    // bewusst noch keine Navigation:
+                    // erste Kante ist UI-seitig umgesetzt,
+                    // Zielscreen-Anbindung folgt separat
+                }
             )
-
         }
 
         else -> {
