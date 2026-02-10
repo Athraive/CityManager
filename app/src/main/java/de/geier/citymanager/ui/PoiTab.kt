@@ -1,18 +1,24 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package de.geier.citymanager.ui
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.viewmodel.PoiViewModel
+import de.geier.citymanager.ui.viewmodel.PoiViewModelFactory
 
 /**
  * Root für den POI-Tab.
  *
- * Einheitlicher Einstieg für Spieler und Spielleiter.
- * Rollenlogik erfolgt ausschließlich über AccessContext
- * innerhalb der nachgelagerten Screens.
+ * – SL: voller Workflow (PoiViewModel)
+ * – Player: read-only Anzeige
+ *
+ * KEINE Player-spezifischen ViewModels.
  */
 @Composable
 fun PoiTab(
@@ -22,36 +28,54 @@ fun PoiTab(
 ) {
     val context = LocalContext.current
 
-    // Rollenfreies Category-ViewModel
+    /* ---------------- Kategorie-VM (rollenfrei) ---------------- */
+
     val categoryViewModel: PoiCategoryViewModel = viewModel(
-        factory = PoiCategoryViewModelFactory(
-            context = context
+        factory = PoiCategoryViewModelFactory(context)
+    )
+
+    /* ---------------- POI-Interaktions-VM (nur SL) ---------------- */
+
+    val poiViewModel: PoiViewModel = viewModel(
+        factory = PoiViewModelFactory(
+            context = context,
+            accessContext = accessContext
         )
     )
+
+    /* ---------------- Daten ---------------- */
 
     val allPois by cityViewModel
         .allPois
         .collectAsState(initial = emptyList())
 
+    // 🔒 Player darf nur sichtbare Fraktionen sehen
+    val visibleFactionsForPlayer =
+        factions.filter { it.visible }
+
+    /* ---------------- Routing ---------------- */
+
     if (accessContext.canEdit()) {
 
-        /* ---------------- Spielleiter ---------------- */
+        /* ---------- Spielleiter ---------- */
 
         GameMasterCategoryListScreen(
             categoryViewModel = categoryViewModel,
             cityViewModel = cityViewModel,
+            poiViewModel = poiViewModel,
             allPois = allPois,
+            factions = factions,                 // SL sieht alle
             accessContext = accessContext
         )
 
     } else {
 
-        /* ---------------- Spieler ---------------- */
+        /* ---------- Spieler ---------- */
 
         PlayerCategoryListScreen(
             cityViewModel = cityViewModel,
             categoryViewModel = categoryViewModel,
-            factions = factions,
+            factions = visibleFactionsForPlayer, // ✔️ gefiltert
             accessContext = accessContext
         )
     }

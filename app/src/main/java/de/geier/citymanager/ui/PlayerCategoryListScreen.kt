@@ -8,25 +8,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import de.geier.citymanager.data.DatabaseProvider
+import de.geier.citymanager.data.repository.PoiFactionRepository
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun PlayerCategoryListScreen(
     cityViewModel: CityViewModel,
     categoryViewModel: PoiCategoryViewModel,
-    factions: List<Faction>,
+    factions: List<Faction>,          // bereits: visible == true
     accessContext: AccessContext
 ) {
-    val categories: List<PoiCategory> by
-    categoryViewModel.categories.collectAsState()
+    val context = LocalContext.current
+    val categories by categoryViewModel.categories.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
 
-    /* =====================================================
-     * KATEGORIEN (Spieler)
-     * ===================================================== */
+    /* ================= Kategorien ================= */
 
     if (selectedCategory == null) {
 
@@ -35,10 +37,7 @@ fun PlayerCategoryListScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(
-                items = categories.filter { it.visible },
-                key = { it.id }
-            ) { category ->
+            items(categories.filter { it.visible }) { category ->
                 Text(
                     text = "${category.icon} ${category.title}",
                     style = MaterialTheme.typography.titleMedium,
@@ -50,14 +49,11 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* =====================================================
-         * POIs DER KATEGORIE (Spieler)
-         * ===================================================== */
+        /* ================= POIs ================= */
 
     } else if (selectedPoi == null) {
 
-        val poisInCategory: List<PointOfInterest> by
-        cityViewModel
+        val poisInCategory by cityViewModel
             .poisByCategory(selectedCategory!!.id)
             .collectAsState(initial = emptyList())
 
@@ -72,17 +68,12 @@ fun PlayerCategoryListScreen(
             )
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(
-                    items = poisInCategory,
-                    key = { it.id }
-                ) { poi ->
+                items(poisInCategory) { poi ->
                     Text(
                         text = "• ${poi.name}",
-                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { selectedPoi = poi }
@@ -92,20 +83,30 @@ fun PlayerCategoryListScreen(
             }
         }
 
-        /* =====================================================
-         * POI-DETAIL (Spieler)
-         * ===================================================== */
+        /* ================= POI-Detail ================= */
 
     } else {
+
+        // 🔒 Read-only POI↔Faction, direkt aus Repository
+        val assignedFactionIds by produceState<Set<String>>(
+            initialValue = emptySet(),
+            key1 = selectedPoi!!.id
+        ) {
+            val db = DatabaseProvider.getDatabase(context)
+            val repo = PoiFactionRepository(db.poiFactionDao())
+
+            value = repo
+                .getFactionIdsForPoi(selectedPoi!!.id)
+                .first()
+                .toSet()
+        }
 
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
-            assignedFactionIds = emptySet(), // 👈 korrekt & bewusst
+            assignedFactionIds = assignedFactionIds,
             accessContext = accessContext,
-            onSave = { updatedPoi ->
-                cityViewModel.savePoi(updatedPoi)
-            },
+            onSave = {},          // Player: read-only
             onBack = { selectedPoi = null }
         )
     }

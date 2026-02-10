@@ -12,14 +12,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.geier.citymanager.ui.viewmodel.PoiViewModel
 
 @Composable
 fun PoiDetailScreen(
     poi: PointOfInterest,
-    persons: List<Person>,   // aktuell nur für Anzeige / später
-    factions: List<Faction>, // aktuell nur für Anzeige / später
+    persons: List<Person>,   // unverändert
+    factions: List<Faction>, // unverändert (Fix 2 kommt später)
+    poiViewModel: PoiViewModel,
     accessContext: AccessContext,
     onBack: () -> Unit,
+    onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit
 ) {
     /* ---------------- lokaler Edit-State ---------------- */
@@ -35,14 +38,16 @@ fun PoiDetailScreen(
 
     val canEdit = accessContext.canEdit()
 
+    val assignedFactionIds by poiViewModel
+        .factionIdsForSelectedPoi
+        .collectAsState()
+
     /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(name.ifBlank { "Ort" })
-                },
+                title = { Text(name.ifBlank { "Ort" }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Schließen")
@@ -109,6 +114,29 @@ fun PoiDetailScreen(
                 }
             }
 
+            /* ---------- Fraktionen (Anzeige, Fix 2 erweitert) ---------- */
+
+            if (factions.isNotEmpty()) {
+                HorizontalDivider()
+                Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
+
+                factions.forEach { faction ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Checkbox(
+                            checked = assignedFactionIds.contains(faction.id),
+                            enabled = canEdit,
+                            onCheckedChange = {
+                                poiViewModel.toggleFactionAssignment(faction.id)
+                            }
+                        )
+                        Text(faction.name)
+                    }
+                }
+            }
+
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
@@ -138,7 +166,7 @@ fun PoiDetailScreen(
                 Button(
                     enabled = name.isNotBlank(),
                     onClick = {
-                        onDelete(
+                        onSave(
                             poi.copy(
                                 name = name,
                                 description = description.takeIf { it.isNotBlank() },
