@@ -9,10 +9,12 @@ import de.geier.citymanager.data.repository.CityLoreRepository
 import de.geier.citymanager.data.repository.FactionRepositoryImpl
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 import de.geier.citymanager.data.repository.PointOfInterestRepository
+import de.geier.citymanager.data.repository.PersonRepository
 import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.Faction
 import de.geier.citymanager.ui.PointOfInterest
 import de.geier.citymanager.ui.PoiCategory
+import de.geier.citymanager.ui.Person
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -22,7 +24,8 @@ class CityViewModel(
     private val poiRepository: PointOfInterestRepository,
     private val factionRepository: FactionRepositoryImpl,
     private val cityDistrictRepository: CityDistrictRepository,
-    private val cityLoreRepository: CityLoreRepository
+    private val cityLoreRepository: CityLoreRepository,
+    private val personRepository: PersonRepository   // 🔹 neu
 ) : ViewModel() {
 
     /* =====================================================
@@ -163,4 +166,17 @@ class CityViewModel(
             poiRepository.delete(poi, accessContext)
         }
     }
+
+    /* =====================================================
+     * Personen (NEU)
+     * ===================================================== */
+
+    val allPersons: StateFlow<List<Person>> =
+        personRepository
+            .getPersons(accessContext)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
 }

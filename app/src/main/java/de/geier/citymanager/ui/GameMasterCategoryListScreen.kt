@@ -24,6 +24,7 @@ fun GameMasterCategoryListScreen(
     poiViewModel: PoiViewModel,
     allPois: List<PointOfInterest>,
     factions: List<Faction>,
+    persons: List<Person>,
     accessContext: AccessContext
 ) {
     val categories by categoryViewModel.categories.collectAsState()
@@ -53,12 +54,20 @@ fun GameMasterCategoryListScreen(
             .factionIdsForSelectedPoi
             .collectAsState()
 
+        val assignedPersonIds by poiViewModel
+            .personIdsForSelectedPoi
+            .collectAsState()
+
         val assignedFactions =
             factions.filter { assignedFactionIds.contains(it.id) }
+
+        val assignedPersons =
+            persons.filter { assignedPersonIds.contains(it.id) }
 
         PoiDetailScreen(
             poi = selectedPoi!!,
             assignedFactions = assignedFactions,
+            assignedPersons = assignedPersons,
             accessContext = accessContext,
             onBack = {
                 selectedPoi = null

@@ -34,7 +34,10 @@ class CityViewModelFactory(
                     CityDistrictRepositoryImpl(database.cityDistrictDao()),
 
                 cityLoreRepository =
-                    CityLoreRepository(database.cityLoreDao())
+                    CityLoreRepository(database.cityLoreDao()),
+
+                personRepository =
+                    PersonRepository(database.personDao())   // 🔹 neu
             ) as T
         }
 

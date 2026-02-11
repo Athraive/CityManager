@@ -49,6 +49,10 @@ fun PoiTab(
         .allPois
         .collectAsState(initial = emptyList())
 
+    val allPersons by cityViewModel
+        .allPersons
+        .collectAsState(initial = emptyList())
+
     // 🔒 Player darf nur sichtbare Fraktionen sehen
     val visibleFactionsForPlayer =
         factions.filter { it.visible }
@@ -64,7 +68,8 @@ fun PoiTab(
             cityViewModel = cityViewModel,
             poiViewModel = poiViewModel,
             allPois = allPois,
-            factions = factions,                 // SL sieht alle
+            factions = factions,        // SL sieht alle
+            persons = allPersons,       // 🔹 neu übergeben
             accessContext = accessContext
         )
 
@@ -75,7 +80,7 @@ fun PoiTab(
         PlayerCategoryListScreen(
             cityViewModel = cityViewModel,
             categoryViewModel = categoryViewModel,
-            factions = visibleFactionsForPlayer, // ✔️ gefiltert
+            factions = visibleFactionsForPlayer,
             accessContext = accessContext
         )
     }

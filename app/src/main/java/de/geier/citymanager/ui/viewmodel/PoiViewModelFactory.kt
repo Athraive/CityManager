@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.PointOfInterestRepository
 import de.geier.citymanager.data.repository.PoiFactionRepository
+import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.ui.AccessContext
 
 class PoiViewModelFactory(
@@ -24,7 +25,9 @@ class PoiViewModelFactory(
                 poiRepository =
                     PointOfInterestRepository(database.pointOfInterestDao()),
                 poiFactionRepository =
-                    PoiFactionRepository(database.poiFactionDao())
+                    PoiFactionRepository(database.poiFactionDao()),
+                personPoiRepository =
+                    PersonPoiRepository(database.personPoiDao())
             ) as T
         }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geier.citymanager.data.repository.PointOfInterestRepository
 import de.geier.citymanager.data.repository.PoiFactionRepository
+import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.PointOfInterest
 import kotlinx.coroutines.flow.*
@@ -14,7 +15,8 @@ import kotlinx.coroutines.launch
 class PoiViewModel(
     private val accessContext: AccessContext,
     private val poiRepository: PointOfInterestRepository,
-    private val poiFactionRepository: PoiFactionRepository
+    private val poiFactionRepository: PoiFactionRepository,
+    private val personPoiRepository: PersonPoiRepository
 ) : ViewModel() {
 
     /* ---------------- POIs ---------------- */
@@ -75,4 +77,22 @@ class PoiViewModel(
             }
         }
     }
+
+    /* ---------------- Personen (Read-only Aggregation) ---------------- */
+
+    val personIdsForSelectedPoi: StateFlow<Set<String>> =
+        selectedPoi
+            .flatMapLatest { poi ->
+                if (poi == null) {
+                    flowOf(emptyList())
+                } else {
+                    personPoiRepository.getPersonIdsForPoi(poi.id)
+                }
+            }
+            .map { it.toSet() }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptySet()
+            )
 }

@@ -17,14 +17,13 @@ import androidx.compose.ui.unit.dp
 fun PoiDetailScreen(
     poi: PointOfInterest,
     assignedFactions: List<Faction>,
+    assignedPersons: List<Person>,
     accessContext: AccessContext,
     onBack: () -> Unit,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit,
     onAssignFactionsClick: () -> Unit
 ) {
-
-    /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
     var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
@@ -36,8 +35,6 @@ fun PoiDetailScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
-
-    /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
@@ -109,6 +106,19 @@ fun PoiDetailScreen(
                 }
             }
 
+            /* ---------- Personen (Read-only) ---------- */
+
+            HorizontalDivider()
+            Text("Personen", style = MaterialTheme.typography.titleMedium)
+
+            if (assignedPersons.isEmpty()) {
+                Text("Keine Personen zugewiesen")
+            } else {
+                assignedPersons.forEach { person ->
+                    Text("• ${person.name}")
+                }
+            }
+
             /* ---------- Fraktionen (Read-only) ---------- */
 
             HorizontalDivider()
@@ -154,8 +164,6 @@ fun PoiDetailScreen(
                 )
             }
 
-            /* ---------- Speichern ---------- */
-
             if (canEdit) {
                 Button(
                     enabled = name.isNotBlank(),
@@ -178,8 +186,6 @@ fun PoiDetailScreen(
             }
         }
     }
-
-    /* ---------------- Delete Confirm ---------------- */
 
     if (showDeleteConfirm) {
         AlertDialog(
