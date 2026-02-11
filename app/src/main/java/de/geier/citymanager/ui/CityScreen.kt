@@ -47,6 +47,7 @@ fun CityScreen(
     val factions by cityViewModel.factions.collectAsState()
     val allPois by cityViewModel.allPois.collectAsState()
     val allPersons by cityViewModel.allPersons.collectAsState()
+    val categories by cityViewModel.poiCategories.collectAsState()
 
     Scaffold(
         topBar = {
@@ -60,7 +61,7 @@ fun CityScreen(
                 CityBottomBar(
                     activeTab = activeTab,
                     accessContext = accessContext,
-                    onTabSelected = { activeTab = it }
+                    onTabSelected = { tab -> activeTab = tab }
                 )
             }
         }
@@ -83,11 +84,27 @@ fun CityScreen(
 
                     if (person != null) {
 
+                        personViewModel.selectPerson(person)
+
+                        val assignedPoiIds by personViewModel
+                            .poiIdsForSelectedPerson
+                            .collectAsState()
+
+                        val assignedFactionIds by personViewModel
+                            .factionIdsForSelectedPerson
+                            .collectAsState()
+
                         val assignedPois =
-                            emptyList<PointOfInterest>() // temporär
+                            allPois.filter {
+                                assignedPoiIds.contains(it.id) &&
+                                        (accessContext.canEdit() || it.visible)
+                            }
 
                         val assignedFactions =
-                            emptyList<Faction>() // temporär
+                            factions.filter {
+                                assignedFactionIds.contains(it.id) &&
+                                        (accessContext.canEdit() || it.visible)
+                            }
 
                         PersonDetailScreen(
                             person = person,
@@ -112,22 +129,6 @@ fun CityScreen(
                     }
                 }
 
-                /* ================= FACTION DETAIL ================= */
-
-                is DetailTarget.Faction -> {
-
-                    activeTab = CityTab.FACTIONS
-                    activeDetail = null
-                }
-
-                /* ================= POI DETAIL ================= */
-
-                is DetailTarget.Poi -> {
-
-                    activeTab = CityTab.POIS
-                    activeDetail = null
-                }
-
                 /* ================= NORMALER TAB ================= */
 
                 null -> {
@@ -146,10 +147,11 @@ fun CityScreen(
                                 viewModel = personViewModel,
                                 factions = factions,
                                 pois = allPois,
-                                categories = emptyList(),
+                                categories = categories,
                                 accessContext = accessContext,
                                 onFactionLinkClicked = {
-                                    activeTab = CityTab.FACTIONS
+                                    activeDetail =
+                                        DetailTarget.Faction(it)
                                 }
                             )
                         }
@@ -173,6 +175,10 @@ fun CityScreen(
                             )
                         }
                     }
+                }
+
+                else -> {
+                    activeDetail = null
                 }
             }
         }

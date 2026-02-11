@@ -24,7 +24,8 @@ fun PersonenTab(
     pois: List<PointOfInterest>,
     categories: List<PoiCategory>,
     accessContext: AccessContext,
-    onFactionLinkClicked: () -> Unit
+    onFactionLinkClicked: (String) -> Unit
+
 ) {
 
     val persons by viewModel.persons.collectAsState()
@@ -116,9 +117,10 @@ fun PersonenTab(
                 onAssignFactions = { showAssignFactions = true },
                 onPersonClick = { /* später Graph */ },
                 onPoiClick = { /* später Graph */ },
-                onFactionClick = {
-                    onFactionLinkClicked()
+                onFactionClick = { id ->
+                    onFactionLinkClicked(id)
                 }
+
             )
         }
 
