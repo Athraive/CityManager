@@ -5,10 +5,10 @@ package de.geier.citymanager.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.components.AppTopBar
 import de.geier.citymanager.ui.viewmodel.CityViewModel
@@ -34,12 +34,14 @@ fun CityScreen(
     accessContext: AccessContext
 ) {
 
+    val context = LocalContext.current
+
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
     var activeDetail by remember { mutableStateOf<DetailTarget?>(null) }
 
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(
-            context = androidx.compose.ui.platform.LocalContext.current,
+            context = context,
             accessContext = accessContext
         )
     )
@@ -61,7 +63,12 @@ fun CityScreen(
                 CityBottomBar(
                     activeTab = activeTab,
                     accessContext = accessContext,
-                    onTabSelected = { tab -> activeTab = tab }
+                    onTabSelected = { tab ->
+                        activeTab = tab
+                        if (tab == CityTab.PERSONS) {
+                            personViewModel.clearSelection()
+                        }
+                    }
                 )
             }
         }
@@ -79,37 +86,14 @@ fun CityScreen(
 
                 is DetailTarget.Person -> {
 
-                    val person =
-                        allPersons.firstOrNull { it.id == detail.id }
+                    val person = allPersons.firstOrNull { it.id == detail.id }
 
                     if (person != null) {
 
-                        personViewModel.selectPerson(person)
-
-                        val assignedPoiIds by personViewModel
-                            .poiIdsForSelectedPerson
-                            .collectAsState()
-
-                        val assignedFactionIds by personViewModel
-                            .factionIdsForSelectedPerson
-                            .collectAsState()
-
-                        val assignedPois =
-                            allPois.filter {
-                                assignedPoiIds.contains(it.id) &&
-                                        (accessContext.canEdit() || it.visible)
-                            }
-
-                        val assignedFactions =
-                            factions.filter {
-                                assignedFactionIds.contains(it.id) &&
-                                        (accessContext.canEdit() || it.visible)
-                            }
-
                         PersonDetailScreen(
                             person = person,
-                            assignedPois = assignedPois,
-                            assignedFactions = assignedFactions,
+                            assignedPois = emptyList(),
+                            assignedFactions = emptyList(),
                             accessContext = accessContext,
                             onBack = { activeDetail = null },
                             onSave = { personViewModel.save(it) },
@@ -127,6 +111,40 @@ fun CityScreen(
                             }
                         )
                     }
+                }
+
+                /* ================= FACTION DETAIL ================= */
+
+                is DetailTarget.Faction -> {
+
+                    val faction =
+                        factions.firstOrNull { it.id == detail.id }
+
+                    if (faction != null) {
+
+                        FactionDetailScreen(
+                            faction = faction,
+                            assignedPersons = emptyList(),
+                            assignedPois = emptyList(),
+                            accessContext = accessContext,
+                            onBack = { activeDetail = null },
+                            onSave = { cityViewModel.saveFaction(it) },
+                            onDelete = { cityViewModel.deleteFaction(it) },
+                            onPersonClick = { id ->
+                                activeDetail = DetailTarget.Person(id)
+                            },
+                            onPoiClick = { id ->
+                                activeDetail = DetailTarget.Poi(id)
+                            }
+                        )
+                    }
+                }
+
+                /* ================= POI DETAIL ================= */
+
+                is DetailTarget.Poi -> {
+                    activeDetail = null
+                    activeTab = CityTab.POIS
                 }
 
                 /* ================= NORMALER TAB ================= */
@@ -149,9 +167,8 @@ fun CityScreen(
                                 pois = allPois,
                                 categories = categories,
                                 accessContext = accessContext,
-                                onFactionLinkClicked = {
-                                    activeDetail =
-                                        DetailTarget.Faction(it)
+                                onFactionLinkClicked = { id ->
+                                    activeDetail = DetailTarget.Faction(id)
                                 }
                             )
                         }
@@ -175,10 +192,6 @@ fun CityScreen(
                             )
                         }
                     }
-                }
-
-                else -> {
-                    activeDetail = null
                 }
             }
         }

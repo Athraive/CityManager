@@ -8,11 +8,12 @@ class PoiFactionRepository(
     private val dao: PoiFactionDao
 ) {
 
-    /* ---------- POI → Fraktionen ---------- */
+    fun getFactionIdsForPoi(poiId: String): Flow<List<String>> =
+        dao.getFactionIdsForPoi(poiId)
 
-    fun getFactionIdsForPoi(poiId: String): Flow<List<String>> {
-        return dao.getFactionIdsForPoi(poiId)
-    }
+    /* NEU */
+    fun getPoiIdsForFaction(factionId: String): Flow<List<String>> =
+        dao.getPoiIdsForFaction(factionId)
 
     suspend fun addFactionToPoi(poiId: String, factionId: String) {
         dao.addFactionToPoi(
