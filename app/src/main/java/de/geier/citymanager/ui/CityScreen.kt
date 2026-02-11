@@ -23,6 +23,14 @@ enum class CityTab {
     FACTIONS
 }
 
+/* ================= Graph-Navigation Fundament ================= */
+
+sealed class DetailTarget {
+    data class Person(val id: String) : DetailTarget()
+    data class Poi(val id: String) : DetailTarget()
+    data class Faction(val id: String) : DetailTarget()
+}
+
 @Composable
 fun CityScreen(
     cityViewModel: CityViewModel,
@@ -31,6 +39,9 @@ fun CityScreen(
     val context = LocalContext.current
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
+
+    // 🔹 Neuer zentraler Detail-State (noch ungenutzt)
+    var activeDetail by remember { mutableStateOf<DetailTarget?>(null) }
 
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(
@@ -43,7 +54,7 @@ fun CityScreen(
 
     val factions by cityViewModel.factions.collectAsState()
     val allPois by cityViewModel.allPois.collectAsState()
-    val allPersons by cityViewModel.allPersons.collectAsState()   // 🔹 neu
+    val allPersons by cityViewModel.allPersons.collectAsState()
     val categories by cityViewModel.poiCategories.collectAsState()
 
     Scaffold(
@@ -72,6 +83,8 @@ fun CityScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+
+            // 🔹 Noch keine Nutzung von activeDetail
             when (activeTab) {
 
                 CityTab.CITY -> {
@@ -106,8 +119,8 @@ fun CityScreen(
                     FraktionenTab(
                         accessContext = accessContext,
                         factions = factions,
-                        persons = allPersons,        // 🔹 neu
-                        pois = allPois,              // 🔹 neu
+                        persons = allPersons,
+                        pois = allPois,
                         onSave = { cityViewModel.saveFaction(it) },
                         onDelete = { cityViewModel.deleteFaction(it) }
                     )
