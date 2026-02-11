@@ -16,12 +16,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FactionDetailScreen(
     faction: Faction,
+    assignedPersons: List<Person>,              // 🔹 neu
+    assignedPois: List<PointOfInterest>,       // 🔹 neu
     accessContext: AccessContext,
     onBack: () -> Unit,
     onSave: (Faction) -> Unit,
     onDelete: (Faction) -> Unit
 ) {
-    /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(faction.id) { mutableStateOf(faction.name) }
     var description by remember(faction.id) { mutableStateOf(faction.description ?: "") }
@@ -33,8 +34,6 @@ fun FactionDetailScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
-
-    /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
@@ -106,6 +105,38 @@ fun FactionDetailScreen(
                 }
             }
 
+            /* ---------- Zugewiesene Personen (Read-only) ---------- */
+
+            HorizontalDivider()
+            Text("Personen", style = MaterialTheme.typography.titleMedium)
+
+            if (assignedPersons.isEmpty()) {
+                Text(
+                    "Keine Personen zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                assignedPersons.forEach { person ->
+                    Text("• ${person.name}")
+                }
+            }
+
+            /* ---------- Zugewiesene POIs (Read-only) ---------- */
+
+            HorizontalDivider()
+            Text("Orte", style = MaterialTheme.typography.titleMedium)
+
+            if (assignedPois.isEmpty()) {
+                Text(
+                    "Keine Orte zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                assignedPois.forEach { poi ->
+                    Text("• ${poi.name}")
+                }
+            }
+
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
@@ -129,8 +160,6 @@ fun FactionDetailScreen(
                 )
             }
 
-            /* ---------- Speichern ---------- */
-
             if (canEdit) {
                 Button(
                     enabled = name.isNotBlank(),
@@ -152,8 +181,6 @@ fun FactionDetailScreen(
             }
         }
     }
-
-    /* ---------------- Delete Confirm ---------------- */
 
     if (showDeleteConfirm) {
         AlertDialog(

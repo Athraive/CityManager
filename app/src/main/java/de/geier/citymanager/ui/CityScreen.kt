@@ -43,6 +43,7 @@ fun CityScreen(
 
     val factions by cityViewModel.factions.collectAsState()
     val allPois by cityViewModel.allPois.collectAsState()
+    val allPersons by cityViewModel.allPersons.collectAsState()   // 🔹 neu
     val categories by cityViewModel.poiCategories.collectAsState()
 
     Scaffold(
@@ -105,6 +106,8 @@ fun CityScreen(
                     FraktionenTab(
                         accessContext = accessContext,
                         factions = factions,
+                        persons = allPersons,        // 🔹 neu
+                        pois = allPois,              // 🔹 neu
                         onSave = { cityViewModel.saveFaction(it) },
                         onDelete = { cityViewModel.deleteFaction(it) }
                     )
