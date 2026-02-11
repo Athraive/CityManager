@@ -12,19 +12,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.geier.citymanager.ui.viewmodel.PoiViewModel
 
 @Composable
 fun PoiDetailScreen(
     poi: PointOfInterest,
-    persons: List<Person>,   // unverändert
-    factions: List<Faction>, // unverändert (Fix 2 kommt später)
-    poiViewModel: PoiViewModel,
+    assignedFactions: List<Faction>,
     accessContext: AccessContext,
     onBack: () -> Unit,
     onSave: (PointOfInterest) -> Unit,
-    onDelete: (PointOfInterest) -> Unit
+    onDelete: (PointOfInterest) -> Unit,
+    onAssignFactionsClick: () -> Unit
 ) {
+
     /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
@@ -37,10 +36,6 @@ fun PoiDetailScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
-
-    val assignedFactionIds by poiViewModel
-        .factionIdsForSelectedPoi
-        .collectAsState()
 
     /* ---------------- UI ---------------- */
 
@@ -114,26 +109,25 @@ fun PoiDetailScreen(
                 }
             }
 
-            /* ---------- Fraktionen (Anzeige, Fix 2 erweitert) ---------- */
+            /* ---------- Fraktionen (Read-only) ---------- */
 
-            if (factions.isNotEmpty()) {
-                HorizontalDivider()
-                Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
+            HorizontalDivider()
+            Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
 
-                factions.forEach { faction ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Checkbox(
-                            checked = assignedFactionIds.contains(faction.id),
-                            enabled = canEdit,
-                            onCheckedChange = {
-                                poiViewModel.toggleFactionAssignment(faction.id)
-                            }
-                        )
-                        Text(faction.name)
-                    }
+            if (assignedFactions.isEmpty()) {
+                Text("Keine Fraktionen zugewiesen")
+            } else {
+                assignedFactions.forEach { faction ->
+                    Text("• ${faction.name}")
+                }
+            }
+
+            if (canEdit) {
+                Button(
+                    onClick = onAssignFactionsClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Fraktionen zuweisen")
                 }
             }
 

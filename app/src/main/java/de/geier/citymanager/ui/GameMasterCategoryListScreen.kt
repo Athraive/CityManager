@@ -31,25 +31,47 @@ fun GameMasterCategoryListScreen(
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
     var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
     var editingCategory by remember { mutableStateOf<PoiCategory?>(null) }
+    var assigningFactions by remember { mutableStateOf(false) }
+
+    /* ---------------- ASSIGN FACTIONS ---------------- */
+
+    if (assigningFactions && selectedPoi != null) {
+        AssignFactionsToPoiScreen(
+            poi = selectedPoi!!,
+            factions = factions,
+            poiViewModel = poiViewModel,
+            onBack = { assigningFactions = false }
+        )
+        return
+    }
 
     /* ---------------- POI DETAIL ---------------- */
 
     if (selectedPoi != null) {
+
+        val assignedFactionIds by poiViewModel
+            .factionIdsForSelectedPoi
+            .collectAsState()
+
+        val assignedFactions =
+            factions.filter { assignedFactionIds.contains(it.id) }
+
         PoiDetailScreen(
             poi = selectedPoi!!,
-            persons = emptyList(),
-            factions = factions,
-            poiViewModel = poiViewModel,
+            assignedFactions = assignedFactions,
             accessContext = accessContext,
             onBack = {
                 selectedPoi = null
                 poiViewModel.clearSelection()
             },
-            onSave = { cityViewModel.savePoi(it) },   // ✅ FIX
+            onSave = { cityViewModel.savePoi(it) },
             onDelete = {
                 cityViewModel.deletePoi(it)
                 selectedPoi = null
                 poiViewModel.clearSelection()
+            },
+            onAssignFactionsClick = {
+                assigningFactions = true
             }
         )
         return
@@ -116,23 +138,31 @@ fun GameMasterCategoryListScreen(
         if (selectedCategory == null) {
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(categories) { category ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             "${category.icon} ${category.title}",
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
                                 .clickable { selectedCategory = category }
                         )
-                        Text("✏", modifier = Modifier.clickable {
-                            editingCategory = category
-                        })
+                        Text(
+                            "✏",
+                            modifier = Modifier.clickable {
+                                editingCategory = category
+                            }
+                        )
                     }
                 }
             }
@@ -143,11 +173,14 @@ fun GameMasterCategoryListScreen(
                 allPois.filter { it.categoryId == selectedCategory!!.id }
 
             Column(
-                modifier = Modifier.fillMaxSize().padding(padding)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
             ) {
                 Text(
                     "← ${selectedCategory!!.title}",
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .padding(16.dp)
                         .clickable { selectedCategory = null }
                 )
 
@@ -157,7 +190,8 @@ fun GameMasterCategoryListScreen(
                 ) {
                     items(poisInCategory) { poi ->
                         Row(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .clickable {
                                     selectedPoi = poi
                                     poiViewModel.selectPoi(poi)
