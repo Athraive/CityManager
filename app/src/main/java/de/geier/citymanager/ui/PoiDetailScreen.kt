@@ -2,6 +2,7 @@
 
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,13 +23,14 @@ fun PoiDetailScreen(
     onBack: () -> Unit,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit,
-    onAssignFactionsClick: () -> Unit
+    onAssignFactions: () -> Unit,
+    onPersonClick: (String) -> Unit,
+    onFactionClick: (String) -> Unit
 ) {
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
     var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
     var visible by remember(poi.id) { mutableStateOf(poi.visible) }
-
     var playerNotes by remember(poi.id) { mutableStateOf(poi.playerNotes) }
     var gameMasterNotes by remember(poi.id) { mutableStateOf(poi.gameMasterNotes) }
 
@@ -65,8 +67,6 @@ fun PoiDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- Name ---------- */
-
             if (canEdit) {
                 OutlinedTextField(
                     value = name,
@@ -78,8 +78,6 @@ fun PoiDetailScreen(
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
             }
-
-            /* ---------- Beschreibung ---------- */
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
@@ -94,8 +92,6 @@ fun PoiDetailScreen(
                 Text(description)
             }
 
-            /* ---------- Sichtbarkeit ---------- */
-
             if (canEdit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
@@ -106,38 +102,51 @@ fun PoiDetailScreen(
                 }
             }
 
-            /* ---------- Personen (Read-only) ---------- */
-
-            HorizontalDivider()
-            Text("Personen", style = MaterialTheme.typography.titleMedium)
-
-            if (assignedPersons.isEmpty()) {
-                Text("Keine Personen zugewiesen")
-            } else {
-                assignedPersons.forEach { person ->
-                    Text("• ${person.name}")
-                }
-            }
-
-            /* ---------- Fraktionen (Read-only) ---------- */
+            /* ---------- Fraktionen ---------- */
 
             HorizontalDivider()
             Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
 
             if (assignedFactions.isEmpty()) {
-                Text("Keine Fraktionen zugewiesen")
+                Text(
+                    "Keine Fraktionen zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
                 assignedFactions.forEach { faction ->
-                    Text("• ${faction.name}")
+                    Text(
+                        text = "• ${faction.name}",
+                        modifier = Modifier.clickable {
+                            onFactionClick(faction.id)
+                        }
+                    )
                 }
             }
 
             if (canEdit) {
-                Button(
-                    onClick = onAssignFactionsClick,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Button(onClick = onAssignFactions) {
                     Text("Fraktionen zuweisen")
+                }
+            }
+
+            /* ---------- Personen ---------- */
+
+            HorizontalDivider()
+            Text("Personen", style = MaterialTheme.typography.titleMedium)
+
+            if (assignedPersons.isEmpty()) {
+                Text(
+                    "Keine Personen zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                assignedPersons.forEach { person ->
+                    Text(
+                        text = "• ${person.name}",
+                        modifier = Modifier.clickable {
+                            onPersonClick(person.id)
+                        }
+                    )
                 }
             }
 
@@ -154,7 +163,7 @@ fun PoiDetailScreen(
                 minLines = 4
             )
 
-            if (accessContext.canViewSlNotes()) {
+            if (canEdit) {
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,
@@ -164,25 +173,22 @@ fun PoiDetailScreen(
                 )
             }
 
-            if (canEdit) {
-                Button(
-                    enabled = name.isNotBlank(),
-                    onClick = {
-                        onSave(
-                            poi.copy(
-                                name = name,
-                                description = description.takeIf { it.isNotBlank() },
-                                visible = visible,
-                                playerNotes = playerNotes,
-                                gameMasterNotes = gameMasterNotes
-                            )
+            Button(
+                enabled = name.isNotBlank(),
+                onClick = {
+                    onSave(
+                        poi.copy(
+                            name = name,
+                            description = description.takeIf { it.isNotBlank() },
+                            visible = visible,
+                            playerNotes = playerNotes,
+                            gameMasterNotes = gameMasterNotes
                         )
-                        onBack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Speichern")
+                    )
+                    onBack()
                 }
+            ) {
+                Text("Speichern")
             }
         }
     }
@@ -192,10 +198,7 @@ fun PoiDetailScreen(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("Ort löschen?") },
             text = {
-                Text(
-                    "Möchtest du den Ort „${name.ifBlank { "ohne Namen" }}“ wirklich löschen?\n" +
-                            "Diese Aktion kann nicht rückgängig gemacht werden."
-                )
+                Text("Möchtest du den Ort wirklich löschen?")
             },
             confirmButton = {
                 Button(

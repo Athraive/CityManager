@@ -54,15 +54,11 @@ fun GameMasterCategoryListScreen(
             .factionIdsForSelectedPoi
             .collectAsState()
 
-        val assignedPersonIds by poiViewModel
-            .personIdsForSelectedPoi
-            .collectAsState()
-
         val assignedFactions =
             factions.filter { assignedFactionIds.contains(it.id) }
 
-        val assignedPersons =
-            persons.filter { assignedPersonIds.contains(it.id) }
+        // 🔹 Personen-Zuweisung vorerst leer (wird später korrekt über ViewModel ergänzt)
+        val assignedPersons = emptyList<Person>()
 
         PoiDetailScreen(
             poi = selectedPoi!!,
@@ -79,9 +75,11 @@ fun GameMasterCategoryListScreen(
                 selectedPoi = null
                 poiViewModel.clearSelection()
             },
-            onAssignFactionsClick = {
+            onAssignFactions = {
                 assigningFactions = true
-            }
+            },
+            onPersonClick = { /* später Graph */ },
+            onFactionClick = { /* später Graph */ }
         )
         return
     }
