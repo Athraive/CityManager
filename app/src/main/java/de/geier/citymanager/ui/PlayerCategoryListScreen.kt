@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.PoiFactionRepository
+import de.geier.citymanager.data.repository.PersonPoiRepository
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import kotlinx.coroutines.flow.first
 
@@ -87,7 +88,8 @@ fun PlayerCategoryListScreen(
 
     } else {
 
-        // 🔒 Read-only POI↔Faction, direkt aus Repository
+        /* ---------- Fraktions-Zuordnung ---------- */
+
         val assignedFactionIds by produceState<Set<String>>(
             initialValue = emptySet(),
             key1 = selectedPoi!!.id
@@ -101,10 +103,34 @@ fun PlayerCategoryListScreen(
                 .toSet()
         }
 
+        /* ---------- Personen-Zuordnung ---------- */
+
+        val assignedPersons by produceState<List<Person>>(
+            initialValue = emptyList(),
+            key1 = selectedPoi!!.id
+        ) {
+            val db = DatabaseProvider.getDatabase(context)
+            val personPoiRepo = PersonPoiRepository(db.personPoiDao())
+
+            val personIds =
+                personPoiRepo
+                    .getPersonIdsForPoi(selectedPoi!!.id)
+                    .first()
+
+            val allPersons =
+                cityViewModel.allPersons.first()
+
+            value =
+                allPersons
+                    .filter { it.id in personIds }
+                    .filter { it.visible }   // 🔒 Spieler sieht nur sichtbare Personen
+        }
+
         PlayerPoiDetailScreen(
             poi = selectedPoi!!,
             factions = factions,
             assignedFactionIds = assignedFactionIds,
+            assignedPersons = assignedPersons,
             accessContext = accessContext,
             onSave = {},          // Player: read-only
             onBack = { selectedPoi = null }

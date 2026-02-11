@@ -17,14 +17,14 @@ import androidx.compose.ui.unit.dp
 fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     factions: List<Faction>,
-    assignedFactionIds: Set<String>, // 👈 WICHTIG
+    assignedFactionIds: Set<String>,
+    assignedPersons: List<Person>,              // 🔹 neu
     accessContext: AccessContext,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit = {},
     onBack: () -> Unit,
     categoryTitle: String? = null
 ) {
-    /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
     var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
@@ -40,6 +40,12 @@ fun PlayerPoiDetailScreen(
         factions.filter { faction ->
             faction.visible && assignedFactionIds.contains(faction.id)
         }
+    }
+
+    /* ---------------- sichtbare Personen ---------------- */
+
+    val visibleAssignedPersons = remember(assignedPersons) {
+        assignedPersons.filter { it.visible }
     }
 
     /* ---------------- UI ---------------- */
@@ -82,8 +88,6 @@ fun PlayerPoiDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- Name ---------- */
-
             if (accessContext.canEdit()) {
                 OutlinedTextField(
                     value = name,
@@ -93,8 +97,6 @@ fun PlayerPoiDetailScreen(
                     singleLine = true
                 )
             }
-
-            /* ---------- Beschreibung ---------- */
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
@@ -109,8 +111,6 @@ fun PlayerPoiDetailScreen(
                 Text(description)
             }
 
-            /* ---------- Sichtbarkeit ---------- */
-
             if (accessContext.canEdit()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Checkbox(
@@ -121,7 +121,23 @@ fun PlayerPoiDetailScreen(
                 }
             }
 
-            /* ---------- Fraktionen (read-only, korrekt gefiltert) ---------- */
+            /* ---------- Personen (read-only) ---------- */
+
+            HorizontalDivider()
+            Text("Personen", style = MaterialTheme.typography.titleMedium)
+
+            if (visibleAssignedPersons.isEmpty()) {
+                Text(
+                    "Keine Personen zugeordnet",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                visibleAssignedPersons.forEach { person ->
+                    Text("• ${person.name}")
+                }
+            }
+
+            /* ---------- Fraktionen ---------- */
 
             HorizontalDivider()
             Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
@@ -160,8 +176,6 @@ fun PlayerPoiDetailScreen(
                 )
             }
 
-            /* ---------- Speichern ---------- */
-
             if (accessContext.canEdit()) {
                 Button(
                     enabled = name.isNotBlank(),
@@ -183,8 +197,6 @@ fun PlayerPoiDetailScreen(
             }
         }
     }
-
-    /* ---------------- Delete Confirm ---------------- */
 
     if (showDeleteConfirm) {
         AlertDialog(
