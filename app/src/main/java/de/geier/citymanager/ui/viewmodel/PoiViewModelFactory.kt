@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
-import de.geier.citymanager.data.repository.PointOfInterestRepository
-import de.geier.citymanager.data.repository.PoiFactionRepository
-import de.geier.citymanager.data.repository.PersonPoiRepository
+import de.geier.citymanager.data.repository.*
 import de.geier.citymanager.ui.AccessContext
 
 class PoiViewModelFactory(
@@ -16,6 +14,7 @@ class PoiViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+
         if (modelClass.isAssignableFrom(PoiViewModel::class.java)) {
 
             val database = DatabaseProvider.getDatabase(context)

@@ -27,6 +27,7 @@ fun GameMasterCategoryListScreen(
     persons: List<Person>,
     accessContext: AccessContext
 ) {
+
     val categories by categoryViewModel.categories.collectAsState()
 
     var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
@@ -54,11 +55,15 @@ fun GameMasterCategoryListScreen(
             .factionIdsForSelectedPoi
             .collectAsState()
 
+        val assignedPersonIds by poiViewModel
+            .personIdsForSelectedPoi
+            .collectAsState()
+
         val assignedFactions =
             factions.filter { assignedFactionIds.contains(it.id) }
 
-        // 🔹 Personen-Zuweisung vorerst leer (wird später korrekt über ViewModel ergänzt)
-        val assignedPersons = emptyList<Person>()
+        val assignedPersons =
+            persons.filter { assignedPersonIds.contains(it.id) }
 
         PoiDetailScreen(
             poi = selectedPoi!!,
@@ -87,7 +92,9 @@ fun GameMasterCategoryListScreen(
     /* ---------------- CATEGORY DETAIL ---------------- */
 
     if (editingCategory != null) {
-        val poiCount = allPois.count { it.categoryId == editingCategory!!.id }
+
+        val poiCount =
+            allPois.count { it.categoryId == editingCategory!!.id }
 
         CategoryDetailScreen(
             category = editingCategory!!,
@@ -184,6 +191,7 @@ fun GameMasterCategoryListScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
+
                 Text(
                     "← ${selectedCategory!!.title}",
                     modifier = Modifier

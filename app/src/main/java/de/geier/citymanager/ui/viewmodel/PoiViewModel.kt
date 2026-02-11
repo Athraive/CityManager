@@ -63,8 +63,6 @@ class PoiViewModel(
 
     fun toggleFactionAssignment(factionId: String) {
         val poi = selectedPoi.value ?: return
-
-        // 🔒 Spieler dürfen keine Beziehungen ändern
         if (!accessContext.canEdit()) return
 
         val current = factionIdsForSelectedPoi.value
@@ -78,7 +76,7 @@ class PoiViewModel(
         }
     }
 
-    /* ---------------- Personen (Read-only Aggregation) ---------------- */
+    /* ---------------- Personen-Zuweisungen ---------------- */
 
     val personIdsForSelectedPoi: StateFlow<Set<String>> =
         selectedPoi
