@@ -13,23 +13,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.geier.citymanager.ui.viewmodel.PersonViewModel
 
 @Composable
 fun PersonDetailScreen(
     person: Person,
-    factions: List<Faction>,
-    viewModel: PersonViewModel,
-    onBack: () -> Unit,
+    assignedPois: List<PointOfInterest>,
+    assignedFactions: List<Faction>,
     accessContext: AccessContext,
-    pois: List<PointOfInterest>,
-    categories: List<PoiCategory>,
+    onBack: () -> Unit,
+    onSave: (Person) -> Unit,
     onDelete: (Person) -> Unit,
     onAssignPois: () -> Unit,
     onAssignFactions: () -> Unit,
+    onPersonClick: (String) -> Unit,
+    onPoiClick: (String) -> Unit,
     onFactionClick: (String) -> Unit
 ) {
-    /* ---------------- lokaler Edit-State ---------------- */
 
     var name by remember(person.id) { mutableStateOf(person.name) }
     var description by remember(person.id) { mutableStateOf(person.description) }
@@ -40,31 +39,6 @@ fun PersonDetailScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
-
-    /* ---------------- Zuweisungen ---------------- */
-
-    val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
-    val assignedFactionIds by viewModel.factionIdsForSelectedPerson.collectAsState()
-
-    val visibleCategoryIds = remember(categories) {
-        categories.filter { it.visible }.map { it.id }.toSet()
-    }
-
-    val visiblePois = remember(pois, assignedPoiIds, visibleCategoryIds, canEdit) {
-        pois.filter { poi ->
-            assignedPoiIds.contains(poi.id) &&
-                    (canEdit || (poi.visible && visibleCategoryIds.contains(poi.categoryId)))
-        }
-    }
-
-    val visibleFactions = remember(factions, assignedFactionIds, canEdit) {
-        factions.filter { faction ->
-            assignedFactionIds.contains(faction.id) &&
-                    (canEdit || faction.visible)
-        }
-    }
-
-    /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
@@ -95,8 +69,6 @@ fun PersonDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- Name ---------- */
-
             if (canEdit) {
                 OutlinedTextField(
                     value = name,
@@ -108,8 +80,6 @@ fun PersonDetailScreen(
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
             }
-
-            /* ---------- Beschreibung ---------- */
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
@@ -123,8 +93,6 @@ fun PersonDetailScreen(
             } else if (description.isNotBlank()) {
                 Text(description)
             }
-
-            /* ---------- Sichtbarkeit ---------- */
 
             if (canEdit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -141,14 +109,13 @@ fun PersonDetailScreen(
             HorizontalDivider()
             Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
 
-            if (visibleFactions.isEmpty()) {
+            if (assignedFactions.isEmpty()) {
                 Text(
                     "Keine Fraktionen zugewiesen",
-                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                visibleFactions.forEach { faction ->
+                assignedFactions.forEach { faction ->
                     Text(
                         text = "• ${faction.name}",
                         modifier = Modifier.clickable {
@@ -169,15 +136,19 @@ fun PersonDetailScreen(
             HorizontalDivider()
             Text("Orte", style = MaterialTheme.typography.titleMedium)
 
-            if (visiblePois.isEmpty()) {
+            if (assignedPois.isEmpty()) {
                 Text(
                     "Keine Orte zugewiesen",
-                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                visiblePois.forEach { poi ->
-                    Text("• ${poi.name}")
+                assignedPois.forEach { poi ->
+                    Text(
+                        text = "• ${poi.name}",
+                        modifier = Modifier.clickable {
+                            onPoiClick(poi.id)
+                        }
+                    )
                 }
             }
 
@@ -210,12 +181,10 @@ fun PersonDetailScreen(
                 )
             }
 
-            /* ---------- Speichern ---------- */
-
             Button(
                 enabled = name.isNotBlank(),
                 onClick = {
-                    viewModel.save(
+                    onSave(
                         person.copy(
                             name = name,
                             description = description,
@@ -231,8 +200,6 @@ fun PersonDetailScreen(
             }
         }
     }
-
-    /* ---------------- Delete Confirm ---------------- */
 
     if (showDeleteConfirm) {
         AlertDialog(

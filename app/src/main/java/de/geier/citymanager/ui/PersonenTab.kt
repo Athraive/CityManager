@@ -26,29 +26,24 @@ fun PersonenTab(
     accessContext: AccessContext,
     onFactionLinkClicked: () -> Unit
 ) {
-    /* ---------------- State ---------------- */
 
     val persons by viewModel.persons.collectAsState()
     val selectedPerson by viewModel.selectedPerson.collectAsState()
+
+    val assignedPoiIds by viewModel.poiIdsForSelectedPerson.collectAsState()
+    val assignedFactionIds by viewModel.factionIdsForSelectedPerson.collectAsState()
 
     var showAssignPois by remember { mutableStateOf(false) }
     var showAssignFactions by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    /* ---------------- Suche ---------------- */
-
     val filteredPersons = remember(persons, searchQuery) {
-        if (searchQuery.isBlank()) {
-            persons
-        } else {
+        if (searchQuery.isBlank()) persons
+        else {
             val q = searchQuery.lowercase(Locale.getDefault())
-            persons.filter {
-                it.name.lowercase(Locale.getDefault()).contains(q)
-            }
+            persons.filter { it.name.lowercase(Locale.getDefault()).contains(q) }
         }
     }
-
-    /* ---------------- Gruppierung ---------------- */
 
     val groupedPersons = remember(filteredPersons) {
         filteredPersons
@@ -59,9 +54,8 @@ fun PersonenTab(
             .toSortedMap()
     }
 
-    /* ---------------- Navigation ---------------- */
-
     when {
+
         selectedPerson != null && showAssignPois -> {
             AssignPoisToPersonScreen(
                 person = selectedPerson!!,
@@ -80,17 +74,48 @@ fun PersonenTab(
         }
 
         selectedPerson != null -> {
+
+            val canEdit = accessContext.canEdit()
+
+            val visibleCategoryIds = remember(categories) {
+                categories.filter { it.visible }.map { it.id }.toSet()
+            }
+
+            val assignedPois = remember(
+                pois,
+                assignedPoiIds,
+                visibleCategoryIds,
+                canEdit
+            ) {
+                pois.filter { poi ->
+                    assignedPoiIds.contains(poi.id) &&
+                            (canEdit || (poi.visible && visibleCategoryIds.contains(poi.categoryId)))
+                }
+            }
+
+            val assignedFactions = remember(
+                factions,
+                assignedFactionIds,
+                canEdit
+            ) {
+                factions.filter { faction ->
+                    assignedFactionIds.contains(faction.id) &&
+                            (canEdit || faction.visible)
+                }
+            }
+
             PersonDetailScreen(
                 person = selectedPerson!!,
-                factions = factions,
-                viewModel = viewModel,
-                onBack = { viewModel.clearSelection() },
+                assignedPois = assignedPois,
+                assignedFactions = assignedFactions,
                 accessContext = accessContext,
-                pois = pois,
-                categories = categories,
+                onBack = { viewModel.clearSelection() },
+                onSave = { viewModel.save(it) },
                 onDelete = { viewModel.delete(it) },
                 onAssignPois = { showAssignPois = true },
                 onAssignFactions = { showAssignFactions = true },
+                onPersonClick = { /* später Graph */ },
+                onPoiClick = { /* später Graph */ },
                 onFactionClick = {
                     onFactionLinkClicked()
                 }
@@ -98,6 +123,7 @@ fun PersonenTab(
         }
 
         else -> {
+
             Scaffold(
                 floatingActionButton = {
                     if (accessContext.canEdit()) {
