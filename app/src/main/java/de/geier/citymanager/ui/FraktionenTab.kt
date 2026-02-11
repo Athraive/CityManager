@@ -98,7 +98,9 @@ fun FraktionenTab(
             accessContext = accessContext,
             onBack = { activeFaction = null },
             onSave = onSave,
-            onDelete = onDelete
+            onDelete = onDelete,
+            onPersonClick = { /* später Graph-Navigation */ },
+            onPoiClick = { /* später Graph-Navigation */ }
         )
         return
     }

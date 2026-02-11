@@ -2,6 +2,7 @@
 
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,18 +17,19 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FactionDetailScreen(
     faction: Faction,
-    assignedPersons: List<Person>,              // 🔹 neu
-    assignedPois: List<PointOfInterest>,       // 🔹 neu
+    assignedPersons: List<Person>,
+    assignedPois: List<PointOfInterest>,
     accessContext: AccessContext,
     onBack: () -> Unit,
     onSave: (Faction) -> Unit,
-    onDelete: (Faction) -> Unit
+    onDelete: (Faction) -> Unit,
+    onPersonClick: (String) -> Unit,
+    onPoiClick: (String) -> Unit
 ) {
 
     var name by remember(faction.id) { mutableStateOf(faction.name) }
     var description by remember(faction.id) { mutableStateOf(faction.description ?: "") }
     var visible by remember(faction.id) { mutableStateOf(faction.visible) }
-
     var playerNotes by remember(faction.id) { mutableStateOf(faction.playerNotes) }
     var gameMasterNotes by remember(faction.id) { mutableStateOf(faction.gameMasterNotes) }
 
@@ -38,7 +40,7 @@ fun FactionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(name.ifBlank { "Neue Fraktion" }) },
+                title = { Text(name.ifBlank { "Fraktion" }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Schließen")
@@ -64,21 +66,17 @@ fun FactionDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- Name ---------- */
-
             if (canEdit) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
             }
-
-            /* ---------- Beschreibung ---------- */
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
@@ -86,14 +84,12 @@ fun FactionDetailScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
                 )
             } else if (description.isNotBlank()) {
                 Text(description)
             }
-
-            /* ---------- Sichtbarkeit ---------- */
 
             if (canEdit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -105,7 +101,7 @@ fun FactionDetailScreen(
                 }
             }
 
-            /* ---------- Zugewiesene Personen (Read-only) ---------- */
+            /* ---------- Personen ---------- */
 
             HorizontalDivider()
             Text("Personen", style = MaterialTheme.typography.titleMedium)
@@ -117,11 +113,16 @@ fun FactionDetailScreen(
                 )
             } else {
                 assignedPersons.forEach { person ->
-                    Text("• ${person.name}")
+                    Text(
+                        text = "• ${person.name}",
+                        modifier = Modifier.clickable {
+                            onPersonClick(person.id)
+                        }
+                    )
                 }
             }
 
-            /* ---------- Zugewiesene POIs (Read-only) ---------- */
+            /* ---------- POIs ---------- */
 
             HorizontalDivider()
             Text("Orte", style = MaterialTheme.typography.titleMedium)
@@ -133,7 +134,12 @@ fun FactionDetailScreen(
                 )
             } else {
                 assignedPois.forEach { poi ->
-                    Text("• ${poi.name}")
+                    Text(
+                        text = "• ${poi.name}",
+                        modifier = Modifier.clickable {
+                            onPoiClick(poi.id)
+                        }
+                    )
                 }
             }
 
@@ -150,7 +156,7 @@ fun FactionDetailScreen(
                 minLines = 4
             )
 
-            if (accessContext.canViewSlNotes()) {
+            if (canEdit) {
                 Text("SL-Notizen")
                 OutlinedTextField(
                     value = gameMasterNotes,
@@ -186,9 +192,7 @@ fun FactionDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("Fraktion löschen?") },
-            text = {
-                Text("Möchtest du diese Fraktion wirklich löschen?")
-            },
+            text = { Text("Möchtest du diese Fraktion wirklich löschen?") },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(

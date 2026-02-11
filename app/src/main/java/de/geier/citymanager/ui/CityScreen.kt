@@ -9,7 +9,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.components.AppTopBar
 import de.geier.citymanager.ui.viewmodel.CityViewModel
@@ -23,8 +22,6 @@ enum class CityTab {
     FACTIONS
 }
 
-/* ================= Graph-Navigation Fundament ================= */
-
 sealed class DetailTarget {
     data class Person(val id: String) : DetailTarget()
     data class Poi(val id: String) : DetailTarget()
@@ -36,26 +33,20 @@ fun CityScreen(
     cityViewModel: CityViewModel,
     accessContext: AccessContext
 ) {
-    val context = LocalContext.current
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
-
-    // 🔹 Neuer zentraler Detail-State (noch ungenutzt)
     var activeDetail by remember { mutableStateOf<DetailTarget?>(null) }
 
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(
-            context = context,
+            context = androidx.compose.ui.platform.LocalContext.current,
             accessContext = accessContext
         )
     )
 
-    /* ---------------- Gemeinsame States ---------------- */
-
     val factions by cityViewModel.factions.collectAsState()
     val allPois by cityViewModel.allPois.collectAsState()
     val allPersons by cityViewModel.allPersons.collectAsState()
-    val categories by cityViewModel.poiCategories.collectAsState()
 
     Scaffold(
         topBar = {
@@ -65,16 +56,13 @@ fun CityScreen(
             )
         },
         bottomBar = {
-            CityBottomBar(
-                activeTab = activeTab,
-                accessContext = accessContext,
-                onTabSelected = { tab ->
-                    activeTab = tab
-                    if (tab == CityTab.PERSONS) {
-                        personViewModel.clearSelection()
-                    }
-                }
-            )
+            if (activeDetail == null) {
+                CityBottomBar(
+                    activeTab = activeTab,
+                    accessContext = accessContext,
+                    onTabSelected = { activeTab = it }
+                )
+            }
         }
     ) { padding ->
 
@@ -84,46 +72,107 @@ fun CityScreen(
                 .padding(padding)
         ) {
 
-            // 🔹 Noch keine Nutzung von activeDetail
-            when (activeTab) {
+            when (val detail = activeDetail) {
 
-                CityTab.CITY -> {
-                    CityOverviewTab(
-                        cityViewModel = cityViewModel,
-                        accessContext = accessContext
-                    )
+                /* ================= PERSON DETAIL ================= */
+
+                is DetailTarget.Person -> {
+
+                    val person =
+                        allPersons.firstOrNull { it.id == detail.id }
+
+                    if (person != null) {
+
+                        val assignedPois =
+                            emptyList<PointOfInterest>() // temporär
+
+                        val assignedFactions =
+                            emptyList<Faction>() // temporär
+
+                        PersonDetailScreen(
+                            person = person,
+                            assignedPois = assignedPois,
+                            assignedFactions = assignedFactions,
+                            accessContext = accessContext,
+                            onBack = { activeDetail = null },
+                            onSave = { personViewModel.save(it) },
+                            onDelete = { personViewModel.delete(it) },
+                            onAssignPois = {},
+                            onAssignFactions = {},
+                            onPersonClick = { id ->
+                                activeDetail = DetailTarget.Person(id)
+                            },
+                            onPoiClick = { id ->
+                                activeDetail = DetailTarget.Poi(id)
+                            },
+                            onFactionClick = { id ->
+                                activeDetail = DetailTarget.Faction(id)
+                            }
+                        )
+                    }
                 }
 
-                CityTab.PERSONS -> {
-                    PersonenTab(
-                        viewModel = personViewModel,
-                        factions = factions,
-                        pois = allPois,
-                        categories = categories,
-                        accessContext = accessContext,
-                        onFactionLinkClicked = {
-                            activeTab = CityTab.FACTIONS
+                /* ================= FACTION DETAIL ================= */
+
+                is DetailTarget.Faction -> {
+
+                    activeTab = CityTab.FACTIONS
+                    activeDetail = null
+                }
+
+                /* ================= POI DETAIL ================= */
+
+                is DetailTarget.Poi -> {
+
+                    activeTab = CityTab.POIS
+                    activeDetail = null
+                }
+
+                /* ================= NORMALER TAB ================= */
+
+                null -> {
+
+                    when (activeTab) {
+
+                        CityTab.CITY -> {
+                            CityOverviewTab(
+                                cityViewModel = cityViewModel,
+                                accessContext = accessContext
+                            )
                         }
-                    )
-                }
 
-                CityTab.POIS -> {
-                    PoiTab(
-                        cityViewModel = cityViewModel,
-                        factions = factions,
-                        accessContext = accessContext
-                    )
-                }
+                        CityTab.PERSONS -> {
+                            PersonenTab(
+                                viewModel = personViewModel,
+                                factions = factions,
+                                pois = allPois,
+                                categories = emptyList(),
+                                accessContext = accessContext,
+                                onFactionLinkClicked = {
+                                    activeTab = CityTab.FACTIONS
+                                }
+                            )
+                        }
 
-                CityTab.FACTIONS -> {
-                    FraktionenTab(
-                        accessContext = accessContext,
-                        factions = factions,
-                        persons = allPersons,
-                        pois = allPois,
-                        onSave = { cityViewModel.saveFaction(it) },
-                        onDelete = { cityViewModel.deleteFaction(it) }
-                    )
+                        CityTab.POIS -> {
+                            PoiTab(
+                                cityViewModel = cityViewModel,
+                                factions = factions,
+                                accessContext = accessContext
+                            )
+                        }
+
+                        CityTab.FACTIONS -> {
+                            FraktionenTab(
+                                accessContext = accessContext,
+                                factions = factions,
+                                persons = allPersons,
+                                pois = allPois,
+                                onSave = { cityViewModel.saveFaction(it) },
+                                onDelete = { cityViewModel.deleteFaction(it) }
+                            )
+                        }
+                    }
                 }
             }
         }
