@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FactionDao {
 
-    @Query("SELECT * FROM factions")
-    fun getAll(): Flow<List<FactionEntity>>
+    @Query("SELECT * FROM factions WHERE cityId = :cityId")
+    fun getAll(cityId: String): Flow<List<FactionEntity>>
 
     @Query("SELECT * FROM factions WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): FactionEntity?
@@ -18,4 +18,7 @@ interface FactionDao {
 
     @Delete
     suspend fun delete(faction: FactionEntity)
+
+    @Query("DELETE FROM factions WHERE cityId = :cityId")
+    suspend fun deleteByCity(cityId: String)
 }

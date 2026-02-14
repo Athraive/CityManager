@@ -17,9 +17,13 @@ fun PointOfInterestEntity.toUi(): PointOfInterest =
         mapY = mapY
     )
 
-fun PointOfInterest.toEntity(): PointOfInterestEntity =
+/**
+ * cityId wird bewusst vom Repository übergeben.
+ */
+fun PointOfInterest.toEntity(cityId: String): PointOfInterestEntity =
     PointOfInterestEntity(
         id = id,
+        cityId = cityId,
         name = name,
         description = description,
         categoryId = categoryId,

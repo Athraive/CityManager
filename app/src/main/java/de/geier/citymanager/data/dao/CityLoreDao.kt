@@ -15,4 +15,11 @@ interface CityLoreDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(lore: CityLoreEntity)
+
+    /**
+     * Löscht die Lore einer Stadt.
+     * Wird beim Löschen einer Stadt verwendet.
+     */
+    @Query("DELETE FROM city_lore WHERE cityId = :cityId")
+    suspend fun deleteByCity(cityId: String)
 }

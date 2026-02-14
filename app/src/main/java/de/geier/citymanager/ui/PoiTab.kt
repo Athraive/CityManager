@@ -31,7 +31,10 @@ fun PoiTab(
     /* ---------------- Kategorie-VM (rollenfrei) ---------------- */
 
     val categoryViewModel: PoiCategoryViewModel = viewModel(
-        factory = PoiCategoryViewModelFactory(context)
+        factory = PoiCategoryViewModelFactory(
+            context = context,
+            accessContext = accessContext
+        )
     )
 
     /* ---------------- POI-Interaktions-VM (nur SL) ---------------- */
@@ -68,8 +71,8 @@ fun PoiTab(
             cityViewModel = cityViewModel,
             poiViewModel = poiViewModel,
             allPois = allPois,
-            factions = factions,        // SL sieht alle
-            persons = allPersons,       // 🔹 neu übergeben
+            factions = factions,
+            persons = allPersons,
             accessContext = accessContext
         )
 

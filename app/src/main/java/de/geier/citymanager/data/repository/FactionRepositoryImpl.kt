@@ -7,20 +7,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class FactionRepositoryImpl(
+    private val cityId: String,
     private val dao: FactionDao
 ) {
 
     fun getAll(): Flow<List<Faction>> =
-        dao.getAll().map { entities ->
+        dao.getAll(cityId).map { entities ->
             entities.map { it.toDomain() }
         }
 
     suspend fun save(faction: Faction) {
-        dao.insert(faction.toEntity())
+        dao.insert(faction.toEntity(cityId))
     }
 
     suspend fun delete(faction: Faction) {
-        dao.delete(faction.toEntity())
+        dao.delete(faction.toEntity(cityId))
     }
 
     suspend fun getById(id: String): Faction? =
@@ -39,9 +40,10 @@ private fun FactionEntity.toDomain() =
         visible = visible
     )
 
-private fun Faction.toEntity() =
+private fun Faction.toEntity(cityId: String) =
     FactionEntity(
         id = id,
+        cityId = cityId,
         name = name,
         description = description,
         playerNotes = playerNotes,

@@ -11,16 +11,24 @@ fun PersonEntity.toDomain(): Person =
         portraitImageUri = portraitImageUri,
         visible = visible,
         playerNotes = playerNotes,
-        gameMasterNotes = gameMasterNotes
+        gameMasterNotes = gameMasterNotes,
+        mapX = mapX,
+        mapY = mapY
     )
 
-fun Person.toEntity(): PersonEntity =
+/**
+ * cityId wird bewusst vom Repository übergeben.
+ */
+fun Person.toEntity(cityId: String): PersonEntity =
     PersonEntity(
         id = id,
+        cityId = cityId,
         name = name,
         description = description,
         portraitImageUri = portraitImageUri,
         visible = visible,
         playerNotes = playerNotes,
-        gameMasterNotes = gameMasterNotes
+        gameMasterNotes = gameMasterNotes,
+        mapX = mapX,
+        mapY = mapY
     )

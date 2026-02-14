@@ -16,7 +16,7 @@ fun AppNavHost() {
     val navController = rememberNavController()
 
     var selectedRole by rememberSaveable { mutableStateOf<Role?>(null) }
-    var selectedCityId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedCityId by rememberSaveable { mutableStateOf<String?>(null) }
 
     NavHost(
         navController = navController,
@@ -37,13 +37,12 @@ fun AppNavHost() {
         }
 
         composable("city_select") {
-            CitySelectScreen { cityId ->
+            CitySelectScreen { cityId: String ->
                 selectedCityId = cityId
                 navController.navigate(Screen.City.route)
             }
         }
 
-        // ✅ CITY existiert IMMER
         composable(Screen.City.route) {
             CityScreenGate(
                 role = selectedRole,

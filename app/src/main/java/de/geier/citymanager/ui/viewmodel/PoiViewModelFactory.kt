@@ -22,7 +22,10 @@ class PoiViewModelFactory(
             return PoiViewModel(
                 accessContext = accessContext,
                 poiRepository =
-                    PointOfInterestRepository(database.pointOfInterestDao()),
+                    PointOfInterestRepository(
+                        accessContext.cityId,
+                        database.pointOfInterestDao()
+                    ),
                 poiFactionRepository =
                     PoiFactionRepository(database.poiFactionDao()),
                 personPoiRepository =

@@ -9,18 +9,19 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class PointOfInterestRepository(
+    private val cityId: String,
     private val dao: PointOfInterestDao
 ) {
 
     fun getPois(accessContext: AccessContext): Flow<List<PointOfInterest>> =
         when {
             accessContext.canEdit() ->
-                dao.getAll().map { list ->
+                dao.getAll(cityId).map { list ->
                     list.map { it.toUi() }
                 }
 
             else ->
-                dao.getVisibleForPlayer().map { list ->
+                dao.getVisibleForPlayer(cityId).map { list ->
                     list.map { it.toUi() }
                 }
         }
@@ -31,12 +32,12 @@ class PointOfInterestRepository(
     ): Flow<List<PointOfInterest>> =
         when {
             accessContext.canEdit() ->
-                dao.getByCategory(categoryId).map { list ->
+                dao.getByCategory(cityId, categoryId).map { list ->
                     list.map { it.toUi() }
                 }
 
             else ->
-                dao.getVisibleForPlayerByCategory(categoryId).map { list ->
+                dao.getVisibleForPlayerByCategory(cityId, categoryId).map { list ->
                     list.map { it.toUi() }
                 }
         }
@@ -49,7 +50,7 @@ class PointOfInterestRepository(
         accessContext: AccessContext
     ) {
         if (!accessContext.canEdit()) return
-        dao.insert(poi.toEntity())
+        dao.insert(poi.toEntity(cityId))
     }
 
     suspend fun delete(
@@ -57,6 +58,6 @@ class PointOfInterestRepository(
         accessContext: AccessContext
     ) {
         if (!accessContext.canEdit()) return
-        dao.delete(poi.toEntity())
+        dao.delete(poi.toEntity(cityId))
     }
 }

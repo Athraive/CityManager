@@ -13,14 +13,12 @@ import de.geier.citymanager.ui.viewmodel.CityViewModelFactory
 @Composable
 fun CityScreenGate(
     role: Role?,
-    cityId: Long?
+    cityId: String?
 ) {
-    // 🔒 Kein gültiger Kontext → nichts anzeigen (oder später Redirect)
     if (role == null || cityId == null) return
 
     val context = LocalContext.current
 
-    // ✅ AccessContext ZUERST erzeugen
     val accessContext = remember {
         AccessContext(
             role = role,
@@ -28,7 +26,6 @@ fun CityScreenGate(
         )
     }
 
-    // ✅ Dann korrekt in die Factory injizieren
     val cityViewModel: CityViewModel = viewModel(
         factory = CityViewModelFactory(
             context = context,

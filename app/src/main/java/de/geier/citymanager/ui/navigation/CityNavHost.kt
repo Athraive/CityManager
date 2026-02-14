@@ -14,14 +14,13 @@ import de.geier.citymanager.ui.viewmodel.CityViewModelFactory
 
 fun NavGraphBuilder.cityNavGraph(
     navController: NavController,
-    cityId: Long,
+    cityId: String,
     role: Role
 ) {
     composable(Screen.City.route) {
 
         val context = LocalContext.current
 
-        // ✅ AccessContext ZUERST erzeugen
         val accessContext = remember {
             AccessContext(
                 role = role,
@@ -29,7 +28,6 @@ fun NavGraphBuilder.cityNavGraph(
             )
         }
 
-        // ✅ Dann korrekt in die Factory injizieren
         val cityViewModel: CityViewModel = viewModel(
             factory = CityViewModelFactory(
                 context = context,

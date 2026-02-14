@@ -7,7 +7,8 @@ import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.PoiCategoryRepository
 
 class PoiCategoryViewModelFactory(
-    private val context: Context
+    private val context: Context,
+    private val accessContext: AccessContext
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -17,7 +18,10 @@ class PoiCategoryViewModelFactory(
             val database = DatabaseProvider.getDatabase(context)
 
             return PoiCategoryViewModel(
-                repository = PoiCategoryRepository(database.poiCategoryDao())
+                repository = PoiCategoryRepository(
+                    accessContext.cityId,
+                    database.poiCategoryDao()
+                )
             ) as T
         }
 

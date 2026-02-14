@@ -3,10 +3,6 @@ package de.geier.citymanager.data.entity.mapper
 import de.geier.citymanager.data.entity.PoiCategoryEntity
 import de.geier.citymanager.ui.PoiCategory
 
-/**
- * Mapper zwischen Room-Entity und Domain-Modell für POI-Kategorien.
- */
-
 fun PoiCategoryEntity.toDomain(): PoiCategory =
     PoiCategory(
         id = id,
@@ -17,9 +13,10 @@ fun PoiCategoryEntity.toDomain(): PoiCategory =
         visible = visible
     )
 
-fun PoiCategory.toEntity(): PoiCategoryEntity =
+fun PoiCategory.toEntity(cityId: String): PoiCategoryEntity =
     PoiCategoryEntity(
         id = id,
+        cityId = cityId,
         title = title,
         icon = icon,
         description = description,

@@ -13,5 +13,9 @@ data class Person(
     val portraitImageUri: String? = null,
     val visible: Boolean = true,
     val playerNotes: String = "",
-    val gameMasterNotes: String = ""
+    val gameMasterNotes: String = "",
+
+    // Kartenkoordinaten (optional, normalisiert 0f–1f)
+    val mapX: Float? = null,
+    val mapY: Float? = null
 )

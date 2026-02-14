@@ -22,13 +22,22 @@ class CityViewModelFactory(
                 accessContext = accessContext,
 
                 poiCategoryRepository =
-                    PoiCategoryRepository(database.poiCategoryDao()),
+                    PoiCategoryRepository(
+                        accessContext.cityId,
+                        database.poiCategoryDao()
+                    ),
 
                 poiRepository =
-                    PointOfInterestRepository(database.pointOfInterestDao()),
+                    PointOfInterestRepository(
+                        accessContext.cityId,
+                        database.pointOfInterestDao()
+                    ),
 
                 factionRepository =
-                    FactionRepositoryImpl(database.factionDao()),
+                    FactionRepositoryImpl(
+                        accessContext.cityId,
+                        database.factionDao()
+                    ),
 
                 cityDistrictRepository =
                     CityDistrictRepositoryImpl(database.cityDistrictDao()),
@@ -37,7 +46,10 @@ class CityViewModelFactory(
                     CityLoreRepository(database.cityLoreDao()),
 
                 personRepository =
-                    PersonRepository(database.personDao())   // 🔹 neu
+                    PersonRepository(
+                        accessContext.cityId,
+                        database.personDao()
+                    )
             ) as T
         }
 

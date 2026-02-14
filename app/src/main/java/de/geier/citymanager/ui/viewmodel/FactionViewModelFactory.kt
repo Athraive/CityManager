@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.FactionRepositoryImpl
+import de.geier.citymanager.ui.AccessContext
 
 class FactionViewModelFactory(
-    private val context: Context
+    private val context: Context,
+    private val accessContext: AccessContext
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -18,6 +20,7 @@ class FactionViewModelFactory(
 
             return FactionViewModel(
                 repository = FactionRepositoryImpl(
+                    accessContext.cityId,
                     database.factionDao()
                 )
             ) as T

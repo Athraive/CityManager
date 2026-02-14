@@ -1,20 +1,17 @@
 package de.geier.citymanager.data.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import de.geier.citymanager.data.entity.PersonEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PersonDao {
 
-    @Query("SELECT * FROM persons")
-    fun getAllPersons(): Flow<List<PersonEntity>>
+    @Query("SELECT * FROM persons WHERE cityId = :cityId")
+    fun getAllPersons(cityId: String): Flow<List<PersonEntity>>
 
-    @Query("SELECT * FROM persons WHERE visible = 1")
-    fun getVisiblePersons(): Flow<List<PersonEntity>>
+    @Query("SELECT * FROM persons WHERE cityId = :cityId AND visible = 1")
+    fun getVisiblePersons(cityId: String): Flow<List<PersonEntity>>
 
     @Query("SELECT * FROM persons WHERE id = :personId LIMIT 1")
     suspend fun getPersonById(personId: String): PersonEntity?
@@ -24,4 +21,7 @@ interface PersonDao {
 
     @Query("DELETE FROM persons WHERE id = :personId")
     suspend fun deletePerson(personId: String)
+
+    @Query("DELETE FROM persons WHERE cityId = :cityId")
+    suspend fun deleteByCity(cityId: String)
 }

@@ -29,4 +29,11 @@ interface CityDistrictDao {
 
     @Query("DELETE FROM city_districts WHERE id = :districtId")
     suspend fun delete(districtId: String)
+
+    /**
+     * Löscht alle Stadtviertel einer Stadt.
+     * Wird beim Löschen einer Stadt verwendet (manuelles Cascade).
+     */
+    @Query("DELETE FROM city_districts WHERE cityId = :cityId")
+    suspend fun deleteByCity(cityId: String)
 }

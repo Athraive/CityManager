@@ -9,13 +9,14 @@ data class FactionEntity(
     @PrimaryKey
     val id: String,
 
+    /**
+     * Referenz auf die Stadt.
+     */
+    val cityId: String,
+
     val name: String,
-
     val description: String?,
-
     val playerNotes: String,
-
     val gameMasterNotes: String,
-
     val visible: Boolean
 )

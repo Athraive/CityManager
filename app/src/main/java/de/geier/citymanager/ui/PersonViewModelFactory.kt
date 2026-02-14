@@ -23,7 +23,10 @@ class PersonViewModelFactory(
             return PersonViewModel(
                 accessContext = accessContext,
                 personRepository =
-                    PersonRepository(database.personDao()),
+                    PersonRepository(
+                        accessContext.cityId,
+                        database.personDao()
+                    ),
                 personPoiRepository =
                     PersonPoiRepository(database.personPoiDao()),
                 personFactionRepository =
