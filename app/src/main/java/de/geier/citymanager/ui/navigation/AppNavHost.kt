@@ -5,43 +5,81 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.geier.citymanager.ui.CitySelectScreen
-import de.geier.citymanager.ui.Role
-import de.geier.citymanager.ui.RoleSelectScreen
-import de.geier.citymanager.ui.StartScreen
+import de.geier.citymanager.ui.*
 
 @Composable
 fun AppNavHost() {
 
     val navController = rememberNavController()
 
-    var selectedRole by rememberSaveable { mutableStateOf<Role?>(null) }
     var selectedCityId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedRole by rememberSaveable { mutableStateOf<Role?>(null) }
 
     NavHost(
         navController = navController,
         startDestination = Screen.Start.route
     ) {
 
+        /* ---------------- Start ---------------- */
+
         composable(Screen.Start.route) {
             StartScreen {
-                navController.navigate(Screen.RoleSelect.route)
-            }
-        }
-
-        composable(Screen.RoleSelect.route) {
-            RoleSelectScreen { role ->
-                selectedRole = role
                 navController.navigate("city_select")
             }
         }
 
+        /* ---------------- City auswählen ---------------- */
+
         composable("city_select") {
-            CitySelectScreen { cityId: String ->
-                selectedCityId = cityId
-                navController.navigate(Screen.City.route)
-            }
+
+            CitySelectScreen(
+                onCitySelected = { cityId ->
+                    selectedCityId = cityId
+                    navController.navigate("role_select")
+                },
+                onCreateCity = {
+                    navController.navigate("create_city")
+                }
+            )
         }
+
+        /* ---------------- Stadt erstellen ---------------- */
+
+        composable("create_city") {
+
+            CreateCityScreen(
+                onCityCreated = { newCityId ->
+                    selectedCityId = newCityId
+                    selectedRole = Role.GAME_MASTER
+                    navController.navigate(Screen.City.route)
+                },
+                onCancel = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        /* ---------------- Rolle wählen ---------------- */
+
+        composable("role_select") {
+
+            val cityId = selectedCityId
+
+            if (cityId == null) {
+                navController.popBackStack()
+                return@composable
+            }
+
+            RoleSelectScreen(
+                cityId = cityId,
+                onAccessGranted = { role ->
+                    selectedRole = role
+                    navController.navigate(Screen.City.route)
+                }
+            )
+        }
+
+        /* ---------------- City ---------------- */
 
         composable(Screen.City.route) {
             CityScreenGate(
