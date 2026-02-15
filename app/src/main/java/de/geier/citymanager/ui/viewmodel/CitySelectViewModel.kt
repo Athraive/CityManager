@@ -21,12 +21,12 @@ class CitySelectViewModel(
             emptyList()
         )
 
-    /**
-     * Erstellt eine Stadt und gibt deren ID zurück.
-     */
     fun createCity(
         name: String,
         gameMasterCode: String,
+        themePreset: String,
+        backgroundMode: String,
+        backgroundValue: String?,
         onCreated: (String) -> Unit
     ) {
         val newId = UUID.randomUUID().toString()
@@ -35,7 +35,10 @@ class CitySelectViewModel(
             id = newId,
             name = name,
             gameMasterCode = gameMasterCode,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            themePreset = themePreset,
+            backgroundMode = backgroundMode,
+            backgroundValue = backgroundValue
         )
 
         viewModelScope.launch {

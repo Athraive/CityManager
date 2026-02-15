@@ -7,33 +7,37 @@ import androidx.room.PrimaryKey
  * Repräsentiert eine eigenständige Stadt.
  *
  * Jede Stadt ist vollständig gekapselt.
- * Alle stadtabhängigen Entities referenzieren diese ID.
  */
 @Entity(tableName = "cities")
 data class CityEntity(
 
-    /**
-     * Globale eindeutige ID (UUID String).
-     * Wird auch später als Firestore-Dokument-ID verwendet.
-     */
     @PrimaryKey
     val id: String,
 
-    /**
-     * Anzeigename der Stadt.
-     * Wird u.a. für "Über [Stadtname]" verwendet.
-     */
     val name: String,
 
-    /**
-     * Vierstelliger Zugangscode für Spielleiter.
-     * Kein Hochsicherheitsmerkmal – einfache Validierung.
-     */
     val gameMasterCode: String,
 
+    val createdAt: Long,
+
+    /* ---------------- Theme ---------------- */
+
     /**
-     * Erstellungszeitpunkt (EpochMillis).
-     * Dient Sortierung & späterer Sync-Strategie.
+     * UI-Theme der Stadt (modern, scifi, western, asia, medieval …)
      */
-    val createdAt: Long
+    val themePreset: String = "modern",
+
+    /**
+     * Hintergrundmodus:
+     *  - "preset"  → aus App-Katalog
+     *  - "custom"  → eigenes Bild (URI)
+     */
+    val backgroundMode: String = "preset",
+
+    /**
+     * Bei preset → Preset-Key
+     * Bei custom → URI
+     * null → kein Hintergrund
+     */
+    val backgroundValue: String? = null
 )

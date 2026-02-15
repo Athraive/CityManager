@@ -3,12 +3,13 @@ package de.geier.citymanager.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import de.geier.citymanager.ui.background.CityBackgroundPresets
+import de.geier.citymanager.ui.background.CityThemePresets
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModel
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
 
@@ -27,6 +28,12 @@ fun CreateCityScreen(
     var cityName by remember { mutableStateOf("") }
     var cityCode by remember { mutableStateOf("") }
 
+    var selectedTheme by remember { mutableStateOf("modern") }
+    var selectedBackgroundPreset by remember { mutableStateOf<String?>(null) }
+
+    var themeExpanded by remember { mutableStateOf(false) }
+    var bgExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,12 +46,16 @@ fun CreateCityScreen(
             style = MaterialTheme.typography.headlineMedium
         )
 
+        /* ---------------- Name ---------------- */
+
         OutlinedTextField(
             value = cityName,
             onValueChange = { cityName = it },
             label = { Text("Stadtname") },
             modifier = Modifier.fillMaxWidth()
         )
+
+        /* ---------------- SL Code ---------------- */
 
         OutlinedTextField(
             value = cityCode,
@@ -56,16 +67,95 @@ fun CreateCityScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        /* ---------------- Theme Dropdown ---------------- */
+
+        ExposedDropdownMenuBox(
+            expanded = themeExpanded,
+            onExpandedChange = { themeExpanded = !themeExpanded }
         ) {
+
+            OutlinedTextField(
+                value = selectedTheme,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Theme") },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = themeExpanded,
+                onDismissRequest = { themeExpanded = false }
+            ) {
+                CityThemePresets.presets.forEach { theme ->
+                    DropdownMenuItem(
+                        text = { Text(theme) },
+                        onClick = {
+                            selectedTheme = theme
+                            themeExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        /* ---------------- Background Preset Dropdown ---------------- */
+
+        ExposedDropdownMenuBox(
+            expanded = bgExpanded,
+            onExpandedChange = { bgExpanded = !bgExpanded }
+        ) {
+
+            OutlinedTextField(
+                value = selectedBackgroundPreset ?: "Kein Hintergrund",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Hintergrund (Preset)") },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = bgExpanded,
+                onDismissRequest = { bgExpanded = false }
+            ) {
+
+                DropdownMenuItem(
+                    text = { Text("Kein Hintergrund") },
+                    onClick = {
+                        selectedBackgroundPreset = null
+                        bgExpanded = false
+                    }
+                )
+
+                CityBackgroundPresets.presets.forEach { preset ->
+                    DropdownMenuItem(
+                        text = { Text(preset) },
+                        onClick = {
+                            selectedBackgroundPreset = preset
+                            bgExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        /* ---------------- Buttons ---------------- */
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
             Button(
                 onClick = {
                     if (cityName.isNotBlank() && cityCode.length == 4) {
+
                         viewModel.createCity(
                             name = cityName.trim(),
-                            gameMasterCode = cityCode
+                            gameMasterCode = cityCode,
+                            themePreset = selectedTheme,
+                            backgroundMode = "preset",
+                            backgroundValue = selectedBackgroundPreset
                         ) { newId ->
                             onCityCreated(newId)
                         }
