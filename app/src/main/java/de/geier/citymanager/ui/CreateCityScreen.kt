@@ -28,8 +28,8 @@ fun CreateCityScreen(
     var cityName by remember { mutableStateOf("") }
     var cityCode by remember { mutableStateOf("") }
 
-    var selectedTheme by remember { mutableStateOf("modern") }
-    var selectedBackgroundPreset by remember { mutableStateOf<String?>(null) }
+    var selectedTheme by remember { mutableStateOf("DEFAULT") }
+    var selectedBackgroundPreset by remember { mutableStateOf("WHITE") }
 
     var themeExpanded by remember { mutableStateOf(false) }
     var bgExpanded by remember { mutableStateOf(false) }
@@ -67,7 +67,7 @@ fun CreateCityScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        /* ---------------- Theme Dropdown ---------------- */
+        /* ---------------- Font Preset Dropdown ---------------- */
 
         ExposedDropdownMenuBox(
             expanded = themeExpanded,
@@ -78,7 +78,7 @@ fun CreateCityScreen(
                 value = selectedTheme,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Theme") },
+                label = { Text("Schriftstil") },
                 modifier = Modifier
                     .menuAnchor()
                     .fillMaxWidth()
@@ -108,7 +108,7 @@ fun CreateCityScreen(
         ) {
 
             OutlinedTextField(
-                value = selectedBackgroundPreset ?: "Kein Hintergrund",
+                value = selectedBackgroundPreset,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Hintergrund (Preset)") },
@@ -121,14 +121,6 @@ fun CreateCityScreen(
                 expanded = bgExpanded,
                 onDismissRequest = { bgExpanded = false }
             ) {
-
-                DropdownMenuItem(
-                    text = { Text("Kein Hintergrund") },
-                    onClick = {
-                        selectedBackgroundPreset = null
-                        bgExpanded = false
-                    }
-                )
 
                 CityBackgroundPresets.presets.forEach { preset ->
                     DropdownMenuItem(
@@ -153,9 +145,8 @@ fun CreateCityScreen(
                         viewModel.createCity(
                             name = cityName.trim(),
                             gameMasterCode = cityCode,
-                            themePreset = selectedTheme,
-                            backgroundMode = "preset",
-                            backgroundValue = selectedBackgroundPreset
+                            backgroundPreset = selectedBackgroundPreset,
+                            fontPreset = selectedTheme
                         ) { newId ->
                             onCityCreated(newId)
                         }

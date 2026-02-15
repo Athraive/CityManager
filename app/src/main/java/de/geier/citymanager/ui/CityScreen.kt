@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.CompositionLocalProvider
 import de.geier.citymanager.data.DatabaseProvider
 import de.geier.citymanager.data.repository.PersonFactionRepository
 import de.geier.citymanager.data.repository.PersonPoiRepository
@@ -20,6 +21,7 @@ import de.geier.citymanager.ui.viewmodel.PersonViewModel
 import de.geier.citymanager.ui.viewmodel.PoiViewModel
 import de.geier.citymanager.ui.PersonViewModelFactory
 import de.geier.citymanager.ui.viewmodel.PoiViewModelFactory
+import de.geier.citymanager.ui.theme.*
 import kotlinx.coroutines.flow.first
 
 enum class CityTab {
@@ -44,6 +46,26 @@ fun CityScreen(
     val context = LocalContext.current
     val database = DatabaseProvider.getDatabase(context)
 
+    /* ================= THEME LADEN ================= */
+
+    val cityEntity by produceState<de.geier.citymanager.data.entity.CityEntity?>(
+        initialValue = null,
+        key1 = accessContext.cityId
+    ) {
+        value = database.cityDao()
+            .getCityById(accessContext.cityId)
+            .first()
+    }
+
+    val cityTheme = cityEntity?.toCityTheme()
+        ?: CityTheme(
+            backgroundPreset = BackgroundPreset.WHITE,
+            backgroundImageUri = null,
+            fontPreset = FontPreset.DEFAULT
+        )
+
+    /* ================= REPOSITORIES ================= */
+
     val personFactionRepo = PersonFactionRepository(database.personFactionDao())
     val personPoiRepo = PersonPoiRepository(database.personPoiDao())
     val poiFactionRepo = PoiFactionRepository(database.poiFactionDao())
@@ -64,176 +86,99 @@ fun CityScreen(
     val allPersons by cityViewModel.allPersons.collectAsState()
     val categories by cityViewModel.poiCategories.collectAsState()
 
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "CityManager",
-                accessContext = accessContext
-            )
-        },
-        bottomBar = {
-            if (activeDetail == null) {
-                CityBottomBar(
-                    activeTab = activeTab,
-                    accessContext = accessContext,
-                    onTabSelected = { tab ->
-                        activeTab = tab
-                        personViewModel.clearSelection()
-                    }
+    /* ================= THEME PROVIDER ================= */
+
+    CompositionLocalProvider(
+        LocalCityTheme provides cityTheme
+    ) {
+
+        Scaffold(
+            topBar = {
+                AppTopBar(
+                    title = "CityManager",
+                    accessContext = accessContext
                 )
+            },
+            bottomBar = {
+                if (activeDetail == null) {
+                    CityBottomBar(
+                        activeTab = activeTab,
+                        accessContext = accessContext,
+                        onTabSelected = { tab ->
+                            activeTab = tab
+                            personViewModel.clearSelection()
+                        }
+                    )
+                }
             }
-        }
-    ) { padding ->
+        ) { padding ->
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
 
-            when (val detail = activeDetail) {
+                /* -------------------------------------------------
+                   HINTERGRUND RENDERER (zentrale Stelle!)
+                   ------------------------------------------------- */
 
-                /* ================= PERSON DETAIL ================= */
+                CityThemeBackground()
 
-                is DetailTarget.Person -> {
+                when (val detail = activeDetail) {
 
-                    val person = allPersons.firstOrNull { it.id == detail.id }
+                    /* ================= PERSON DETAIL ================= */
 
-                    if (person != null) {
-
-                        LaunchedEffect(person.id) {
-                            personViewModel.selectPerson(person)
+                    is DetailTarget.Person -> {
+                        val person = allPersons.firstOrNull { it.id == detail.id }
+                        if (person != null) {
+                            PersonDetailScreen(
+                                person = person,
+                                assignedPois = emptyList(),
+                                assignedFactions = emptyList(),
+                                accessContext = accessContext,
+                                onBack = { activeDetail = null },
+                                onSave = { personViewModel.save(it) },
+                                onDelete = { personViewModel.delete(it) },
+                                onAssignPois = {},
+                                onAssignFactions = {},
+                                onPersonClick = { activeDetail = DetailTarget.Person(it) },
+                                onPoiClick = { activeDetail = DetailTarget.Poi(it) },
+                                onFactionClick = { activeDetail = DetailTarget.Faction(it) }
+                            )
                         }
-
-                        val assignedPoiIds by personViewModel.poiIdsForSelectedPerson.collectAsState()
-                        val assignedFactionIds by personViewModel.factionIdsForSelectedPerson.collectAsState()
-
-                        val assignedPois = allPois.filter { it.id in assignedPoiIds }
-                        val assignedFactions = factions.filter { it.id in assignedFactionIds }
-
-                        PersonDetailScreen(
-                            person = person,
-                            assignedPois = assignedPois,
-                            assignedFactions = assignedFactions,
-                            accessContext = accessContext,
-                            onBack = { activeDetail = null },
-                            onSave = { personViewModel.save(it) },
-                            onDelete = { personViewModel.delete(it) },
-                            onAssignPois = {},
-                            onAssignFactions = {},
-                            onPersonClick = { activeDetail = DetailTarget.Person(it) },
-                            onPoiClick = { activeDetail = DetailTarget.Poi(it) },
-                            onFactionClick = { activeDetail = DetailTarget.Faction(it) }
-                        )
                     }
-                }
 
-                /* ================= POI DETAIL ================= */
+                    /* ================= NORMALER TAB ================= */
 
-                is DetailTarget.Poi -> {
-
-                    val poi = allPois.firstOrNull { it.id == detail.id }
-
-                    if (poi != null) {
-
-                        val assignedFactionIds by produceState(initialValue = emptyList<String>(), key1 = poi.id) {
-                            value = poiFactionRepo.getFactionIdsForPoi(poi.id).first()
+                    null -> {
+                        when (activeTab) {
+                            CityTab.CITY -> CityOverviewTab(cityViewModel, accessContext)
+                            CityTab.PERSONS -> PersonenTab(
+                                viewModel = personViewModel,
+                                factions = factions,
+                                pois = allPois,
+                                categories = categories,
+                                accessContext = accessContext,
+                                onFactionLinkClicked = { activeDetail = DetailTarget.Faction(it) }
+                            )
+                            CityTab.POIS -> PoiTab(
+                                cityViewModel = cityViewModel,
+                                factions = factions,
+                                accessContext = accessContext
+                            )
+                            CityTab.FACTIONS -> FraktionenTab(
+                                accessContext = accessContext,
+                                factions = factions,
+                                persons = allPersons,
+                                pois = allPois,
+                                onSave = { cityViewModel.saveFaction(it) },
+                                onDelete = { cityViewModel.deleteFaction(it) }
+                            )
                         }
-
-                        val assignedPersonIds by produceState(initialValue = emptyList<String>(), key1 = poi.id) {
-                            value = personPoiRepo.getPersonIdsForPoi(poi.id).first()
-                        }
-
-                        val assignedFactions = factions.filter { it.id in assignedFactionIds }
-                        val assignedPersons = allPersons.filter { it.id in assignedPersonIds }
-
-                        PoiDetailScreen(
-                            poi = poi,
-                            assignedFactions = assignedFactions,
-                            assignedPersons = assignedPersons,
-                            accessContext = accessContext,
-                            onBack = { activeDetail = null },
-                            onSave = { cityViewModel.savePoi(it) },
-                            onDelete = { cityViewModel.deletePoi(it) },
-                            onAssignFactions = {},
-                            onPersonClick = { activeDetail = DetailTarget.Person(it) },
-                            onFactionClick = { activeDetail = DetailTarget.Faction(it) }
-                        )
                     }
-                }
 
-                /* ================= FACTION DETAIL ================= */
-
-                is DetailTarget.Faction -> {
-
-                    val faction = factions.firstOrNull { it.id == detail.id }
-
-                    if (faction != null) {
-
-                        val assignedPersons by produceState(initialValue = emptyList<Person>(), key1 = faction.id) {
-                            val result = mutableListOf<Person>()
-                            allPersons.forEach { person ->
-                                val ids = personFactionRepo.getFactionIdsForPerson(person.id).first()
-                                if (faction.id in ids) result.add(person)
-                            }
-                            value = result
-                        }
-
-                        val assignedPois by produceState(initialValue = emptyList<PointOfInterest>(), key1 = faction.id) {
-                            val result = mutableListOf<PointOfInterest>()
-                            allPois.forEach { poi ->
-                                val ids = poiFactionRepo.getFactionIdsForPoi(poi.id).first()
-                                if (faction.id in ids) result.add(poi)
-                            }
-                            value = result
-                        }
-
-                        FactionDetailScreen(
-                            faction = faction,
-                            assignedPersons = assignedPersons,
-                            assignedPois = assignedPois,
-                            accessContext = accessContext,
-                            onBack = { activeDetail = null },
-                            onSave = { cityViewModel.saveFaction(it) },
-                            onDelete = { cityViewModel.deleteFaction(it) },
-                            onPersonClick = { activeDetail = DetailTarget.Person(it) },
-                            onPoiClick = { activeDetail = DetailTarget.Poi(it) }
-                        )
-                    }
-                }
-
-                /* ================= NORMALER TAB ================= */
-
-                null -> {
-
-                    when (activeTab) {
-
-                        CityTab.CITY -> CityOverviewTab(cityViewModel, accessContext)
-
-                        CityTab.PERSONS -> PersonenTab(
-                            viewModel = personViewModel,
-                            factions = factions,
-                            pois = allPois,
-                            categories = categories,
-                            accessContext = accessContext,
-                            onFactionLinkClicked = { activeDetail = DetailTarget.Faction(it) }
-                        )
-
-                        CityTab.POIS -> PoiTab(
-                            cityViewModel = cityViewModel,
-                            factions = factions,
-                            accessContext = accessContext
-                        )
-
-                        CityTab.FACTIONS -> FraktionenTab(
-                            accessContext = accessContext,
-                            factions = factions,
-                            persons = allPersons,
-                            pois = allPois,
-                            onSave = { cityViewModel.saveFaction(it) },
-                            onDelete = { cityViewModel.deleteFaction(it) }
-                        )
-                    }
+                    else -> {}
                 }
             }
         }

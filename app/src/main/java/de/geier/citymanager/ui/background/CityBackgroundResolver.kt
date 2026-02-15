@@ -5,12 +5,12 @@ import de.geier.citymanager.data.entity.CityEntity
 object CityBackgroundResolver {
 
     /**
-     * Gibt den Hintergrundwert zurück, der effektiv verwendet werden soll.
+     * Gibt den Hintergrund zurück, der effektiv verwendet werden soll.
      *
      * Reihenfolge:
      * 1. Tab-Hintergrund (falls gesetzt)
-     * 2. Stadt-Hintergrund
-     * 3. null
+     * 2. Stadt-eigenes Hintergrundbild (backgroundImageUri)
+     * 3. null (Preset wird später separat behandelt)
      */
     fun resolve(
         city: CityEntity?,
@@ -21,8 +21,8 @@ object CityBackgroundResolver {
             return tabBackground
         }
 
-        if (city?.backgroundValue != null) {
-            return city.backgroundValue
+        if (!city?.backgroundImageUri.isNullOrBlank()) {
+            return city?.backgroundImageUri
         }
 
         return null

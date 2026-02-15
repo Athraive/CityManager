@@ -23,7 +23,7 @@ import de.geier.citymanager.data.entity.*
         PersonPoiCrossRef::class,
         PoiFactionCrossRef::class
     ],
-    version = 5, // 🔹 erhöht wegen neuer CityEntity
+    version = 6, // 🔹 erhöht wegen Theme-Feldern in CityEntity
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

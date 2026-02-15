@@ -7,37 +7,57 @@ import androidx.room.PrimaryKey
  * Repräsentiert eine eigenständige Stadt.
  *
  * Jede Stadt ist vollständig gekapselt.
+ * Alle stadtabhängigen Entities referenzieren diese ID.
+ *
+ * Ab Version 6:
+ * – Hintergrund-Preset
+ * – Optionales eigenes Hintergrundbild
+ * – Schrift-Preset
  */
 @Entity(tableName = "cities")
 data class CityEntity(
 
+    /**
+     * Globale eindeutige ID (UUID String).
+     * Wird später auch als Firestore-Dokument-ID verwendet.
+     */
     @PrimaryKey
     val id: String,
 
+    /**
+     * Anzeigename der Stadt.
+     */
     val name: String,
 
+    /**
+     * Vierstelliger Zugangscode für Spielleiter.
+     */
     val gameMasterCode: String,
 
+    /**
+     * Erstellungszeitpunkt (EpochMillis).
+     */
     val createdAt: Long,
 
-    /* ---------------- Theme ---------------- */
+    /* =====================================================
+     * THEME (neu ab Version 6)
+     * ===================================================== */
 
     /**
-     * UI-Theme der Stadt (modern, scifi, western, asia, medieval …)
+     * Hintergrund-Preset (String gespeichert, Enum im UI).
+     * Beispiele:
+     * "WHITE", "MEDIEVAL", "SCIFI", ...
      */
-    val themePreset: String = "modern",
+    val backgroundPreset: String = "WHITE",
 
     /**
-     * Hintergrundmodus:
-     *  - "preset"  → aus App-Katalog
-     *  - "custom"  → eigenes Bild (URI)
+     * Optional eigenes Hintergrundbild.
+     * Überschreibt Preset, wenn gesetzt.
      */
-    val backgroundMode: String = "preset",
+    val backgroundImageUri: String? = null,
 
     /**
-     * Bei preset → Preset-Key
-     * Bei custom → URI
-     * null → kein Hintergrund
+     * Schrift-Preset.
      */
-    val backgroundValue: String? = null
+    val fontPreset: String = "DEFAULT"
 )
