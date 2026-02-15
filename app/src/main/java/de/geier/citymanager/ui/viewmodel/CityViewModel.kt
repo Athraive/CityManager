@@ -3,13 +3,9 @@ package de.geier.citymanager.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geier.citymanager.data.entity.CityDistrictEntity
+import de.geier.citymanager.data.entity.CityEntity
 import de.geier.citymanager.data.entity.CityLoreEntity
-import de.geier.citymanager.data.repository.CityDistrictRepository
-import de.geier.citymanager.data.repository.CityLoreRepository
-import de.geier.citymanager.data.repository.FactionRepositoryImpl
-import de.geier.citymanager.data.repository.PoiCategoryRepository
-import de.geier.citymanager.data.repository.PointOfInterestRepository
-import de.geier.citymanager.data.repository.PersonRepository
+import de.geier.citymanager.data.repository.*
 import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.Faction
 import de.geier.citymanager.ui.PointOfInterest
@@ -20,13 +16,27 @@ import kotlinx.coroutines.launch
 
 class CityViewModel(
     private val accessContext: AccessContext,
+    private val cityRepository: CityRepository,
     private val poiCategoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
     private val factionRepository: FactionRepositoryImpl,
     private val cityDistrictRepository: CityDistrictRepository,
     private val cityLoreRepository: CityLoreRepository,
-    private val personRepository: PersonRepository   // 🔹 neu
+    private val personRepository: PersonRepository
 ) : ViewModel() {
+
+    /* =====================================================
+     * Aktuelle Stadt
+     * ===================================================== */
+
+    val city: StateFlow<CityEntity?> =
+        cityRepository
+            .cityById(accessContext.cityId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                null
+            )
 
     /* =====================================================
      * Stadtgeschichte & Metadaten
@@ -134,7 +144,7 @@ class CityViewModel(
             )
 
     /* =====================================================
-     * POIs (rollenbewusst)
+     * POIs
      * ===================================================== */
 
     val allPois: StateFlow<List<PointOfInterest>> =
@@ -168,7 +178,7 @@ class CityViewModel(
     }
 
     /* =====================================================
-     * Personen (NEU)
+     * Personen
      * ===================================================== */
 
     val allPersons: StateFlow<List<Person>> =

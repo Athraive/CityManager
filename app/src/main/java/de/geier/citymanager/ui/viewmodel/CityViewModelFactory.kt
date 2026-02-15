@@ -14,12 +14,24 @@ class CityViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+
         if (modelClass.isAssignableFrom(CityViewModel::class.java)) {
 
             val database = DatabaseProvider.getDatabase(context)
 
+            val cityRepository = CityRepositoryImpl(
+                cityDao = database.cityDao(),
+                personDao = database.personDao(),
+                poiDao = database.pointOfInterestDao(),
+                factionDao = database.factionDao(),
+                poiCategoryDao = database.poiCategoryDao(),
+                districtDao = database.cityDistrictDao(),
+                loreDao = database.cityLoreDao()
+            )
+
             return CityViewModel(
                 accessContext = accessContext,
+                cityRepository = cityRepository,
 
                 poiCategoryRepository =
                     PoiCategoryRepository(
