@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -36,6 +38,7 @@ fun CityMapScreen(
     accessContext: AccessContext
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
 
     val lore by cityViewModel.cityLore.collectAsState()
     val persons by cityViewModel.allPersons.collectAsState()
@@ -64,6 +67,9 @@ fun CityMapScreen(
 
     var tempPosition by remember { mutableStateOf<Offset?>(null) }
     var showSheet by remember { mutableStateOf(false) }
+
+    // Gedämpfte Zoom-Skalierung
+    val pinScale = 1f + (scale - 1f) * 0.25f
 
     Box(
         modifier = Modifier
@@ -136,6 +142,19 @@ fun CityMapScreen(
 
                     if (width > 0f && height > 0f) {
 
+                        val basePinSizePx = width * 0.007f
+                        val baseTempPinSizePx = width * 0.009f
+
+                        var pinSizeDp =
+                            with(density) { basePinSizePx.toDp() }
+
+                        var tempPinSizeDp =
+                            with(density) { baseTempPinSizePx.toDp() }
+
+                        // Mindest- & Maximalgröße
+                        pinSizeDp = pinSizeDp.coerceIn(4.dp, 18.dp)
+                        tempPinSizeDp = tempPinSizeDp.coerceIn(5.dp, 22.dp)
+
                         persons.filter {
                             it.mapX != null && it.mapY != null
                         }.forEach { person ->
@@ -148,8 +167,11 @@ fun CityMapScreen(
                                     .graphicsLayer {
                                         translationX = x
                                         translationY = y
+                                        scaleX = pinScale
+                                        scaleY = pinScale
                                     }
-                                    .size(14.dp)
+                                    .size(pinSizeDp)
+                                    .border(0.5.dp, Color.White, CircleShape)
                                     .background(Color.Blue, CircleShape)
                             )
                         }
@@ -166,13 +188,17 @@ fun CityMapScreen(
                                     .graphicsLayer {
                                         translationX = x
                                         translationY = y
+                                        scaleX = pinScale
+                                        scaleY = pinScale
                                     }
-                                    .size(14.dp)
+                                    .size(pinSizeDp)
+                                    .border(0.5.dp, Color.White, CircleShape)
                                     .background(Color.Red, CircleShape)
                             )
                         }
 
                         tempPosition?.let { temp ->
+
                             val x = temp.x * width
                             val y = temp.y * height
 
@@ -181,8 +207,11 @@ fun CityMapScreen(
                                     .graphicsLayer {
                                         translationX = x
                                         translationY = y
+                                        scaleX = pinScale
+                                        scaleY = pinScale
                                     }
-                                    .size(18.dp)
+                                    .size(tempPinSizeDp)
+                                    .border(0.5.dp, Color.White, CircleShape)
                                     .background(Color.Yellow, CircleShape)
                             )
                         }
@@ -224,10 +253,6 @@ fun CityMapScreen(
             }
         }
     }
-
-    /* ---------------------------------------------------
-     * Bottom Sheet für Pin-Zuweisung
-     * --------------------------------------------------- */
 
     if (showSheet && tempPosition != null) {
 
