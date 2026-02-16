@@ -15,19 +15,13 @@ import androidx.navigation.compose.rememberNavController
 import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 
-/**
- * Eigener Root für den Stadt-Tab.
- * Enthält einen lokalen NavHost mit gleichwertigen Unter-Tabs.
- */
 @Composable
 fun CityOverviewTab(
     cityViewModel: CityViewModel,
     accessContext: AccessContext
 ) {
     val navController = rememberNavController()
-    val cityId = "default"
-
-    val pois by cityViewModel.allPois.collectAsState()
+    val cityId = accessContext.cityId
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -50,7 +44,6 @@ fun CityOverviewTab(
                     accessContext = accessContext
                 )
             }
-
 
             composable(Route.STADTVIERTEL_LIST) {
                 CityDistrictListScreen(
@@ -82,10 +75,6 @@ fun CityOverviewTab(
         }
     }
 }
-
-/* -------------------------------------------------------
- * Interne Stadt-Tabs
- * ----------------------------------------------------- */
 
 @Composable
 private fun StadtTabs(

@@ -25,10 +25,6 @@ class CityViewModel(
     private val personRepository: PersonRepository
 ) : ViewModel() {
 
-    /* =====================================================
-     * Aktuelle Stadt
-     * ===================================================== */
-
     val city: StateFlow<CityEntity?> =
         cityRepository
             .cityById(accessContext.cityId)
@@ -38,16 +34,12 @@ class CityViewModel(
                 null
             )
 
-    /* =====================================================
-     * Stadtgeschichte & Metadaten
-     * ===================================================== */
-
-    fun cityLore(cityId: String): StateFlow<CityLoreEntity?> =
+    val cityLore: StateFlow<CityLoreEntity?> =
         cityLoreRepository
-            .loreForCity(cityId)
+            .loreForCity(accessContext.cityId)
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 null
             )
 
@@ -56,24 +48,20 @@ class CityViewModel(
         uri: String
     ) {
         viewModelScope.launch {
-            val existing =
-                cityLoreRepository.loreForCity(cityId).first()
 
-            cityLoreRepository.save(
-                (existing ?: CityLoreEntity(
-                    cityId = cityId,
-                    title = "Über die Stadt",
-                    text = ""
-                )).copy(
-                    mapImageUri = uri
-                )
+            val existing = cityLore.value
+
+            val updated = (existing ?: CityLoreEntity(
+                cityId = accessContext.cityId,
+                title = "Über die Stadt",
+                text = ""
+            )).copy(
+                mapImageUri = uri
             )
+
+            cityLoreRepository.save(updated)
         }
     }
-
-    /* =====================================================
-     * Stadtviertel
-     * ===================================================== */
 
     fun districtsForCity(cityId: String): StateFlow<List<CityDistrictEntity>> =
         cityDistrictRepository
@@ -105,10 +93,6 @@ class CityViewModel(
         }
     }
 
-    /* =====================================================
-     * Fraktionen
-     * ===================================================== */
-
     val factions: StateFlow<List<Faction>> =
         factionRepository
             .getAll()
@@ -130,10 +114,6 @@ class CityViewModel(
         }
     }
 
-    /* =====================================================
-     * POI-Kategorien
-     * ===================================================== */
-
     val poiCategories: StateFlow<List<PoiCategory>> =
         poiCategoryRepository
             .categories
@@ -142,10 +122,6 @@ class CityViewModel(
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
-
-    /* =====================================================
-     * POIs
-     * ===================================================== */
 
     val allPois: StateFlow<List<PointOfInterest>> =
         poiRepository
@@ -177,9 +153,25 @@ class CityViewModel(
         }
     }
 
-    /* =====================================================
-     * Personen
-     * ===================================================== */
+    fun updatePoiCoordinates(
+        poiId: String,
+        mapX: Float,
+        mapY: Float
+    ) {
+        if (!accessContext.canEdit()) return
+
+        viewModelScope.launch {
+            val existing =
+                poiRepository.getById(poiId) ?: return@launch
+
+            val updated = existing.copy(
+                mapX = mapX,
+                mapY = mapY
+            )
+
+            poiRepository.save(updated, accessContext)
+        }
+    }
 
     val allPersons: StateFlow<List<Person>> =
         personRepository
@@ -189,4 +181,25 @@ class CityViewModel(
                 SharingStarted.WhileSubscribed(5_000),
                 emptyList()
             )
+
+    fun updatePersonCoordinates(
+        personId: String,
+        mapX: Float,
+        mapY: Float
+    ) {
+        if (!accessContext.canEdit()) return
+
+        viewModelScope.launch {
+            val existing =
+                personRepository.getById(personId)
+                    ?: return@launch
+
+            val updated = existing.copy(
+                mapX = mapX,
+                mapY = mapY
+            )
+
+            personRepository.save(updated, accessContext)
+        }
+    }
 }

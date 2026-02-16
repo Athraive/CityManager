@@ -15,7 +15,7 @@ fun StadtgeschichteScreen(
     cityId: String,
     cityViewModel: CityViewModel
 ) {
-    val lore by cityViewModel.cityLore(cityId).collectAsState()
+    val lore by cityViewModel.cityLore.collectAsState()
 
     if (lore == null) return
 
