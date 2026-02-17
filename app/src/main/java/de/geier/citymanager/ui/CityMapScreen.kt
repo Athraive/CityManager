@@ -9,9 +9,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,11 @@ import coil.compose.AsyncImage
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 private enum class MapMode { VIEW, EDIT }
+
+private sealed class SelectableEntity {
+    data class Person(val id: String, val name: String) : SelectableEntity()
+    data class Poi(val id: String, val name: String) : SelectableEntity()
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,10 +71,11 @@ fun CityMapScreen(
     var offset by remember { mutableStateOf(Offset.Zero) }
     var imageSize by remember { mutableStateOf(IntSize.Zero) }
 
-    var tempPosition by remember { mutableStateOf<Offset?>(null) }
-    var showSheet by remember { mutableStateOf(false) }
+    var selectedEntity by remember { mutableStateOf<SelectableEntity?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var showPersons by remember { mutableStateOf(true) }
+    var showPois by remember { mutableStateOf(true) }
 
-    // Gedämpfte Zoom-Skalierung
     val pinScale = 1f + (scale - 1f) * 0.25f
 
     Box(
@@ -77,148 +84,243 @@ fun CityMapScreen(
             .background(MaterialTheme.colorScheme.surface)
     ) {
 
-        when {
-            lore?.mapImageUri == null -> {
-                Text(
-                    text = "Keine Stadtkarte hinterlegt",
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+        /* ============================================================
+           1️⃣  MAP LAYER (transformiert)
+        ============================================================ */
 
-            else -> {
+        if (lore?.mapImageUri != null) {
 
-                val uri = lore!!.mapImageUri!!
+            val uri = lore!!.mapImageUri!!
 
-                Box(
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+
+                            val newScale = (scale * zoom).coerceIn(1f, 5f)
+
+                            if (newScale > 1f) {
+                                offset += pan
+                            } else {
+                                offset = Offset.Zero
+                            }
+
+                            scale = newScale
+                        }
+                    }
+                    .pointerInput(mapMode, selectedEntity, imageSize, scale, offset) {
+
+                        if (mapMode == MapMode.EDIT && selectedEntity != null) {
+
+                            detectTapGestures { tapOffset ->
+
+                                if (imageSize.width == 0) return@detectTapGestures
+
+                                val correctedX =
+                                    (tapOffset.x - offset.x) / scale
+                                val correctedY =
+                                    (tapOffset.y - offset.y) / scale
+
+                                val normalizedX =
+                                    correctedX / imageSize.width
+                                val normalizedY =
+                                    correctedY / imageSize.height
+
+                                val entity =
+                                    selectedEntity ?: return@detectTapGestures
+
+                                when (entity) {
+
+                                    is SelectableEntity.Person ->
+                                        cityViewModel.updatePersonCoordinates(
+                                            entity.id,
+                                            normalizedX,
+                                            normalizedY
+                                        )
+
+                                    is SelectableEntity.Poi ->
+                                        cityViewModel.updatePoiCoordinates(
+                                            entity.id,
+                                            normalizedX,
+                                            normalizedY
+                                        )
+                                }
+
+                                selectedEntity = null
+                            }
+                        }
+                    }
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offset.x
+                        translationY = offset.y
+                    }
+            ) {
+
+                AsyncImage(
+                    model = uri,
+                    contentDescription = "Stadtkarte",
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(mapMode) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                scale = (scale * zoom).coerceIn(1f, 5f)
-                                offset += pan
-                            }
-                        }
-                        .pointerInput(mapMode, imageSize, scale, offset) {
-                            if (mapMode == MapMode.EDIT) {
-                                detectTapGestures { tapOffset ->
-                                    if (imageSize.width == 0) return@detectTapGestures
+                        .onSizeChanged { imageSize = it },
+                    contentScale = ContentScale.Fit
+                )
 
-                                    val correctedX =
-                                        (tapOffset.x - offset.x) / scale
-                                    val correctedY =
-                                        (tapOffset.y - offset.y) / scale
+                val width = imageSize.width.toFloat()
+                val height = imageSize.height.toFloat()
 
-                                    val normalizedX =
-                                        correctedX / imageSize.width
-                                    val normalizedY =
-                                        correctedY / imageSize.height
+                if (width > 0f && height > 0f) {
 
-                                    tempPosition =
-                                        Offset(normalizedX, normalizedY)
+                    val basePinSizePx = width * 0.007f
+                    var pinSizeDp =
+                        with(density) { basePinSizePx.toDp() }
+                    pinSizeDp = pinSizeDp.coerceIn(4.dp, 18.dp)
 
-                                    showSheet = true
+                    persons.filter {
+                        it.mapX != null && it.mapY != null
+                    }.forEach { person ->
+
+                        val x = person.mapX!! * width
+                        val y = person.mapY!! * height
+
+                        Box(
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    translationX = x
+                                    translationY = y
+                                    scaleX = pinScale
+                                    scaleY = pinScale
                                 }
-                            }
-                        }
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                            translationX = offset.x
-                            translationY = offset.y
-                        }
+                                .size(pinSizeDp)
+                                .border(0.5.dp, Color.White, CircleShape)
+                                .background(Color.Blue, CircleShape)
+                        )
+                    }
+
+                    pois.filter {
+                        it.mapX != null && it.mapY != null
+                    }.forEach { poi ->
+
+                        val x = poi.mapX!! * width
+                        val y = poi.mapY!! * height
+
+                        Box(
+                            modifier = Modifier
+                                .graphicsLayer {
+                                    translationX = x
+                                    translationY = y
+                                    scaleX = pinScale
+                                    scaleY = pinScale
+                                }
+                                .size(pinSizeDp)
+                                .border(0.5.dp, Color.White, CircleShape)
+                                .background(Color.Red, CircleShape)
+                        )
+                    }
+                }
+            }
+
+        } else {
+            Text(
+                text = "Keine Stadtkarte hinterlegt",
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        /* ============================================================
+           2️⃣  EDIT PANEL (NICHT transformiert!)
+        ============================================================ */
+
+        if (mapMode == MapMode.EDIT && accessContext.canEdit()) {
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(8.dp)
+            ) {
+
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Suchen...") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = showPersons,
+                        onClick = { showPersons = !showPersons },
+                        label = { Text("Personen") }
+                    )
+                    FilterChip(
+                        selected = showPois,
+                        onClick = { showPois = !showPois },
+                        label = { Text("POIs") }
+                    )
+                }
+
+                val freePersons =
+                    persons.filter {
+                        it.mapX == null &&
+                                it.name.contains(searchQuery, true)
+                    }
+
+                val freePois =
+                    pois.filter {
+                        it.mapX == null &&
+                                it.name.contains(searchQuery, true)
+                    }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp)
                 ) {
 
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = "Stadtkarte",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .onSizeChanged { imageSize = it },
-                        contentScale = ContentScale.Fit
-                    )
-
-                    val width = imageSize.width.toFloat()
-                    val height = imageSize.height.toFloat()
-
-                    if (width > 0f && height > 0f) {
-
-                        val basePinSizePx = width * 0.007f
-                        val baseTempPinSizePx = width * 0.009f
-
-                        var pinSizeDp =
-                            with(density) { basePinSizePx.toDp() }
-
-                        var tempPinSizeDp =
-                            with(density) { baseTempPinSizePx.toDp() }
-
-                        // Mindest- & Maximalgröße
-                        pinSizeDp = pinSizeDp.coerceIn(4.dp, 18.dp)
-                        tempPinSizeDp = tempPinSizeDp.coerceIn(5.dp, 22.dp)
-
-                        persons.filter {
-                            it.mapX != null && it.mapY != null
-                        }.forEach { person ->
-
-                            val x = person.mapX!! * width
-                            val y = person.mapY!! * height
-
-                            Box(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        translationX = x
-                                        translationY = y
-                                        scaleX = pinScale
-                                        scaleY = pinScale
-                                    }
-                                    .size(pinSizeDp)
-                                    .border(0.5.dp, Color.White, CircleShape)
-                                    .background(Color.Blue, CircleShape)
-                            )
+                    if (showPersons) {
+                        items(freePersons) { person ->
+                            TextButton(
+                                onClick = {
+                                    selectedEntity =
+                                        SelectableEntity.Person(
+                                            person.id,
+                                            person.name
+                                        )
+                                }
+                            ) {
+                                Text("Person: ${person.name}")
+                            }
                         }
+                    }
 
-                        pois.filter {
-                            it.mapX != null && it.mapY != null
-                        }.forEach { poi ->
-
-                            val x = poi.mapX!! * width
-                            val y = poi.mapY!! * height
-
-                            Box(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        translationX = x
-                                        translationY = y
-                                        scaleX = pinScale
-                                        scaleY = pinScale
-                                    }
-                                    .size(pinSizeDp)
-                                    .border(0.5.dp, Color.White, CircleShape)
-                                    .background(Color.Red, CircleShape)
-                            )
-                        }
-
-                        tempPosition?.let { temp ->
-
-                            val x = temp.x * width
-                            val y = temp.y * height
-
-                            Box(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        translationX = x
-                                        translationY = y
-                                        scaleX = pinScale
-                                        scaleY = pinScale
-                                    }
-                                    .size(tempPinSizeDp)
-                                    .border(0.5.dp, Color.White, CircleShape)
-                                    .background(Color.Yellow, CircleShape)
-                            )
+                    if (showPois) {
+                        items(freePois) { poi ->
+                            TextButton(
+                                onClick = {
+                                    selectedEntity =
+                                        SelectableEntity.Poi(
+                                            poi.id,
+                                            poi.name
+                                        )
+                                }
+                            ) {
+                                Text("POI: ${poi.name}")
+                            }
                         }
                     }
                 }
             }
         }
+
+        /* ============================================================
+           3️⃣  FAB
+        ============================================================ */
 
         if (accessContext.canEdit()) {
             Column(
@@ -248,70 +350,7 @@ fun CityMapScreen(
                 FloatingActionButton(
                     onClick = { imagePicker.launch(arrayOf("image/*")) }
                 ) {
-                    Text("+")
-                }
-            }
-        }
-    }
-
-    if (showSheet && tempPosition != null) {
-
-        ModalBottomSheet(
-            onDismissRequest = {
-                showSheet = false
-                tempPosition = null
-            }
-        ) {
-
-            val freePersons =
-                persons.filter { it.mapX == null }
-
-            val freePois =
-                pois.filter { it.mapX == null }
-
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-                Text("Position zuweisen")
-
-                freePersons.forEach { person ->
-                    Button(
-                        onClick = {
-                            val pos = tempPosition!!
-                            cityViewModel.updatePersonCoordinates(
-                                person.id,
-                                pos.x,
-                                pos.y
-                            )
-                            showSheet = false
-                            tempPosition = null
-                        }
-                    ) {
-                        Text("Person: ${person.name}")
-                    }
-                }
-
-                freePois.forEach { poi ->
-                    Button(
-                        onClick = {
-                            val pos = tempPosition!!
-                            cityViewModel.updatePoiCoordinates(
-                                poi.id,
-                                pos.x,
-                                pos.y
-                            )
-                            showSheet = false
-                            tempPosition = null
-                        }
-                    ) {
-                        Text("POI: ${poi.name}")
-                    }
-                }
-
-                if (freePersons.isEmpty() && freePois.isEmpty()) {
-                    Text("Keine freien Einträge verfügbar.")
+                    Text("⋮")
                 }
             }
         }
