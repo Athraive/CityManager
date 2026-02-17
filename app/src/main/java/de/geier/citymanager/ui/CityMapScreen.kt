@@ -6,11 +6,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -29,8 +29,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import de.geier.citymanager.ui.viewmodel.CityViewModel
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
 
 private enum class MapMode { VIEW, EDIT }
 
@@ -50,8 +48,6 @@ fun CityMapScreen(
     val pois by cityViewModel.allPois.collectAsState()
 
     var mapMode by remember { mutableStateOf(MapMode.VIEW) }
-    var panelOpen by remember { mutableStateOf(false) }
-    var selectedEntity by remember { mutableStateOf<SelectableEntity?>(null) }
 
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -71,15 +67,8 @@ fun CityMapScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        /* ---------------- MAP ---------------- */
-
         if (lore?.mapImageUri == null) {
-
-            Text(
-                text = "Keine Stadtkarte hinterlegt",
-                modifier = Modifier.align(Alignment.Center)
-            )
-
+            Text("Keine Stadtkarte hinterlegt", Modifier.align(Alignment.Center))
         } else {
 
             Box(
@@ -110,7 +99,7 @@ fun CityMapScreen(
 
                 AsyncImage(
                     model = lore!!.mapImageUri,
-                    contentDescription = "Stadtkarte",
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
                         .onSizeChanged { imageSize = it },
@@ -127,41 +116,55 @@ fun CityMapScreen(
                     pinSizeDp = pinSizeDp.coerceIn(4.dp, 16.dp)
 
                     persons.filter { it.mapX != null }.forEach { person ->
-                        val x = person.mapX!! * width
-                        val y = person.mapY!! * height
 
-                        Box(
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    translationX = x
-                                    translationY = y
-                                }
-                                .size(pinSizeDp)
-                                .border(0.5.dp, Color.White, CircleShape)
-                                .background(Color.Blue, CircleShape)
+                        MapPin(
+                            id = person.id,
+                            initialX = person.mapX!!,
+                            initialY = person.mapY!!,
+                            width = width,
+                            height = height,
+                            scale = scale,
+                            sizeDp = pinSizeDp,
+                            color = Color.Blue,
+                            isEditable = mapMode == MapMode.EDIT,
+                            onPositionPersist = { x, y ->
+                                cityViewModel.updatePersonCoordinates(person.id, x, y)
+                            },
+                            onTap = {
+                                println("Tap Person ${person.name}")
+                            },
+                            onLongPress = {
+                                println("LongPress Person ${person.name}")
+                            }
                         )
                     }
 
                     pois.filter { it.mapX != null }.forEach { poi ->
-                        val x = poi.mapX!! * width
-                        val y = poi.mapY!! * height
 
-                        Box(
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    translationX = x
-                                    translationY = y
-                                }
-                                .size(pinSizeDp)
-                                .border(0.5.dp, Color.White, CircleShape)
-                                .background(Color.Red, CircleShape)
+                        MapPin(
+                            id = poi.id,
+                            initialX = poi.mapX!!,
+                            initialY = poi.mapY!!,
+                            width = width,
+                            height = height,
+                            scale = scale,
+                            sizeDp = pinSizeDp,
+                            color = Color.Red,
+                            isEditable = mapMode == MapMode.EDIT,
+                            onPositionPersist = { x, y ->
+                                cityViewModel.updatePoiCoordinates(poi.id, x, y)
+                            },
+                            onTap = {
+                                println("Tap POI ${poi.name}")
+                            },
+                            onLongPress = {
+                                println("LongPress POI ${poi.name}")
+                            }
                         )
                     }
                 }
             }
         }
-
-        /* ---------------- OVERFLOW MENU ---------------- */
 
         var menuExpanded by remember { mutableStateOf(false) }
 
@@ -172,7 +175,7 @@ fun CityMapScreen(
         ) {
 
             IconButton(onClick = { menuExpanded = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = null)
+                Icon(Icons.Default.MoreVert, null)
             }
 
             DropdownMenu(
@@ -182,21 +185,15 @@ fun CityMapScreen(
 
                 DropdownMenuItem(
                     text = {
-                        Text(
-                            if (mapMode == MapMode.VIEW) "Editieren"
-                            else "Ansicht"
-                        )
+                        Text(if (mapMode == MapMode.VIEW) "Editieren" else "Ansicht")
                     },
                     onClick = {
+                        mapMode =
+                            if (mapMode == MapMode.VIEW)
+                                MapMode.EDIT
+                            else
+                                MapMode.VIEW
                         menuExpanded = false
-
-                        if (mapMode == MapMode.VIEW) {
-                            mapMode = MapMode.EDIT
-                            panelOpen = true
-                        } else {
-                            mapMode = MapMode.VIEW
-                            panelOpen = false
-                        }
                     }
                 )
 
@@ -209,132 +206,72 @@ fun CityMapScreen(
                 )
             }
         }
-
-        /* ---------------- SIDE PANEL ---------------- */
-
-        if (panelOpen && mapMode == MapMode.EDIT) {
-
-            Surface(
-                tonalElevation = 8.dp,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(260.dp)
-                    .align(Alignment.CenterEnd)
-            ) {
-
-                LazyColumn(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-
-                    item {
-                        Text(
-                            "Personen",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-
-                    items(persons) { person ->
-
-                        val placed = person.mapX != null
-
-                        Text(
-                            text = person.name + if (placed) " ✓" else "",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selectedEntity =
-                                        SelectableEntity.Person(person.id)
-                                    panelOpen = false
-                                }
-                                .padding(8.dp)
-                        )
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "POIs",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-
-                    items(pois) { poi ->
-
-                        val placed = poi.mapX != null
-
-                        Text(
-                            text = poi.name + if (placed) " ✓" else "",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selectedEntity =
-                                        SelectableEntity.Poi(poi.id)
-                                    panelOpen = false
-                                }
-                                .padding(8.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        /* ---------------- TAP TO PLACE ---------------- */
-
-        if (mapMode == MapMode.EDIT && selectedEntity != null) {
-
-            LaunchedEffect(selectedEntity) {
-                // wartet auf nächsten Tap
-            }
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .pointerInput(selectedEntity) {
-                        detectTapGestures { tapOffset ->
-
-                            if (imageSize.width == 0) return@detectTapGestures
-
-                            val correctedX =
-                                (tapOffset.x - offset.x) / scale
-                            val correctedY =
-                                (tapOffset.y - offset.y) / scale
-
-                            val normalizedX =
-                                correctedX / imageSize.width
-                            val normalizedY =
-                                correctedY / imageSize.height
-
-                            when (val entity = selectedEntity) {
-
-                                is SelectableEntity.Person ->
-                                    cityViewModel.updatePersonCoordinates(
-                                        entity.id,
-                                        normalizedX,
-                                        normalizedY
-                                    )
-
-                                is SelectableEntity.Poi ->
-                                    cityViewModel.updatePoiCoordinates(
-                                        entity.id,
-                                        normalizedX,
-                                        normalizedY
-                                    )
-
-                                null -> {}
-                            }
-
-                            selectedEntity = null
-                        }
-                    }
-            )
-        }
     }
 }
 
-/* ---------------- ENTITY WRAPPER ---------------- */
+@Composable
+private fun MapPin(
+    id: String,
+    initialX: Float,
+    initialY: Float,
+    width: Float,
+    height: Float,
+    scale: Float,
+    sizeDp: androidx.compose.ui.unit.Dp,
+    color: Color,
+    isEditable: Boolean,
+    onPositionPersist: (Float, Float) -> Unit,
+    onTap: () -> Unit,
+    onLongPress: () -> Unit
+) {
 
-private sealed class SelectableEntity {
-    data class Person(val id: String) : SelectableEntity()
-    data class Poi(val id: String) : SelectableEntity()
+    var localOffset by remember(id, width, height) {
+        mutableStateOf(
+            Offset(
+                initialX * width,
+                initialY * height
+            )
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .graphicsLayer {
+                translationX = localOffset.x
+                translationY = localOffset.y
+            }
+            .size(sizeDp)
+            .border(0.5.dp, Color.White, CircleShape)
+            .background(color, CircleShape)
+            .pointerInput(id, isEditable) {
+
+                detectDragGestures(
+                    onDragEnd = {
+                        if (isEditable) {
+                            val normalizedX =
+                                (localOffset.x / width).coerceIn(0f, 1f)
+                            val normalizedY =
+                                (localOffset.y / height).coerceIn(0f, 1f)
+
+                            onPositionPersist(normalizedX, normalizedY)
+                        }
+                    },
+                    onDrag = { change, dragAmount ->
+                        if (isEditable) {
+                            change.consume()
+                            localOffset += Offset(
+                                dragAmount.x / scale,
+                                dragAmount.y / scale
+                            )
+                        }
+                    }
+                )
+            }
+            .pointerInput(id) {
+                detectTapGestures(
+                    onTap = { onTap() },
+                    onLongPress = { onLongPress() }
+                )
+            }
+    )
 }
