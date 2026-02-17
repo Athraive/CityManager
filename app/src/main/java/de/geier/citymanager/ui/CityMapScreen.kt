@@ -6,12 +6,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -28,13 +29,10 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 
 private enum class MapMode { VIEW, EDIT }
-
-private sealed class SelectableEntity {
-    data class Person(val id: String, val name: String) : SelectableEntity()
-    data class Poi(val id: String, val name: String) : SelectableEntity()
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,12 +41,21 @@ fun CityMapScreen(
     cityViewModel: CityViewModel,
     accessContext: AccessContext
 ) {
+
     val context = LocalContext.current
     val density = LocalDensity.current
 
     val lore by cityViewModel.cityLore.collectAsState()
     val persons by cityViewModel.allPersons.collectAsState()
     val pois by cityViewModel.allPois.collectAsState()
+
+    var mapMode by remember { mutableStateOf(MapMode.VIEW) }
+    var panelOpen by remember { mutableStateOf(false) }
+    var selectedEntity by remember { mutableStateOf<SelectableEntity?>(null) }
+
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var imageSize by remember { mutableStateOf(IntSize.Zero) }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -58,96 +65,38 @@ fun CityMapScreen(
                 it,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
-            cityViewModel.saveCityMapUri(
-                accessContext.cityId,
-                it.toString()
-            )
+            cityViewModel.saveCityMapUri(cityId, it.toString())
         }
     }
 
-    var mapMode by remember { mutableStateOf(MapMode.VIEW) }
+    Box(modifier = Modifier.fillMaxSize()) {
 
-    var scale by remember { mutableStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    var imageSize by remember { mutableStateOf(IntSize.Zero) }
+        /* ---------------- MAP ---------------- */
 
-    var selectedEntity by remember { mutableStateOf<SelectableEntity?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showPersons by remember { mutableStateOf(true) }
-    var showPois by remember { mutableStateOf(true) }
+        if (lore?.mapImageUri == null) {
 
-    val pinScale = 1f + (scale - 1f) * 0.25f
+            Text(
+                text = "Keine Stadtkarte hinterlegt",
+                modifier = Modifier.align(Alignment.Center)
+            )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
-
-        /* ============================================================
-           1️⃣  MAP LAYER (transformiert)
-        ============================================================ */
-
-        if (lore?.mapImageUri != null) {
-
-            val uri = lore!!.mapImageUri!!
+        } else {
 
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
                     .pointerInput(Unit) {
                         detectTransformGestures { _, pan, zoom, _ ->
 
                             val newScale = (scale * zoom).coerceIn(1f, 5f)
 
-                            if (newScale > 1f) {
-                                offset += pan
-                            } else {
+                            if (newScale == 1f) {
+                                scale = 1f
                                 offset = Offset.Zero
-                            }
-
-                            scale = newScale
-                        }
-                    }
-                    .pointerInput(mapMode, selectedEntity, imageSize, scale, offset) {
-
-                        if (mapMode == MapMode.EDIT && selectedEntity != null) {
-
-                            detectTapGestures { tapOffset ->
-
-                                if (imageSize.width == 0) return@detectTapGestures
-
-                                val correctedX =
-                                    (tapOffset.x - offset.x) / scale
-                                val correctedY =
-                                    (tapOffset.y - offset.y) / scale
-
-                                val normalizedX =
-                                    correctedX / imageSize.width
-                                val normalizedY =
-                                    correctedY / imageSize.height
-
-                                val entity =
-                                    selectedEntity ?: return@detectTapGestures
-
-                                when (entity) {
-
-                                    is SelectableEntity.Person ->
-                                        cityViewModel.updatePersonCoordinates(
-                                            entity.id,
-                                            normalizedX,
-                                            normalizedY
-                                        )
-
-                                    is SelectableEntity.Poi ->
-                                        cityViewModel.updatePoiCoordinates(
-                                            entity.id,
-                                            normalizedX,
-                                            normalizedY
-                                        )
-                                }
-
-                                selectedEntity = null
+                            } else {
+                                scale = newScale
+                                offset += pan
                             }
                         }
                     }
@@ -160,7 +109,7 @@ fun CityMapScreen(
             ) {
 
                 AsyncImage(
-                    model = uri,
+                    model = lore!!.mapImageUri,
                     contentDescription = "Stadtkarte",
                     modifier = Modifier
                         .fillMaxSize()
@@ -171,17 +120,13 @@ fun CityMapScreen(
                 val width = imageSize.width.toFloat()
                 val height = imageSize.height.toFloat()
 
-                if (width > 0f && height > 0f) {
+                if (width > 0 && height > 0) {
 
                     val basePinSizePx = width * 0.007f
-                    var pinSizeDp =
-                        with(density) { basePinSizePx.toDp() }
-                    pinSizeDp = pinSizeDp.coerceIn(4.dp, 18.dp)
+                    var pinSizeDp = with(density) { basePinSizePx.toDp() }
+                    pinSizeDp = pinSizeDp.coerceIn(4.dp, 16.dp)
 
-                    persons.filter {
-                        it.mapX != null && it.mapY != null
-                    }.forEach { person ->
-
+                    persons.filter { it.mapX != null }.forEach { person ->
                         val x = person.mapX!! * width
                         val y = person.mapY!! * height
 
@@ -190,8 +135,6 @@ fun CityMapScreen(
                                 .graphicsLayer {
                                     translationX = x
                                     translationY = y
-                                    scaleX = pinScale
-                                    scaleY = pinScale
                                 }
                                 .size(pinSizeDp)
                                 .border(0.5.dp, Color.White, CircleShape)
@@ -199,10 +142,7 @@ fun CityMapScreen(
                         )
                     }
 
-                    pois.filter {
-                        it.mapX != null && it.mapY != null
-                    }.forEach { poi ->
-
+                    pois.filter { it.mapX != null }.forEach { poi ->
                         val x = poi.mapX!! * width
                         val y = poi.mapY!! * height
 
@@ -211,8 +151,6 @@ fun CityMapScreen(
                                 .graphicsLayer {
                                     translationX = x
                                     translationY = y
-                                    scaleX = pinScale
-                                    scaleY = pinScale
                                 }
                                 .size(pinSizeDp)
                                 .border(0.5.dp, Color.White, CircleShape)
@@ -221,138 +159,182 @@ fun CityMapScreen(
                     }
                 }
             }
-
-        } else {
-            Text(
-                text = "Keine Stadtkarte hinterlegt",
-                modifier = Modifier.align(Alignment.Center)
-            )
         }
 
-        /* ============================================================
-           2️⃣  EDIT PANEL (NICHT transformiert!)
-        ============================================================ */
+        /* ---------------- OVERFLOW MENU ---------------- */
 
-        if (mapMode == MapMode.EDIT && accessContext.canEdit()) {
+        var menuExpanded by remember { mutableStateOf(false) }
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(8.dp)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = null)
+            }
+
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false }
             ) {
 
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text("Suchen...") },
-                    modifier = Modifier.fillMaxWidth()
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            if (mapMode == MapMode.VIEW) "Editieren"
+                            else "Ansicht"
+                        )
+                    },
+                    onClick = {
+                        menuExpanded = false
+
+                        if (mapMode == MapMode.VIEW) {
+                            mapMode = MapMode.EDIT
+                            panelOpen = true
+                        } else {
+                            mapMode = MapMode.VIEW
+                            panelOpen = false
+                        }
+                    }
                 )
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
-                        selected = showPersons,
-                        onClick = { showPersons = !showPersons },
-                        label = { Text("Personen") }
-                    )
-                    FilterChip(
-                        selected = showPois,
-                        onClick = { showPois = !showPois },
-                        label = { Text("POIs") }
-                    )
-                }
-
-                val freePersons =
-                    persons.filter {
-                        it.mapX == null &&
-                                it.name.contains(searchQuery, true)
+                DropdownMenuItem(
+                    text = { Text("Karte ändern") },
+                    onClick = {
+                        menuExpanded = false
+                        imagePicker.launch(arrayOf("image/*"))
                     }
-
-                val freePois =
-                    pois.filter {
-                        it.mapX == null &&
-                                it.name.contains(searchQuery, true)
-                    }
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp)
-                ) {
-
-                    if (showPersons) {
-                        items(freePersons) { person ->
-                            TextButton(
-                                onClick = {
-                                    selectedEntity =
-                                        SelectableEntity.Person(
-                                            person.id,
-                                            person.name
-                                        )
-                                }
-                            ) {
-                                Text("Person: ${person.name}")
-                            }
-                        }
-                    }
-
-                    if (showPois) {
-                        items(freePois) { poi ->
-                            TextButton(
-                                onClick = {
-                                    selectedEntity =
-                                        SelectableEntity.Poi(
-                                            poi.id,
-                                            poi.name
-                                        )
-                                }
-                            ) {
-                                Text("POI: ${poi.name}")
-                            }
-                        }
-                    }
-                }
+                )
             }
         }
 
-        /* ============================================================
-           3️⃣  FAB
-        ============================================================ */
+        /* ---------------- SIDE PANEL ---------------- */
 
-        if (accessContext.canEdit()) {
-            Column(
+        if (panelOpen && mapMode == MapMode.EDIT) {
+
+            Surface(
+                tonalElevation = 8.dp,
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxHeight()
+                    .width(260.dp)
+                    .align(Alignment.CenterEnd)
             ) {
 
-                FloatingActionButton(
-                    onClick = {
-                        mapMode =
-                            if (mapMode == MapMode.VIEW)
-                                MapMode.EDIT
-                            else
-                                MapMode.VIEW
-                    }
+                LazyColumn(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        if (mapMode == MapMode.VIEW)
-                            "Edit"
-                        else
-                            "View"
-                    )
-                }
 
-                FloatingActionButton(
-                    onClick = { imagePicker.launch(arrayOf("image/*")) }
-                ) {
-                    Text("⋮")
+                    item {
+                        Text(
+                            "Personen",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    items(persons) { person ->
+
+                        val placed = person.mapX != null
+
+                        Text(
+                            text = person.name + if (placed) " ✓" else "",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedEntity =
+                                        SelectableEntity.Person(person.id)
+                                    panelOpen = false
+                                }
+                                .padding(8.dp)
+                        )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "POIs",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    items(pois) { poi ->
+
+                        val placed = poi.mapX != null
+
+                        Text(
+                            text = poi.name + if (placed) " ✓" else "",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedEntity =
+                                        SelectableEntity.Poi(poi.id)
+                                    panelOpen = false
+                                }
+                                .padding(8.dp)
+                        )
+                    }
                 }
             }
         }
+
+        /* ---------------- TAP TO PLACE ---------------- */
+
+        if (mapMode == MapMode.EDIT && selectedEntity != null) {
+
+            LaunchedEffect(selectedEntity) {
+                // wartet auf nächsten Tap
+            }
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .pointerInput(selectedEntity) {
+                        detectTapGestures { tapOffset ->
+
+                            if (imageSize.width == 0) return@detectTapGestures
+
+                            val correctedX =
+                                (tapOffset.x - offset.x) / scale
+                            val correctedY =
+                                (tapOffset.y - offset.y) / scale
+
+                            val normalizedX =
+                                correctedX / imageSize.width
+                            val normalizedY =
+                                correctedY / imageSize.height
+
+                            when (val entity = selectedEntity) {
+
+                                is SelectableEntity.Person ->
+                                    cityViewModel.updatePersonCoordinates(
+                                        entity.id,
+                                        normalizedX,
+                                        normalizedY
+                                    )
+
+                                is SelectableEntity.Poi ->
+                                    cityViewModel.updatePoiCoordinates(
+                                        entity.id,
+                                        normalizedX,
+                                        normalizedY
+                                    )
+
+                                null -> {}
+                            }
+
+                            selectedEntity = null
+                        }
+                    }
+            )
+        }
     }
+}
+
+/* ---------------- ENTITY WRAPPER ---------------- */
+
+private sealed class SelectableEntity {
+    data class Person(val id: String) : SelectableEntity()
+    data class Poi(val id: String) : SelectableEntity()
 }
