@@ -6,7 +6,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,7 +20,6 @@ import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.*
@@ -47,6 +48,9 @@ fun CityMapScreen(
 
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
+    var sidePanelOpen by remember { mutableStateOf(false) }
+    var addPosition by remember { mutableStateOf<Offset?>(null) }
+
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -63,11 +67,34 @@ fun CityMapScreen(
         modifier = Modifier
             .fillMaxSize()
             .onSizeChanged { containerSize = it }
-            .pointerInput(scale) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    if (scale > 1f) {
-                        panOffset += dragAmount
+            .pointerInput(mode, scale, sidePanelOpen) {
+
+                // Drag → Pan (nur wenn Panel geschlossen)
+                if (!sidePanelOpen) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        if (scale > 1f) {
+                            panOffset += dragAmount
+                        }
+                    }
+                }
+            }
+            .pointerInput(mode, scale, panOffset, sidePanelOpen) {
+
+                // Tap auf leere Karte im EDIT-Modus
+                if (mode == MapMode.EDIT && !sidePanelOpen) {
+
+                    detectTapGestures { tapOffset ->
+
+                        val mapX = (tapOffset.x - panOffset.x) / scale
+                        val mapY = (tapOffset.y - panOffset.y) / scale
+
+                        addPosition = Offset(
+                            mapX / containerSize.width,
+                            mapY / containerSize.height
+                        )
+
+                        sidePanelOpen = true
                     }
                 }
             }
@@ -84,7 +111,7 @@ fun CityMapScreen(
             )
         }
 
-        // UI Overlay unten
+        // Bottom UI
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -93,7 +120,6 @@ fun CityMapScreen(
                 .padding(8.dp)
         ) {
 
-            // Edit Button
             Box(
                 modifier = Modifier
                     .align(Alignment.End)
@@ -140,7 +166,7 @@ fun CityMapScreen(
             }
         }
 
-        // Menü oben rechts
+        // Top menu
         var menuExpanded by remember { mutableStateOf(false) }
 
         Box(
@@ -176,5 +202,15 @@ fun CityMapScreen(
                 )
             }
         }
+
+        // Side Panel
+        EditSidePanel(
+            visible = sidePanelOpen,
+            tapPosition = addPosition,
+            onClose = {
+                sidePanelOpen = false
+                addPosition = null
+            }
+        )
     }
 }
