@@ -1,7 +1,8 @@
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,19 +21,23 @@ fun ManagePinsScreen(
     val pois by cityViewModel.allPois.collectAsState()
 
     var selectedTab by remember { mutableStateOf(0) }
-    var selectedIds by remember { mutableStateOf(setOf<String>()) }
     var confirmDelete by remember { mutableStateOf(false) }
 
-    val personPins: List<Person> =
-        persons.filter { it.mapX != null && it.mapY != null }
+    val personsWithPins = persons.filter { it.mapX != null && it.mapY != null }
+    val poisWithPins = pois.filter { it.mapX != null && it.mapY != null }
 
-    val poiPins: List<PointOfInterest> =
-        pois.filter { it.mapX != null && it.mapY != null }
+    val selectedPersons = remember { mutableStateListOf<String>() }
+    val selectedPois = remember { mutableStateListOf<String>() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pins verwalten") }
+                title = { Text("Pins verwalten") },
+                actions = {
+                    TextButton(onClick = { navController.popBackStack() }) {
+                        Text("Abbrechen")
+                    }
+                }
             )
         }
     ) { padding ->
@@ -40,6 +45,7 @@ fun ManagePinsScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
+                .padding(16.dp)
                 .fillMaxSize()
         ) {
 
@@ -47,84 +53,112 @@ fun ManagePinsScreen(
 
                 Tab(
                     selected = selectedTab == 0,
-                    onClick = {
-                        selectedTab = 0
-                        selectedIds = emptySet()
-                    },
+                    onClick = { selectedTab = 0 },
                     text = { Text("Personen") }
                 )
 
                 Tab(
                     selected = selectedTab == 1,
-                    onClick = {
-                        selectedTab = 1
-                        selectedIds = emptySet()
-                    },
+                    onClick = { selectedTab = 1 },
                     text = { Text("POIs") }
                 )
             }
 
             Spacer(Modifier.height(16.dp))
 
-            if (selectedTab == 0) {
+            val list = if (selectedTab == 0)
+                personsWithPins
+            else
+                poisWithPins
 
-                PinsList(
-                    items = personPins,
-                    selectedIds = selectedIds,
-                    onSelectionChange = { selectedIds = it }
-                )
-
+            if (list.isEmpty()) {
+                Text("Keine Pins vorhanden.")
             } else {
 
-                PinsList(
-                    items = poiPins,
-                    selectedIds = selectedIds,
-                    onSelectionChange = { selectedIds = it }
-                )
-            }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
 
-            Spacer(Modifier.height(16.dp))
+                    if (selectedTab == 0) {
+                        personsWithPins.forEach { person ->
 
-            Button(
-                onClick = { confirmDelete = true },
-                enabled = selectedIds.isNotEmpty(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text("Ausgewählte entfernen")
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+
+                                Text(person.name)
+
+                                Checkbox(
+                                    checked = selectedPersons.contains(person.id),
+                                    onCheckedChange = { checked ->
+                                        if (checked)
+                                            selectedPersons.add(person.id)
+                                        else
+                                            selectedPersons.remove(person.id)
+                                    }
+                                )
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    } else {
+
+                        poisWithPins.forEach { poi ->
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+
+                                Text(poi.name)
+
+                                Checkbox(
+                                    checked = selectedPois.contains(poi.id),
+                                    onCheckedChange = { checked ->
+                                        if (checked)
+                                            selectedPois.add(poi.id)
+                                        else
+                                            selectedPois.remove(poi.id)
+                                    }
+                                )
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Button(
+                    onClick = { confirmDelete = true },
+                    enabled = selectedPersons.isNotEmpty() || selectedPois.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Ausgewählte Pins löschen")
+                }
             }
         }
     }
 
     if (confirmDelete) {
-
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Pins wirklich entfernen?") },
-            text = {
-                Text("${selectedIds.size} Pins werden entfernt.")
-            },
+            title = { Text("Wirklich löschen?") },
+            text = { Text("Die ausgewählten Pins werden entfernt.") },
             confirmButton = {
                 TextButton(
                     onClick = {
 
-                        if (selectedTab == 0) {
-                            selectedIds.forEach { id ->
-                                cityViewModel.updatePersonCoordinates(
-                                    id,
-                                    null,
-                                    null
-                                )
-                            }
-                        } else {
-                            selectedIds.forEach { id ->
-                                cityViewModel.updatePoiCoordinates(
-                                    id,
-                                    null,
-                                    null
-                                )
-                            }
+                        selectedPersons.forEach {
+                            cityViewModel.updatePersonCoordinates(it, null, null)
+                        }
+
+                        selectedPois.forEach {
+                            cityViewModel.updatePoiCoordinates(it, null, null)
                         }
 
                         confirmDelete = false
@@ -142,91 +176,5 @@ fun ManagePinsScreen(
                 }
             }
         )
-    }
-}
-
-/* ---------- Gemeinsame Liste ---------- */
-
-@Composable
-private fun <T> PinsList(
-    items: List<T>,
-    selectedIds: Set<String>,
-    onSelectionChange: (Set<String>) -> Unit
-) where T : Any {
-
-    if (items.isEmpty()) {
-        Text(
-            text = "Keine Pins vorhanden",
-            modifier = Modifier.padding(16.dp)
-        )
-        return
-    }
-
-    val ids = items.map {
-        when (it) {
-            is Person -> it.id
-            is PointOfInterest -> it.id
-            else -> ""
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
-        TextButton(
-            onClick = {
-                onSelectionChange(
-                    if (selectedIds.size == items.size)
-                        emptySet()
-                    else
-                        ids.toSet()
-                )
-            }
-        ) {
-            Text("Alle auswählen")
-        }
-    }
-
-    items.forEach { item ->
-
-        val id = when (item) {
-            is Person -> item.id
-            is PointOfInterest -> item.id
-            else -> ""
-        }
-
-        val name = when (item) {
-            is Person -> item.name
-            is PointOfInterest -> item.name
-            else -> ""
-        }
-
-        val checked = selectedIds.contains(id)
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .toggleable(
-                    value = checked,
-                    onValueChange = {
-                        onSelectionChange(
-                            if (checked)
-                                selectedIds - id
-                            else
-                                selectedIds + id
-                        )
-                    }
-                )
-                .padding(16.dp)
-        ) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = null
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(name)
-        }
     }
 }

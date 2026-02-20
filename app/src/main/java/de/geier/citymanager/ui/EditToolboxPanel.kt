@@ -2,22 +2,30 @@ package de.geier.citymanager.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun EditToolboxPanel(
     onPinAdd: () -> Unit,
     onPinDelete: () -> Unit,
-    onChangeMap: () -> Unit,
-    onClose: () -> Unit
+    onChangeMap: () -> Unit
 ) {
+
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val calculatedWidthDp =
+        (screenWidthDp * 0.55f).coerceAtMost(420f)
+
+    val panelWidth: Dp = calculatedWidthDp.dp
 
     AnimatedVisibility(
         visible = true,
@@ -31,15 +39,21 @@ fun EditToolboxPanel(
         )
     ) {
 
-        Box(
+        Surface(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(280.dp)
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp)
+                .width(panelWidth),
+            shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp),
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp
         ) {
 
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
 
                 Text(
                     text = "Edit-Toolbox",
@@ -48,40 +62,28 @@ fun EditToolboxPanel(
 
                 Spacer(Modifier.height(24.dp))
 
-                Button(
-                    onClick = onPinAdd,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Pin anlegen")
-                }
-
+                ToolboxButton("Pin anlegen", onPinAdd)
                 Spacer(Modifier.height(12.dp))
 
-                Button(
-                    onClick = onPinDelete,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Pin löschen")
-                }
-
+                ToolboxButton("Pin löschen", onPinDelete)
                 Spacer(Modifier.height(12.dp))
 
-                Button(
-                    onClick = onChangeMap,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Karte ändern")
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = onClose,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Schließen")
-                }
+                ToolboxButton("Karte ändern", onChangeMap)
             }
         }
+    }
+}
+
+@Composable
+private fun ToolboxButton(
+    text: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Text(text)
     }
 }

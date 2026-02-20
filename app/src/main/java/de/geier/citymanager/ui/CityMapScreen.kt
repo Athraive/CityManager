@@ -2,10 +2,11 @@ package de.geier.citymanager.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -14,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -34,8 +34,9 @@ fun CityMapScreen(
 ) {
 
     val context = LocalContext.current
-
     val lore by cityViewModel.cityLore.collectAsState()
+    val persons by cityViewModel.allPersons.collectAsState()
+    val pois by cityViewModel.allPois.collectAsState()
 
     var toolboxOpen by remember { mutableStateOf(false) }
     var placementMode by remember { mutableStateOf(false) }
@@ -70,6 +71,30 @@ fun CityMapScreen(
                     }
                 }
             }
+            .pointerInput(placementMode, scale, panOffset) {
+                if (placementMode) {
+                    detectTapGestures { tapOffset ->
+
+                        val adjustedX =
+                            (tapOffset.x - panOffset.x) / scale
+                        val adjustedY =
+                            (tapOffset.y - panOffset.y) / scale
+
+                        val normalizedX =
+                            (adjustedX / containerSize.width)
+                                .coerceIn(0f, 1f)
+
+                        val normalizedY =
+                            (adjustedY / containerSize.height)
+                                .coerceIn(0f, 1f)
+
+                        // Vorläufig nur Log-Ausgabe
+                        println("Pin bei $normalizedX / $normalizedY")
+
+                        placementMode = false
+                    }
+                }
+            }
     ) {
 
         /* ---------------- Map Content ---------------- */
@@ -77,8 +102,8 @@ fun CityMapScreen(
         if (lore?.mapImageUri != null) {
             MapContent(
                 mapImageUri = lore!!.mapImageUri!!,
-                persons = cityViewModel.allPersons.collectAsState().value,
-                pois = cityViewModel.allPois.collectAsState().value,
+                persons = persons,
+                pois = pois,
                 containerSize = containerSize,
                 scale = scale,
                 panOffset = panOffset
@@ -88,69 +113,84 @@ fun CityMapScreen(
         /* ---------------- Placement Hinweis ---------------- */
 
         if (placementMode) {
-            Box(
+            Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .padding(12.dp)
+                    .padding(top = 16.dp),
+                tonalElevation = 4.dp,
+                shadowElevation = 6.dp
             ) {
                 Text(
-                    "Tippe auf die Karte, um einen Pin zu setzen",
-                    color = Color.White
+                    text = "Tippe auf die Karte, um einen Pin zu setzen",
+                    modifier = Modifier.padding(12.dp)
                 )
             }
         }
 
-        /* ---------------- Zoom Controls ---------------- */
+        /* ---------------- Zoom-Leiste ---------------- */
 
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(Color.Gray.copy(alpha = 0.4f))
-                .padding(8.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .zIndex(1f)
         ) {
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
 
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                    tint = Color.Black
-                )
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null
+                    )
 
-                Slider(
-                    value = scale,
-                    onValueChange = {
-                        scale = it
-                        if (scale == 1f) {
-                            panOffset = Offset.Zero
-                        }
-                    },
-                    valueRange = 1f..5f,
-                    modifier = Modifier.weight(1f)
-                )
+                    Slider(
+                        value = scale,
+                        onValueChange = {
+                            scale = it
+                            if (scale == 1f) {
+                                panOffset = Offset.Zero
+                            }
+                        },
+                        valueRange = 1f..5f,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 
-        /* ---------------- Edit Toolbox Button ---------------- */
+        /* ---------------- Werkzeug-Button ---------------- */
 
         FloatingActionButton(
-            onClick = { toolboxOpen = true },
+            onClick = {
+                toolboxOpen = !toolboxOpen
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp)
+                .padding(end = 16.dp, bottom = 96.dp) // ← höher gesetzt
                 .zIndex(2f),
-            containerColor = Color.Gray.copy(alpha = 0.8f)
+            containerColor =
+                if (toolboxOpen)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.surfaceVariant
         ) {
             Icon(Icons.Default.Build, contentDescription = null)
         }
 
-        /* ---------------- Toolbox Panel ---------------- */
+        /* ---------------- Toolbox ---------------- */
 
         if (toolboxOpen) {
-
             EditToolboxPanel(
                 onPinAdd = {
                     toolboxOpen = false
@@ -163,17 +203,13 @@ fun CityMapScreen(
                 onChangeMap = {
                     toolboxOpen = false
                     confirmReplaceMap = true
-                },
-                onClose = {
-                    toolboxOpen = false
                 }
             )
         }
 
-        /* ---------------- Replace Map Dialog ---------------- */
+        /* ---------------- Dialog Karte ersetzen ---------------- */
 
         if (confirmReplaceMap) {
-
             AlertDialog(
                 onDismissRequest = { confirmReplaceMap = false },
                 title = { Text("Karte wirklich ersetzen?") },
