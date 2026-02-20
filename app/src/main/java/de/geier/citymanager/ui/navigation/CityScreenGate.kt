@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.CityScreen
+import de.geier.citymanager.ui.ManagePinsScreen
 import de.geier.citymanager.ui.Role
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.CityViewModelFactory
@@ -13,7 +15,9 @@ import de.geier.citymanager.ui.viewmodel.CityViewModelFactory
 @Composable
 fun CityScreenGate(
     role: Role?,
-    cityId: String?
+    cityId: String?,
+    managePinsMode: Boolean = false,
+    navController: NavController? = null
 ) {
     if (role == null || cityId == null) return
 
@@ -33,8 +37,18 @@ fun CityScreenGate(
         )
     )
 
-    CityScreen(
-        cityViewModel = cityViewModel,
-        accessContext = accessContext
-    )
+    if (managePinsMode && navController != null) {
+
+        ManagePinsScreen(
+            navController = navController,
+            cityViewModel = cityViewModel
+        )
+
+    } else {
+
+        CityScreen(
+            cityViewModel = cityViewModel,
+            accessContext = accessContext
+        )
+    }
 }

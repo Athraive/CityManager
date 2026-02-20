@@ -87,5 +87,7 @@ fun AppNavHost() {
                 cityId = selectedCityId
             )
         }
+
+
     }
 }

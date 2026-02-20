@@ -13,4 +13,7 @@ object Route {
     const val PERSONEN = "personen"
     const val POIS = "pois"
     const val FRAKTIONEN = "fraktionen"
+
+    // 🔵 NEU
+    const val MANAGE_PINS = "manage_pins"
 }

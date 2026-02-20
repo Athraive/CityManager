@@ -33,17 +33,33 @@ fun CityOverviewTab(
             modifier = Modifier.weight(1f)
         ) {
 
+            /* ---------------- Übersicht ---------------- */
+
             composable(Route.STADTUEBERSICHT) {
                 CityIntroScreen()
             }
+
+            /* ---------------- Stadtkarte ---------------- */
 
             composable(Route.STADTKARTE) {
                 CityMapScreen(
                     cityId = cityId,
                     cityViewModel = cityViewModel,
-                    accessContext = accessContext
+                    accessContext = accessContext,
+                    navController = navController
                 )
             }
+
+            /* ---------------- Manage Pins (NEU) ---------------- */
+
+            composable(Route.MANAGE_PINS) {
+                ManagePinsScreen(
+                    navController = navController,
+                    cityViewModel = cityViewModel
+                )
+            }
+
+            /* ---------------- Stadtviertel Liste ---------------- */
 
             composable(Route.STADTVIERTEL_LIST) {
                 CityDistrictListScreen(
@@ -55,6 +71,8 @@ fun CityOverviewTab(
                 )
             }
 
+            /* ---------------- Stadtviertel Detail ---------------- */
+
             composable(Route.STADTVIERTEL_DETAIL) { backStackEntry ->
                 val id =
                     backStackEntry.arguments?.getString("districtId")
@@ -65,6 +83,8 @@ fun CityOverviewTab(
                     cityViewModel = cityViewModel
                 )
             }
+
+            /* ---------------- Geschichte ---------------- */
 
             composable(Route.STADTGESCHICHTE) {
                 StadtgeschichteScreen(

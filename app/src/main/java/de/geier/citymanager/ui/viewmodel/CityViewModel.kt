@@ -153,10 +153,11 @@ class CityViewModel(
         }
     }
 
+    // ✅ Nullable Koordinaten
     fun updatePoiCoordinates(
         poiId: String,
-        mapX: Float,
-        mapY: Float
+        mapX: Float?,
+        mapY: Float?
     ) {
         if (!accessContext.canEdit()) return
 
@@ -182,10 +183,11 @@ class CityViewModel(
                 emptyList()
             )
 
+    // ✅ Nullable Koordinaten
     fun updatePersonCoordinates(
         personId: String,
-        mapX: Float,
-        mapY: Float
+        mapX: Float?,
+        mapY: Float?
     ) {
         if (!accessContext.canEdit()) return
 
