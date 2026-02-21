@@ -2,12 +2,12 @@ package de.geier.citymanager.ui
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Search
@@ -75,6 +75,9 @@ fun CityMapScreen(
                 if (placementMode) {
                     detectTapGestures { tapOffset ->
 
+                        if (containerSize.width == 0 || containerSize.height == 0)
+                            return@detectTapGestures
+
                         val adjustedX =
                             (tapOffset.x - panOffset.x) / scale
                         val adjustedY =
@@ -88,10 +91,11 @@ fun CityMapScreen(
                             (adjustedY / containerSize.height)
                                 .coerceIn(0f, 1f)
 
-                        // Vorläufig nur Log-Ausgabe
-                        println("Pin bei $normalizedX / $normalizedY")
-
                         placementMode = false
+
+                        navController.navigate(
+                            "add_pin/$normalizedX/$normalizedY"
+                        )
                     }
                 }
             }
@@ -177,7 +181,7 @@ fun CityMapScreen(
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 96.dp) // ← höher gesetzt
+                .padding(end = 16.dp, bottom = 96.dp)
                 .zIndex(2f),
             containerColor =
                 if (toolboxOpen)

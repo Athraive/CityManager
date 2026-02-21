@@ -14,6 +14,7 @@ object Route {
     const val POIS = "pois"
     const val FRAKTIONEN = "fraktionen"
 
-    // 🔵 NEU
+    // Pin Management
     const val MANAGE_PINS = "manage_pins"
+    const val ADD_PIN = "add_pin/{x}/{y}"
 }
