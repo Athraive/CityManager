@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -71,51 +70,26 @@ fun CityMapScreen(
                     }
                 }
             }
-            .pointerInput(placementMode, scale, panOffset) {
-                if (placementMode) {
-                    detectTapGestures { tapOffset ->
-
-                        if (containerSize.width == 0 || containerSize.height == 0)
-                            return@detectTapGestures
-
-                        val adjustedX =
-                            (tapOffset.x - panOffset.x) / scale
-                        val adjustedY =
-                            (tapOffset.y - panOffset.y) / scale
-
-                        val normalizedX =
-                            (adjustedX / containerSize.width)
-                                .coerceIn(0f, 1f)
-
-                        val normalizedY =
-                            (adjustedY / containerSize.height)
-                                .coerceIn(0f, 1f)
-
-                        placementMode = false
-
-                        navController.navigate(
-                            "add_pin/$normalizedX/$normalizedY"
-                        )
-                    }
-                }
-            }
     ) {
 
-        /* ---------------- Map Content ---------------- */
-
         if (lore?.mapImageUri != null) {
+
             MapContent(
                 mapImageUri = lore!!.mapImageUri!!,
                 persons = persons,
                 pois = pois,
                 containerSize = containerSize,
                 scale = scale,
-                panOffset = panOffset
+                panOffset = panOffset,
+                placementMode = placementMode,
+                onTapNormalized = { x, y ->
+                    placementMode = false
+                    navController.navigate("add_pin/$x/$y")
+                }
             )
         }
 
-        /* ---------------- Placement Hinweis ---------------- */
-
+        // Placement Hinweis
         if (placementMode) {
             Surface(
                 modifier = Modifier
@@ -131,8 +105,7 @@ fun CityMapScreen(
             }
         }
 
-        /* ---------------- Zoom-Leiste ---------------- */
-
+        // Zoom Slider
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -173,27 +146,18 @@ fun CityMapScreen(
             }
         }
 
-        /* ---------------- Werkzeug-Button ---------------- */
-
+        // Toolbox Button
         FloatingActionButton(
-            onClick = {
-                toolboxOpen = !toolboxOpen
-            },
+            onClick = { toolboxOpen = !toolboxOpen },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 96.dp)
-                .zIndex(2f),
-            containerColor =
-                if (toolboxOpen)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.surfaceVariant
+                .zIndex(2f)
         ) {
             Icon(Icons.Default.Build, contentDescription = null)
         }
 
-        /* ---------------- Toolbox ---------------- */
-
+        // Toolbox Panel
         if (toolboxOpen) {
             EditToolboxPanel(
                 onPinAdd = {
@@ -211,8 +175,7 @@ fun CityMapScreen(
             )
         }
 
-        /* ---------------- Dialog Karte ersetzen ---------------- */
-
+        // Replace Map Dialog
         if (confirmReplaceMap) {
             AlertDialog(
                 onDismissRequest = { confirmReplaceMap = false },
