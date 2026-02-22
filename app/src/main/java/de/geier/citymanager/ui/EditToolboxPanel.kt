@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.Dp
 fun EditToolboxPanel(
     onPinAdd: () -> Unit,
     onPinDelete: () -> Unit,
-    onChangeMap: () -> Unit
+    onChangeMap: () -> Unit,
+    onMoveStart: () -> Unit
 ) {
 
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
@@ -69,6 +70,9 @@ fun EditToolboxPanel(
                 Spacer(Modifier.height(12.dp))
 
                 ToolboxButton("Karte ändern", onChangeMap)
+                Spacer(Modifier.height(12.dp))
+
+                ToolboxButton("Pin verschieben", onMoveStart)
             }
         }
     }

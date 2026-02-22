@@ -39,6 +39,7 @@ fun CityMapScreen(
 
     var toolboxOpen by remember { mutableStateOf(false) }
     var placementMode by remember { mutableStateOf(false) }
+    var moveMode by remember { mutableStateOf(false) }
 
     var scale by remember { mutableStateOf(1f) }
     var panOffset by remember { mutableStateOf(Offset.Zero) }
@@ -62,11 +63,13 @@ fun CityMapScreen(
         modifier = Modifier
             .fillMaxSize()
             .onSizeChanged { containerSize = it }
-            .pointerInput(scale) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    if (scale > 1f) {
-                        panOffset += dragAmount
+            .pointerInput(scale, moveMode) {
+                if (!moveMode) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        if (scale > 1f) {
+                            panOffset += dragAmount
+                        }
                     }
                 }
             }
@@ -82,14 +85,24 @@ fun CityMapScreen(
                 scale = scale,
                 panOffset = panOffset,
                 placementMode = placementMode,
+                moveMode = moveMode,
                 onTapNormalized = { x, y ->
                     placementMode = false
                     navController.navigate("add_pin/$x/$y")
+                },
+                onMovePin = { id, isPerson, x, y ->
+                    if (isPerson) {
+                        cityViewModel.updatePersonCoordinates(id, x, y)
+                    } else {
+                        cityViewModel.updatePoiCoordinates(id, x, y)
+                    }
+                },
+                onMoveFinished = {
+                    moveMode = false
                 }
             )
         }
 
-        // Placement Hinweis
         if (placementMode) {
             Surface(
                 modifier = Modifier
@@ -105,7 +118,6 @@ fun CityMapScreen(
             }
         }
 
-        // Zoom Slider
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -113,7 +125,6 @@ fun CityMapScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .zIndex(1f)
         ) {
-
             Surface(
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp,
@@ -126,18 +137,13 @@ fun CityMapScreen(
                         .padding(horizontal = 16.dp)
                 ) {
 
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null
-                    )
+                    Icon(Icons.Default.Search, contentDescription = null)
 
                     Slider(
                         value = scale,
                         onValueChange = {
                             scale = it
-                            if (scale == 1f) {
-                                panOffset = Offset.Zero
-                            }
+                            if (scale == 1f) panOffset = Offset.Zero
                         },
                         valueRange = 1f..5f,
                         modifier = Modifier.weight(1f)
@@ -146,7 +152,6 @@ fun CityMapScreen(
             }
         }
 
-        // Toolbox Button
         FloatingActionButton(
             onClick = { toolboxOpen = !toolboxOpen },
             modifier = Modifier
@@ -157,12 +162,12 @@ fun CityMapScreen(
             Icon(Icons.Default.Build, contentDescription = null)
         }
 
-        // Toolbox Panel
         if (toolboxOpen) {
             EditToolboxPanel(
                 onPinAdd = {
                     toolboxOpen = false
                     placementMode = true
+                    moveMode = false
                 },
                 onPinDelete = {
                     toolboxOpen = false
@@ -171,18 +176,20 @@ fun CityMapScreen(
                 onChangeMap = {
                     toolboxOpen = false
                     confirmReplaceMap = true
+                },
+                onMoveStart = {
+                    toolboxOpen = false
+                    placementMode = false
+                    moveMode = true
                 }
             )
         }
 
-        // Replace Map Dialog
         if (confirmReplaceMap) {
             AlertDialog(
                 onDismissRequest = { confirmReplaceMap = false },
                 title = { Text("Karte wirklich ersetzen?") },
-                text = {
-                    Text("Die bestehende Karte wird überschrieben.")
-                },
+                text = { Text("Die bestehende Karte wird überschrieben.") },
                 confirmButton = {
                     TextButton(
                         onClick = {

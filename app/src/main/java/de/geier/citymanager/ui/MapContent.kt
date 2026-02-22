@@ -2,9 +2,14 @@ package de.geier.citymanager.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -15,7 +20,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.*
 import coil.compose.AsyncImage
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 @Composable
 fun MapContent(
@@ -26,7 +33,10 @@ fun MapContent(
     scale: Float,
     panOffset: Offset,
     placementMode: Boolean,
-    onTapNormalized: (Float, Float) -> Unit
+    moveMode: Boolean,
+    onTapNormalized: (Float, Float) -> Unit,
+    onMovePin: (String, Boolean, Float, Float) -> Unit,
+    onMoveFinished: () -> Unit
 ) {
 
     var imageWidthPx by remember { mutableStateOf<Float?>(null) }
@@ -34,8 +44,6 @@ fun MapContent(
 
     val containerWidth = containerSize.width.toFloat()
     val containerHeight = containerSize.height.toFloat()
-
-    // ===== FIT-BERECHNUNG =====
 
     val renderedWidth: Float
     val renderedHeight: Float
@@ -48,7 +56,6 @@ fun MapContent(
         containerWidth > 0f &&
         containerHeight > 0f
     ) {
-
         val fitScale = min(
             containerWidth / imageWidthPx!!,
             containerHeight / imageHeightPx!!
@@ -59,13 +66,15 @@ fun MapContent(
 
         offsetX = (containerWidth - renderedWidth) / 2f
         offsetY = (containerHeight - renderedHeight) / 2f
-
     } else {
         renderedWidth = 0f
         renderedHeight = 0f
         offsetX = 0f
         offsetY = 0f
     }
+
+    var selectedId by remember { mutableStateOf<String?>(null) }
+    var selectedIsPerson by remember { mutableStateOf<Boolean?>(null) }
 
     Box(
         modifier = Modifier
@@ -76,32 +85,75 @@ fun MapContent(
                 translationX = panOffset.x
                 translationY = panOffset.y
             }
-            .pointerInput(
-                placementMode,
-                renderedWidth,
-                renderedHeight,
-                offsetX,
-                offsetY
-            ) {
-                if (placementMode) {
-                    detectTapGestures { tapOffset ->
+            // TAP: Auswahl oder Placement
+            .pointerInput(moveMode, placementMode) {
+                detectTapGestures { tap ->
 
-                        if (renderedWidth == 0f || renderedHeight == 0f)
-                            return@detectTapGestures
+                    if (renderedWidth == 0f) return@detectTapGestures
 
-                        val relativeX = tapOffset.x - offsetX
-                        val relativeY = tapOffset.y - offsetY
+                    val relX = tap.x - offsetX
+                    val relY = tap.y - offsetY
+                    val radius = 24f
 
-                        val normalizedX =
-                            (relativeX / renderedWidth)
-                                .coerceIn(0f, 1f)
+                    var hitId: String? = null
+                    var hitIsPerson: Boolean? = null
 
-                        val normalizedY =
-                            (relativeY / renderedHeight)
-                                .coerceIn(0f, 1f)
-
-                        onTapNormalized(normalizedX, normalizedY)
+                    persons.forEach {
+                        if (it.mapX != null && it.mapY != null) {
+                            val px = it.mapX!! * renderedWidth
+                            val py = it.mapY!! * renderedHeight
+                            if (sqrt((relX - px).pow(2) + (relY - py).pow(2)) <= radius) {
+                                hitId = it.id
+                                hitIsPerson = true
+                            }
+                        }
                     }
+
+                    pois.forEach {
+                        if (it.mapX != null && it.mapY != null) {
+                            val px = it.mapX!! * renderedWidth
+                            val py = it.mapY!! * renderedHeight
+                            if (sqrt((relX - px).pow(2) + (relY - py).pow(2)) <= radius) {
+                                hitId = it.id
+                                hitIsPerson = false
+                            }
+                        }
+                    }
+
+                    if (hitId != null) {
+                        selectedId = hitId
+                        selectedIsPerson = hitIsPerson
+                    } else if (placementMode) {
+                        val normX = (relX / renderedWidth).coerceIn(0f, 1f)
+                        val normY = (relY / renderedHeight).coerceIn(0f, 1f)
+                        onTapNormalized(normX, normY)
+                    }
+                }
+            }
+            // DRAG: nur im Move-Modus & wenn Pin selektiert
+            .pointerInput(moveMode, selectedId) {
+                if (moveMode && selectedId != null) {
+                    detectDragGestures(
+                        onDrag = { change, _ ->
+                            val relX = change.position.x - offsetX
+                            val relY = change.position.y - offsetY
+
+                            val newX = (relX / renderedWidth).coerceIn(0f, 1f)
+                            val newY = (relY / renderedHeight).coerceIn(0f, 1f)
+
+                            onMovePin(
+                                selectedId!!,
+                                selectedIsPerson == true,
+                                newX,
+                                newY
+                            )
+                        },
+                        onDragEnd = {
+                            selectedId = null
+                            selectedIsPerson = null
+                            onMoveFinished()
+                        }
+                    )
                 }
             }
     ) {
@@ -111,69 +163,81 @@ fun MapContent(
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Fit,
-            onSuccess = { result ->
-                val drawable = result.result.drawable
-                imageWidthPx = drawable.intrinsicWidth.toFloat()
-                imageHeightPx = drawable.intrinsicHeight.toFloat()
+            onSuccess = {
+                val d = it.result.drawable
+                imageWidthPx = d.intrinsicWidth.toFloat()
+                imageHeightPx = d.intrinsicHeight.toFloat()
             }
         )
 
         val pinSize = (14.dp / scale)
 
-        // ===== PERSONEN =====
-        persons
-            .filter { it.mapX != null && it.mapY != null }
-            .forEach { person ->
+        persons.filter { it.mapX != null && it.mapY != null }
+            .forEach {
+                val x = offsetX + it.mapX!! * renderedWidth
+                val y = offsetY + it.mapY!! * renderedHeight
 
-                if (renderedWidth > 0f && renderedHeight > 0f) {
+                Box(
+                    modifier = Modifier
+                        .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                        .size(pinSize)
+                        .background(Color.Blue, CircleShape)
+                        .border(1.dp, Color.White, CircleShape)
+                )
 
-                    val x = offsetX +
-                            (person.mapX!! * renderedWidth)
-
-                    val y = offsetY +
-                            (person.mapY!! * renderedHeight)
-
-                    Box(
-                        modifier = Modifier
-                            .offset {
-                                IntOffset(
-                                    x.roundToInt(),
-                                    y.roundToInt()
-                                )
-                            }
-                            .size(pinSize)
-                            .background(Color.Blue, CircleShape)
-                            .border(1.dp, Color.White, CircleShape)
-                    )
+                if (selectedId == it.id) {
+                    PinLabel(it.name, x, y, scale)
                 }
             }
 
-        // ===== POIs =====
-        pois
-            .filter { it.mapX != null && it.mapY != null }
-            .forEach { poi ->
+        pois.filter { it.mapX != null && it.mapY != null }
+            .forEach {
+                val x = offsetX + it.mapX!! * renderedWidth
+                val y = offsetY + it.mapY!! * renderedHeight
 
-                if (renderedWidth > 0f && renderedHeight > 0f) {
+                Box(
+                    modifier = Modifier
+                        .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                        .size(pinSize)
+                        .background(Color.Red, CircleShape)
+                        .border(1.dp, Color.White, CircleShape)
+                )
 
-                    val x = offsetX +
-                            (poi.mapX!! * renderedWidth)
-
-                    val y = offsetY +
-                            (poi.mapY!! * renderedHeight)
-
-                    Box(
-                        modifier = Modifier
-                            .offset {
-                                IntOffset(
-                                    x.roundToInt(),
-                                    y.roundToInt()
-                                )
-                            }
-                            .size(pinSize)
-                            .background(Color.Red, CircleShape)
-                            .border(1.dp, Color.White, CircleShape)
-                    )
+                if (selectedId == it.id) {
+                    PinLabel(it.name, x, y, scale)
                 }
             }
+    }
+}
+
+@Composable
+private fun PinLabel(
+    name: String,
+    x: Float,
+    y: Float,
+    scale: Float
+) {
+    Surface(
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    (x + 10f).roundToInt(),
+                    (y - 22f).roundToInt()
+                )
+            }
+            .graphicsLayer {
+                scaleX = 1f / scale
+                scaleY = 1f / scale
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
+            },
+        tonalElevation = 4.dp,
+        shadowElevation = 6.dp,
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = name,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
