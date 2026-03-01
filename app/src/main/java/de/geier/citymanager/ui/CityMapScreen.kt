@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -22,6 +23,7 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +45,10 @@ fun CityMapScreen(
 
     var scale by remember { mutableStateOf(1f) }
     var panOffset by remember { mutableStateOf(Offset.Zero) }
+
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
+    var renderedWidth by remember { mutableStateOf(0f) }
+    var renderedHeight by remember { mutableStateOf(0f) }
 
     var confirmReplaceMap by remember { mutableStateOf(false) }
 
@@ -62,13 +67,42 @@ fun CityMapScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .clipToBounds()   // <<< entscheidend
             .onSizeChanged { containerSize = it }
-            .pointerInput(scale, moveMode) {
+            .pointerInput(scale, moveMode, renderedWidth, renderedHeight, containerSize) {
+
                 if (!moveMode) {
+
                     detectDragGestures { change, dragAmount ->
                         change.consume()
-                        if (scale > 1f) {
-                            panOffset += dragAmount
+
+                        if (
+                            scale > 1f &&
+                            renderedWidth > 0f &&
+                            renderedHeight > 0f &&
+                            containerSize.width > 0 &&
+                            containerSize.height > 0
+                        ) {
+
+                            val containerWidth = containerSize.width.toFloat()
+                            val containerHeight = containerSize.height.toFloat()
+
+                            val newOffset = panOffset + dragAmount
+
+                            val maxPanX = max(
+                                0f,
+                                (renderedWidth * scale - containerWidth) / 2f
+                            )
+
+                            val maxPanY = max(
+                                0f,
+                                (renderedHeight * scale - containerHeight) / 2f
+                            )
+
+                            panOffset = Offset(
+                                x = newOffset.x.coerceIn(-maxPanX, maxPanX),
+                                y = newOffset.y.coerceIn(-maxPanY, maxPanY)
+                            )
                         }
                     }
                 }
@@ -99,6 +133,10 @@ fun CityMapScreen(
                 },
                 onMoveFinished = {
                     moveMode = false
+                },
+                onRenderedSizeCalculated = { w, h ->
+                    renderedWidth = w
+                    renderedHeight = h
                 }
             )
         }
@@ -125,6 +163,7 @@ fun CityMapScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .zIndex(1f)
         ) {
+
             Surface(
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp,
@@ -143,7 +182,9 @@ fun CityMapScreen(
                         value = scale,
                         onValueChange = {
                             scale = it
-                            if (scale == 1f) panOffset = Offset.Zero
+                            if (scale == 1f) {
+                                panOffset = Offset.Zero
+                            }
                         },
                         valueRange = 1f..5f,
                         modifier = Modifier.weight(1f)

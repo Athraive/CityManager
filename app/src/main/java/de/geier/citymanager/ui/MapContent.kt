@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -36,7 +37,8 @@ fun MapContent(
     moveMode: Boolean,
     onTapNormalized: (Float, Float) -> Unit,
     onMovePin: (String, Boolean, Float, Float) -> Unit,
-    onMoveFinished: () -> Unit
+    onMoveFinished: () -> Unit,
+    onRenderedSizeCalculated: (Float, Float) -> Unit
 ) {
 
     var imageWidthPx by remember { mutableStateOf<Float?>(null) }
@@ -56,6 +58,7 @@ fun MapContent(
         containerWidth > 0f &&
         containerHeight > 0f
     ) {
+
         val fitScale = min(
             containerWidth / imageWidthPx!!,
             containerHeight / imageHeightPx!!
@@ -66,11 +69,18 @@ fun MapContent(
 
         offsetX = (containerWidth - renderedWidth) / 2f
         offsetY = (containerHeight - renderedHeight) / 2f
+
     } else {
         renderedWidth = 0f
         renderedHeight = 0f
         offsetX = 0f
         offsetY = 0f
+    }
+
+    LaunchedEffect(renderedWidth, renderedHeight) {
+        if (renderedWidth > 0f && renderedHeight > 0f) {
+            onRenderedSizeCalculated(renderedWidth, renderedHeight)
+        }
     }
 
     var selectedId by remember { mutableStateOf<String?>(null) }
@@ -85,7 +95,6 @@ fun MapContent(
                 translationX = panOffset.x
                 translationY = panOffset.y
             }
-            // TAP: Auswahl oder Placement
             .pointerInput(moveMode, placementMode) {
                 detectTapGestures { tap ->
 
@@ -130,7 +139,6 @@ fun MapContent(
                     }
                 }
             }
-            // DRAG: nur im Move-Modus & wenn Pin selektiert
             .pointerInput(moveMode, selectedId) {
                 if (moveMode && selectedId != null) {
                     detectDragGestures(
@@ -170,7 +178,7 @@ fun MapContent(
             }
         )
 
-        val pinSize = (14.dp / scale)
+        val pinSize = 14.dp / scale
 
         persons.filter { it.mapX != null && it.mapY != null }
             .forEach {
@@ -228,7 +236,7 @@ private fun PinLabel(
             .graphicsLayer {
                 scaleX = 1f / scale
                 scaleY = 1f / scale
-                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
+                transformOrigin = TransformOrigin(0f, 0f)
             },
         tonalElevation = 4.dp,
         shadowElevation = 6.dp,
