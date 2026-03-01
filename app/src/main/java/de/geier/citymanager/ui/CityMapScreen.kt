@@ -52,6 +52,15 @@ fun CityMapScreen(
 
     var confirmReplaceMap by remember { mutableStateOf(false) }
 
+    // Sicherheitsnetz: Toolbox schließen, falls Spieler
+    LaunchedEffect(accessContext.role) {
+        if (!accessContext.canEdit()) {
+            toolboxOpen = false
+            placementMode = false
+            moveMode = false
+        }
+    }
+
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -67,12 +76,11 @@ fun CityMapScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clipToBounds()   // <<< entscheidend
+            .clipToBounds()
             .onSizeChanged { containerSize = it }
             .pointerInput(scale, moveMode, renderedWidth, renderedHeight, containerSize) {
 
                 if (!moveMode) {
-
                     detectDragGestures { change, dragAmount ->
                         change.consume()
 
@@ -110,7 +118,6 @@ fun CityMapScreen(
     ) {
 
         if (lore?.mapImageUri != null) {
-
             MapContent(
                 mapImageUri = lore!!.mapImageUri!!,
                 persons = persons,
@@ -121,14 +128,18 @@ fun CityMapScreen(
                 placementMode = placementMode,
                 moveMode = moveMode,
                 onTapNormalized = { x, y ->
-                    placementMode = false
-                    navController.navigate("add_pin/$x/$y")
+                    if (accessContext.canEdit()) {
+                        placementMode = false
+                        navController.navigate("add_pin/$x/$y")
+                    }
                 },
                 onMovePin = { id, isPerson, x, y ->
-                    if (isPerson) {
-                        cityViewModel.updatePersonCoordinates(id, x, y)
-                    } else {
-                        cityViewModel.updatePoiCoordinates(id, x, y)
+                    if (accessContext.canEdit()) {
+                        if (isPerson) {
+                            cityViewModel.updatePersonCoordinates(id, x, y)
+                        } else {
+                            cityViewModel.updatePoiCoordinates(id, x, y)
+                        }
                     }
                 },
                 onMoveFinished = {
@@ -141,7 +152,7 @@ fun CityMapScreen(
             )
         }
 
-        if (placementMode) {
+        if (placementMode && accessContext.canEdit()) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -193,17 +204,21 @@ fun CityMapScreen(
             }
         }
 
-        FloatingActionButton(
-            onClick = { toolboxOpen = !toolboxOpen },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 96.dp)
-                .zIndex(2f)
-        ) {
-            Icon(Icons.Default.Build, contentDescription = null)
+        // 🔒 FAB nur für GameMaster
+        if (accessContext.canEdit()) {
+            FloatingActionButton(
+                onClick = { toolboxOpen = !toolboxOpen },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 96.dp)
+                    .zIndex(2f)
+            ) {
+                Icon(Icons.Default.Build, contentDescription = null)
+            }
         }
 
-        if (toolboxOpen) {
+        // 🔒 Toolbox nur für GameMaster
+        if (toolboxOpen && accessContext.canEdit()) {
             EditToolboxPanel(
                 onPinAdd = {
                     toolboxOpen = false
@@ -226,7 +241,7 @@ fun CityMapScreen(
             )
         }
 
-        if (confirmReplaceMap) {
+        if (confirmReplaceMap && accessContext.canEdit()) {
             AlertDialog(
                 onDismissRequest = { confirmReplaceMap = false },
                 title = { Text("Karte wirklich ersetzen?") },
