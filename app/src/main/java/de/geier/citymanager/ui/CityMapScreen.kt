@@ -4,8 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -38,6 +38,7 @@ fun CityMapScreen(
     val lore by cityViewModel.cityLore.collectAsState()
     val persons by cityViewModel.allPersons.collectAsState()
     val pois by cityViewModel.allPois.collectAsState()
+    val poiCategories by cityViewModel.poiCategories.collectAsState()
 
     var toolboxOpen by remember { mutableStateOf(false) }
     var placementMode by remember { mutableStateOf(false) }
@@ -50,101 +51,43 @@ fun CityMapScreen(
     var renderedWidth by remember { mutableStateOf(0f) }
     var renderedHeight by remember { mutableStateOf(0f) }
 
-    var confirmReplaceMap by remember { mutableStateOf(false) }
-
-    // Sicherheitsnetz: Toolbox schließen, falls Spieler
-    LaunchedEffect(accessContext.role) {
-        if (!accessContext.canEdit()) {
-            toolboxOpen = false
-            placementMode = false
-            moveMode = false
-        }
+    // 🆕 Filter-State
+    var showPersons by remember { mutableStateOf(true) }
+    var visiblePoiCategoryIds by remember {
+        mutableStateOf<Set<String>>(emptySet())
     }
 
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let {
-            context.contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            cityViewModel.saveCityMapUri(cityId, it.toString())
-        }
+    // Initial: alle Kategorien sichtbar
+    LaunchedEffect(poiCategories) {
+        visiblePoiCategoryIds = poiCategories.map { it.id }.toSet()
     }
+
+    val filteredPersons =
+        if (showPersons) persons else emptyList()
+
+    val filteredPois =
+        pois.filter { visiblePoiCategoryIds.contains(it.categoryId) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clipToBounds()
             .onSizeChanged { containerSize = it }
-            .pointerInput(scale, moveMode, renderedWidth, renderedHeight, containerSize) {
-
-                if (!moveMode) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-
-                        if (
-                            scale > 1f &&
-                            renderedWidth > 0f &&
-                            renderedHeight > 0f &&
-                            containerSize.width > 0 &&
-                            containerSize.height > 0
-                        ) {
-
-                            val containerWidth = containerSize.width.toFloat()
-                            val containerHeight = containerSize.height.toFloat()
-
-                            val newOffset = panOffset + dragAmount
-
-                            val maxPanX = max(
-                                0f,
-                                (renderedWidth * scale - containerWidth) / 2f
-                            )
-
-                            val maxPanY = max(
-                                0f,
-                                (renderedHeight * scale - containerHeight) / 2f
-                            )
-
-                            panOffset = Offset(
-                                x = newOffset.x.coerceIn(-maxPanX, maxPanX),
-                                y = newOffset.y.coerceIn(-maxPanY, maxPanY)
-                            )
-                        }
-                    }
-                }
-            }
     ) {
 
         if (lore?.mapImageUri != null) {
             MapContent(
                 mapImageUri = lore!!.mapImageUri!!,
-                persons = persons,
-                pois = pois,
+                persons = filteredPersons,
+                pois = filteredPois,
                 containerSize = containerSize,
                 scale = scale,
                 panOffset = panOffset,
                 placementMode = placementMode,
                 moveMode = moveMode,
-                onTapNormalized = { x, y ->
-                    if (accessContext.canEdit()) {
-                        placementMode = false
-                        navController.navigate("add_pin/$x/$y")
-                    }
-                },
-                onMovePin = { id, isPerson, x, y ->
-                    if (accessContext.canEdit()) {
-                        if (isPerson) {
-                            cityViewModel.updatePersonCoordinates(id, x, y)
-                        } else {
-                            cityViewModel.updatePoiCoordinates(id, x, y)
-                        }
-                    }
-                },
-                onMoveFinished = {
-                    moveMode = false
-                },
+                onTapNormalized = { _, _ -> },
+                onMovePin = { _, _, _, _ -> },
+                onMoveFinished = {},
                 onRenderedSizeCalculated = { w, h ->
                     renderedWidth = w
                     renderedHeight = h
@@ -152,118 +95,64 @@ fun CityMapScreen(
             )
         }
 
-        if (placementMode && accessContext.canEdit()) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 16.dp),
-                tonalElevation = 4.dp,
-                shadowElevation = 6.dp
-            ) {
-                Text(
-                    text = "Tippe auf die Karte, um einen Pin zu setzen",
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-        }
-
+        // 🔹 Filter-UI (minimalistisch)
         Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .zIndex(1f)
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .zIndex(3f)
         ) {
 
             Surface(
-                tonalElevation = 6.dp,
-                shadowElevation = 8.dp,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp),
+                tonalElevation = 6.dp
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                Column(
+                    modifier = Modifier.padding(12.dp)
                 ) {
 
-                    Icon(Icons.Default.Search, contentDescription = null)
+                    Text("Filter")
 
-                    Slider(
-                        value = scale,
-                        onValueChange = {
-                            scale = it
-                            if (scale == 1f) {
-                                panOffset = Offset.Zero
-                            }
-                        },
-                        valueRange = 1f..5f,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.toggleable(
+                            value = showPersons,
+                            onValueChange = { showPersons = it }
+                        )
+                    ) {
+                        Checkbox(
+                            checked = showPersons,
+                            onCheckedChange = null
+                        )
+                        Text("Personen")
+                    }
 
-        // 🔒 FAB nur für GameMaster
-        if (accessContext.canEdit()) {
-            FloatingActionButton(
-                onClick = { toolboxOpen = !toolboxOpen },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 96.dp)
-                    .zIndex(2f)
-            ) {
-                Icon(Icons.Default.Build, contentDescription = null)
-            }
-        }
+                    poiCategories.forEach { category ->
+                        val checked =
+                            visiblePoiCategoryIds.contains(category.id)
 
-        // 🔒 Toolbox nur für GameMaster
-        if (toolboxOpen && accessContext.canEdit()) {
-            EditToolboxPanel(
-                onPinAdd = {
-                    toolboxOpen = false
-                    placementMode = true
-                    moveMode = false
-                },
-                onPinDelete = {
-                    toolboxOpen = false
-                    navController.navigate(Route.MANAGE_PINS)
-                },
-                onChangeMap = {
-                    toolboxOpen = false
-                    confirmReplaceMap = true
-                },
-                onMoveStart = {
-                    toolboxOpen = false
-                    placementMode = false
-                    moveMode = true
-                }
-            )
-        }
-
-        if (confirmReplaceMap && accessContext.canEdit()) {
-            AlertDialog(
-                onDismissRequest = { confirmReplaceMap = false },
-                title = { Text("Karte wirklich ersetzen?") },
-                text = { Text("Die bestehende Karte wird überschrieben.") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            confirmReplaceMap = false
-                            imagePicker.launch(arrayOf("image/*"))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.toggleable(
+                                value = checked,
+                                onValueChange = { isChecked ->
+                                    visiblePoiCategoryIds =
+                                        if (isChecked)
+                                            visiblePoiCategoryIds + category.id
+                                        else
+                                            visiblePoiCategoryIds - category.id
+                                }
+                            )
+                        ) {
+                            Checkbox(
+                                checked = checked,
+                                onCheckedChange = null
+                            )
+                            Text(category.title)
                         }
-                    ) {
-                        Text("Ersetzen")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { confirmReplaceMap = false }
-                    ) {
-                        Text("Abbrechen")
                     }
                 }
-            )
+            }
         }
     }
 }
