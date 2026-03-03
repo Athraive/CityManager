@@ -5,13 +5,16 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -40,6 +43,7 @@ fun CityMapScreen(
 
     val context = LocalContext.current
     val lore by cityViewModel.cityLore.collectAsState()
+    val poiCategories by cityViewModel.poiCategories.collectAsState()
 
     val personsWithFactions by mapViewModel.personsWithFactions.collectAsState()
     val poisWithFactions by mapViewModel.poisWithFactions.collectAsState()
@@ -48,19 +52,27 @@ fun CityMapScreen(
 
     var showPersons by remember { mutableStateOf(true) }
     var showPois by remember { mutableStateOf(true) }
+
+    var visibleCategoryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var visibilityPanelOpen by remember { mutableStateOf(false) }
+    var showCategoryDetailPanel by remember { mutableStateOf(false) }
+
+    LaunchedEffect(poiCategories) {
+        visibleCategoryIds = poiCategories.map { it.id }.toSet()
+    }
 
     val persons =
         if (showPersons)
             personsWithFactions.map { it.person }
-        else
-            emptyList()
+        else emptyList()
 
     val pois =
-        if (showPois)
-            poisWithFactions.map { it.poi }
-        else
+        if (!showPois)
             emptyList()
+        else
+            poisWithFactions
+                .map { it.poi }
+                .filter { visibleCategoryIds.contains(it.categoryId) }
 
     /* ---------------- MAP STATE ---------------- */
 
@@ -95,9 +107,7 @@ fun CityMapScreen(
             .clipToBounds()
             .onSizeChanged { containerSize = it }
             .pointerInput(scale, moveMode, renderedWidth, renderedHeight, containerSize) {
-
                 if (!moveMode) {
-
                     detectDragGestures { change, dragAmount ->
                         change.consume()
 
@@ -108,7 +118,6 @@ fun CityMapScreen(
                             containerSize.width > 0 &&
                             containerSize.height > 0
                         ) {
-
                             val containerWidth = containerSize.width.toFloat()
                             val containerHeight = containerSize.height.toFloat()
 
@@ -134,6 +143,8 @@ fun CityMapScreen(
             }
     ) {
 
+        /* ---------------- MAP CONTENT ---------------- */
+
         if (lore?.mapImageUri != null) {
             MapContent(
                 mapImageUri = lore!!.mapImageUri!!,
@@ -149,11 +160,10 @@ fun CityMapScreen(
                     navController.navigate("add_pin/$x/$y")
                 },
                 onMovePin = { id, isPerson, x, y ->
-                    if (isPerson) {
+                    if (isPerson)
                         cityViewModel.updatePersonCoordinates(id, x, y)
-                    } else {
+                    else
                         cityViewModel.updatePoiCoordinates(id, x, y)
-                    }
                 },
                 onMoveFinished = { moveMode = false },
                 onRenderedSizeCalculated = { w, h ->
@@ -161,6 +171,139 @@ fun CityMapScreen(
                     renderedHeight = h
                 }
             )
+        }
+
+        /* ---------------- SCRIM ---------------- */
+
+        if (visibilityPanelOpen || showCategoryDetailPanel) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(3f)
+                    .pointerInput(Unit) {
+                        detectTapGestures {
+                            visibilityPanelOpen = false
+                            showCategoryDetailPanel = false
+                        }
+                    }
+            )
+        }
+
+        /* ---------------- MAIN VISIBILITY PANEL ---------------- */
+
+        if (visibilityPanelOpen) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 240.dp)
+                    .zIndex(4f),
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+
+                    Text("Sichtbarkeit", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.toggleable(
+                            value = showPersons,
+                            onValueChange = { showPersons = it }
+                        )
+                    ) {
+                        Switch(checked = showPersons, onCheckedChange = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("alle Personen")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.toggleable(
+                            value = showPois,
+                            onValueChange = { showPois = it }
+                        )
+                    ) {
+                        Switch(checked = showPois, onCheckedChange = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("alle POI")
+                    }
+
+                    TextButton(
+                        onClick = { showCategoryDetailPanel = true },
+                        enabled = showPois,
+                        modifier = Modifier.padding(start = 40.dp)
+                    ) {
+                        Text("nach Kategorien")
+                    }
+                }
+            }
+        }
+
+        /* ---------------- CATEGORY DETAIL PANEL ---------------- */
+
+        if (showCategoryDetailPanel) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 240.dp, end = 16.dp)
+                    .widthIn(min = 380.dp, max = 500.dp)
+                    .zIndex(5f),
+                tonalElevation = 8.dp,
+                shadowElevation = 12.dp,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .heightIn(max = 450.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+
+                    Text("POI-Kategorien", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    poiCategories.forEach { category ->
+
+                        val checked = visibleCategoryIds.contains(category.id)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .toggleable(
+                                    value = checked,
+                                    onValueChange = { isChecked ->
+                                        visibleCategoryIds =
+                                            if (isChecked)
+                                                visibleCategoryIds + category.id
+                                            else
+                                                visibleCategoryIds - category.id
+                                    }
+                                )
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            Text(
+                                text = category.title,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1
+                            )
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Switch(
+                                checked = checked,
+                                onCheckedChange = null
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         /* ---------------- ZOOM SLIDER ---------------- */
@@ -183,9 +326,7 @@ fun CityMapScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-
                     Icon(Icons.Default.Search, contentDescription = null)
-
                     Slider(
                         value = scale,
                         onValueChange = {
@@ -220,62 +361,7 @@ fun CityMapScreen(
                 .padding(end = 16.dp, bottom = 168.dp)
                 .zIndex(2f)
         ) {
-            Icon(Icons.Default.RemoveRedEye, contentDescription = null)
-        }
-
-        /* ---------------- VISIBILITY PANEL ---------------- */
-
-        if (visibilityPanelOpen) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 240.dp)
-                    .zIndex(3f),
-                tonalElevation = 6.dp,
-                shadowElevation = 8.dp,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-
-                    Text("Sichtbarkeit", style = MaterialTheme.typography.titleMedium)
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.toggleable(
-                            value = showPersons,
-                            onValueChange = { showPersons = it }
-                        )
-                    ) {
-                        Switch(
-                            checked = showPersons,
-                            onCheckedChange = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Personen")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.toggleable(
-                            value = showPois,
-                            onValueChange = { showPois = it }
-                        )
-                    ) {
-                        Switch(
-                            checked = showPois,
-                            onCheckedChange = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("POI")
-                    }
-                }
-            }
+            Icon(Icons.Default.Visibility, contentDescription = null)
         }
 
         /* ---------------- TOOLBOX PANEL ---------------- */
@@ -316,16 +402,12 @@ fun CityMapScreen(
                             confirmReplaceMap = false
                             imagePicker.launch(arrayOf("image/*"))
                         }
-                    ) {
-                        Text("Ersetzen")
-                    }
+                    ) { Text("Ersetzen") }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { confirmReplaceMap = false }
-                    ) {
-                        Text("Abbrechen")
-                    }
+                    ) { Text("Abbrechen") }
                 }
             )
         }
