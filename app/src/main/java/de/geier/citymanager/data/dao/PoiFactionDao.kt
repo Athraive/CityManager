@@ -21,7 +21,7 @@ interface PoiFactionDao {
     )
     fun getFactionIdsForPoi(poiId: String): Flow<List<String>>
 
-    /* ---------- Fraktion → POIs (NEU) ---------- */
+    /* ---------- Fraktion → POIs ---------- */
 
     @Query(
         """
@@ -31,6 +31,16 @@ interface PoiFactionDao {
         """
     )
     fun getPoiIdsForFaction(factionId: String): Flow<List<String>>
+
+    /* ---------- NEU: Alle CrossRefs ---------- */
+
+    @Query(
+        """
+        SELECT * 
+        FROM poi_faction_cross_ref
+        """
+    )
+    fun getAll(): Flow<List<PoiFactionCrossRef>>
 
     /* ---------- Mutationen ---------- */
 

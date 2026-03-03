@@ -21,7 +21,7 @@ interface PersonFactionDao {
     )
     fun getFactionIdsForPerson(personId: String): Flow<List<String>>
 
-    /* ---------- Fraktion → Personen (NEU) ---------- */
+    /* ---------- Fraktion → Personen ---------- */
 
     @Query(
         """
@@ -31,6 +31,16 @@ interface PersonFactionDao {
         """
     )
     fun getPersonIdsForFaction(factionId: String): Flow<List<String>>
+
+    /* ---------- NEU: Alle CrossRefs ---------- */
+
+    @Query(
+        """
+        SELECT * 
+        FROM person_faction_cross_ref
+        """
+    )
+    fun getAll(): Flow<List<PersonFactionCrossRef>>
 
     /* ---------- Mutationen ---------- */
 
