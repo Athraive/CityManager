@@ -24,6 +24,8 @@ import de.geier.citymanager.ui.PersonViewModelFactory
 import de.geier.citymanager.ui.viewmodel.PoiViewModelFactory
 import de.geier.citymanager.ui.theme.*
 import kotlinx.coroutines.flow.first
+import de.geier.citymanager.ui.map.MapViewModel
+import de.geier.citymanager.ui.map.MapViewModelFactory
 
 enum class CityTab {
     CITY,
@@ -251,8 +253,22 @@ fun CityScreen(
                         null -> {
                             when (activeTab) {
 
-                                CityTab.CITY ->
-                                    CityOverviewTab(cityViewModel, accessContext)
+                                CityTab.CITY -> {
+
+                                    val mapViewModel: MapViewModel = viewModel(
+                                        factory = MapViewModelFactory(
+                                            cityViewModel = cityViewModel,
+                                            personFactionRepository = personFactionRepo,
+                                            poiFactionRepository = poiFactionRepo
+                                        )
+                                    )
+
+                                    CityOverviewTab(
+                                        cityViewModel = cityViewModel,
+                                        accessContext = accessContext,
+                                        mapViewModel = mapViewModel
+                                    )
+                                }
 
                                 CityTab.PERSONS ->
                                     PersonenTab(

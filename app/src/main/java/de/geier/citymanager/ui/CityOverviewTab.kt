@@ -8,11 +8,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.map.MapViewModel
 
 @Composable
 fun CityOverviewTab(
     cityViewModel: CityViewModel,
-    accessContext: AccessContext
+    accessContext: AccessContext,
+    mapViewModel: MapViewModel
 ) {
     val navController = rememberNavController()
     val cityId = accessContext.cityId
@@ -36,7 +38,8 @@ fun CityOverviewTab(
                     cityId = cityId,
                     cityViewModel = cityViewModel,
                     accessContext = accessContext,
-                    navController = navController
+                    navController = navController,
+                    mapViewModel = mapViewModel
                 )
             }
 
