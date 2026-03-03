@@ -11,9 +11,12 @@ class PoiFactionRepository(
     fun getFactionIdsForPoi(poiId: String): Flow<List<String>> =
         dao.getFactionIdsForPoi(poiId)
 
-    /* NEU */
     fun getPoiIdsForFaction(factionId: String): Flow<List<String>> =
         dao.getPoiIdsForFaction(factionId)
+
+    /* NEU */
+    fun getAll(): Flow<List<PoiFactionCrossRef>> =
+        dao.getAll()
 
     suspend fun addFactionToPoi(poiId: String, factionId: String) {
         dao.addFactionToPoi(

@@ -11,9 +11,12 @@ class PersonFactionRepository(
     fun getFactionIdsForPerson(personId: String): Flow<List<String>> =
         dao.getFactionIdsForPerson(personId)
 
-    /* NEU */
     fun getPersonIdsForFaction(factionId: String): Flow<List<String>> =
         dao.getPersonIdsForFaction(factionId)
+
+    /* NEU */
+    fun getAll(): Flow<List<PersonFactionCrossRef>> =
+        dao.getAll()
 
     suspend fun addFactionToPerson(personId: String, factionId: String) {
         dao.addFactionToPerson(
