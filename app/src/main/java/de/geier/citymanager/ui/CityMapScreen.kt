@@ -6,9 +6,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,12 +41,28 @@ fun CityMapScreen(
     val context = LocalContext.current
     val lore by cityViewModel.cityLore.collectAsState()
 
-    // ✅ Aggregierte Daten über MapViewModel
     val personsWithFactions by mapViewModel.personsWithFactions.collectAsState()
     val poisWithFactions by mapViewModel.poisWithFactions.collectAsState()
 
-    val persons = personsWithFactions.map { it.person }
-    val pois = poisWithFactions.map { it.poi }
+    /* ---------------- VISIBILITY STATE ---------------- */
+
+    var showPersons by remember { mutableStateOf(true) }
+    var showPois by remember { mutableStateOf(true) }
+    var visibilityPanelOpen by remember { mutableStateOf(false) }
+
+    val persons =
+        if (showPersons)
+            personsWithFactions.map { it.person }
+        else
+            emptyList()
+
+    val pois =
+        if (showPois)
+            poisWithFactions.map { it.poi }
+        else
+            emptyList()
+
+    /* ---------------- MAP STATE ---------------- */
 
     var toolboxOpen by remember { mutableStateOf(false) }
     var placementMode by remember { mutableStateOf(false) }
@@ -117,7 +135,6 @@ fun CityMapScreen(
     ) {
 
         if (lore?.mapImageUri != null) {
-
             MapContent(
                 mapImageUri = lore!!.mapImageUri!!,
                 persons = persons,
@@ -138,9 +155,7 @@ fun CityMapScreen(
                         cityViewModel.updatePoiCoordinates(id, x, y)
                     }
                 },
-                onMoveFinished = {
-                    moveMode = false
-                },
+                onMoveFinished = { moveMode = false },
                 onRenderedSizeCalculated = { w, h ->
                     renderedWidth = w
                     renderedHeight = h
@@ -148,20 +163,7 @@ fun CityMapScreen(
             )
         }
 
-        if (placementMode) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 16.dp),
-                tonalElevation = 4.dp,
-                shadowElevation = 6.dp
-            ) {
-                Text(
-                    text = "Tippe auf die Karte, um einen Pin zu setzen",
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-        }
+        /* ---------------- ZOOM SLIDER ---------------- */
 
         Column(
             modifier = Modifier
@@ -170,7 +172,6 @@ fun CityMapScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .zIndex(1f)
         ) {
-
             Surface(
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp,
@@ -189,9 +190,7 @@ fun CityMapScreen(
                         value = scale,
                         onValueChange = {
                             scale = it
-                            if (scale == 1f) {
-                                panOffset = Offset.Zero
-                            }
+                            if (scale == 1f) panOffset = Offset.Zero
                         },
                         valueRange = 1f..5f,
                         modifier = Modifier.weight(1f)
@@ -199,6 +198,8 @@ fun CityMapScreen(
                 }
             }
         }
+
+        /* ---------------- TOOLBOX FAB ---------------- */
 
         FloatingActionButton(
             onClick = { toolboxOpen = !toolboxOpen },
@@ -209,6 +210,75 @@ fun CityMapScreen(
         ) {
             Icon(Icons.Default.Build, contentDescription = null)
         }
+
+        /* ---------------- EYE FAB ---------------- */
+
+        FloatingActionButton(
+            onClick = { visibilityPanelOpen = !visibilityPanelOpen },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 168.dp)
+                .zIndex(2f)
+        ) {
+            Icon(Icons.Default.RemoveRedEye, contentDescription = null)
+        }
+
+        /* ---------------- VISIBILITY PANEL ---------------- */
+
+        if (visibilityPanelOpen) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 240.dp)
+                    .zIndex(3f),
+                tonalElevation = 6.dp,
+                shadowElevation = 8.dp,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+
+                    Text("Sichtbarkeit", style = MaterialTheme.typography.titleMedium)
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.toggleable(
+                            value = showPersons,
+                            onValueChange = { showPersons = it }
+                        )
+                    ) {
+                        Switch(
+                            checked = showPersons,
+                            onCheckedChange = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Personen")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.toggleable(
+                            value = showPois,
+                            onValueChange = { showPois = it }
+                        )
+                    ) {
+                        Switch(
+                            checked = showPois,
+                            onCheckedChange = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("POI")
+                    }
+                }
+            }
+        }
+
+        /* ---------------- TOOLBOX PANEL ---------------- */
 
         if (toolboxOpen) {
             EditToolboxPanel(
@@ -232,6 +302,8 @@ fun CityMapScreen(
                 }
             )
         }
+
+        /* ---------------- CONFIRM DIALOG ---------------- */
 
         if (confirmReplaceMap) {
             AlertDialog(
