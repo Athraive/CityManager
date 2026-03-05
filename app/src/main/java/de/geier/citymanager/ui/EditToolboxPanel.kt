@@ -3,8 +3,6 @@ package de.geier.citymanager.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -41,9 +39,7 @@ fun EditToolboxPanel(
     ) {
 
         Surface(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(panelWidth),
+            modifier = Modifier.width(panelWidth),
             shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp),
             tonalElevation = 6.dp,
             shadowElevation = 8.dp
@@ -51,9 +47,7 @@ fun EditToolboxPanel(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
             ) {
 
                 Text(
@@ -66,13 +60,17 @@ fun EditToolboxPanel(
                 ToolboxButton("Pin anlegen", onPinAdd)
                 Spacer(Modifier.height(12.dp))
 
+                ToolboxButton("Pin verschieben", onMoveStart)
+                Spacer(Modifier.height(12.dp))
+
                 ToolboxButton("Pin löschen", onPinDelete)
                 Spacer(Modifier.height(12.dp))
 
-                ToolboxButton("Karte ändern", onChangeMap)
-                Spacer(Modifier.height(12.dp))
-
-                ToolboxButton("Pin verschieben", onMoveStart)
+                ToolboxButton(
+                    text = "Karte ändern",
+                    onClick = onChangeMap,
+                    highlight = true
+                )
             }
         }
     }
@@ -81,12 +79,27 @@ fun EditToolboxPanel(
 @Composable
 private fun ToolboxButton(
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    highlight: Boolean = false
 ) {
+    val colors =
+        if (highlight) {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+        } else {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+
     Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = colors
     ) {
         Text(text)
     }

@@ -8,6 +8,9 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.RemoveRedEye
@@ -40,6 +43,7 @@ fun CityMapScreen(
 
     val context = LocalContext.current
     val lore by cityViewModel.cityLore.collectAsState()
+    val poiCategories by cityViewModel.poiCategories.collectAsState()
 
     val personsWithFactions by mapViewModel.personsWithFactions.collectAsState()
     val poisWithFactions by mapViewModel.poisWithFactions.collectAsState()
@@ -50,6 +54,13 @@ fun CityMapScreen(
     var showPois by remember { mutableStateOf(true) }
     var visibilityPanelOpen by remember { mutableStateOf(false) }
 
+    var visibleCategoryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var showCategoryDetailPanel by remember { mutableStateOf(false) }
+
+    LaunchedEffect(poiCategories) {
+        visibleCategoryIds = poiCategories.map { it.id }.toSet()
+    }
+
     val persons =
         if (showPersons)
             personsWithFactions.map { it.person }
@@ -57,10 +68,12 @@ fun CityMapScreen(
             emptyList()
 
     val pois =
-        if (showPois)
-            poisWithFactions.map { it.poi }
-        else
+        if (!showPois)
             emptyList()
+        else
+            poisWithFactions
+                .map { it.poi }
+                .filter { visibleCategoryIds.contains(it.categoryId) }
 
     /* ---------------- MAP STATE ---------------- */
 
@@ -94,9 +107,29 @@ fun CityMapScreen(
             .fillMaxSize()
             .clipToBounds()
             .onSizeChanged { containerSize = it }
-            .pointerInput(scale, moveMode, renderedWidth, renderedHeight, containerSize) {
 
-                if (!moveMode) {
+            /* ---- Tap auf Karte schließt Kategoriepanel ---- */
+
+            .pointerInput(showCategoryDetailPanel) {
+                detectTapGestures {
+                    if (showCategoryDetailPanel) {
+                        showCategoryDetailPanel = false
+                    }
+                }
+            }
+
+            /* ---- Map Drag / Pan ---- */
+
+            .pointerInput(
+                scale,
+                moveMode,
+                renderedWidth,
+                renderedHeight,
+                containerSize,
+                showCategoryDetailPanel
+            ) {
+
+                if (!moveMode && !showCategoryDetailPanel) {
 
                     detectDragGestures { change, dragAmount ->
                         change.consume()
@@ -214,7 +247,13 @@ fun CityMapScreen(
         /* ---------------- EYE FAB ---------------- */
 
         FloatingActionButton(
-            onClick = { visibilityPanelOpen = !visibilityPanelOpen },
+            onClick = {
+                if (showCategoryDetailPanel) {
+                    showCategoryDetailPanel = false
+                } else {
+                    visibilityPanelOpen = !visibilityPanelOpen
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 168.dp)
@@ -250,12 +289,9 @@ fun CityMapScreen(
                             onValueChange = { showPersons = it }
                         )
                     ) {
-                        Switch(
-                            checked = showPersons,
-                            onCheckedChange = null
-                        )
+                        Switch(checked = showPersons, onCheckedChange = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Personen")
+                        Text("alle Personen")
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -267,12 +303,84 @@ fun CityMapScreen(
                             onValueChange = { showPois = it }
                         )
                     ) {
-                        Switch(
-                            checked = showPois,
-                            onCheckedChange = null
-                        )
+                        Switch(checked = showPois, onCheckedChange = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("POI")
+                        Text("alle POI")
+                    }
+
+                    TextButton(
+                        onClick = { showCategoryDetailPanel = true },
+                        enabled = showPois,
+                        modifier = Modifier.padding(start = 40.dp)
+                    ) {
+                        Text("nach Kategorien")
+                    }
+                }
+            }
+        }
+
+        /* ---------------- CATEGORY PANEL ---------------- */
+
+        if (showCategoryDetailPanel) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 240.dp, end = 16.dp)
+                    .widthIn(min = 380.dp, max = 500.dp)
+                    .zIndex(4f),
+                tonalElevation = 8.dp,
+                shadowElevation = 12.dp,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .heightIn(max = 450.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+
+                    Text(
+                        text = "POI-Kategorien",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    poiCategories.forEach { category ->
+
+                        val checked = visibleCategoryIds.contains(category.id)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .toggleable(
+                                    value = checked,
+                                    onValueChange = { isChecked ->
+                                        visibleCategoryIds =
+                                            if (isChecked)
+                                                visibleCategoryIds + category.id
+                                            else
+                                                visibleCategoryIds - category.id
+                                    }
+                                )
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            Text(
+                                text = category.title,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1
+                            )
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Switch(
+                                checked = checked,
+                                onCheckedChange = null
+                            )
+                        }
                     }
                 }
             }
@@ -316,16 +424,12 @@ fun CityMapScreen(
                             confirmReplaceMap = false
                             imagePicker.launch(arrayOf("image/*"))
                         }
-                    ) {
-                        Text("Ersetzen")
-                    }
+                    ) { Text("Ersetzen") }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { confirmReplaceMap = false }
-                    ) {
-                        Text("Abbrechen")
-                    }
+                    ) { Text("Abbrechen") }
                 }
             )
         }
