@@ -278,7 +278,10 @@ fun CityMapScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
 
-                    Text("Sichtbarkeit", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Sichtbarkeit",
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -289,7 +292,10 @@ fun CityMapScreen(
                             onValueChange = { showPersons = it }
                         )
                     ) {
-                        Switch(checked = showPersons, onCheckedChange = null)
+                        Switch(
+                            checked = showPersons,
+                            onCheckedChange = null
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("alle Personen")
                     }
@@ -300,20 +306,36 @@ fun CityMapScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.toggleable(
                             value = showPois,
-                            onValueChange = { showPois = it }
+                            onValueChange = { enabled ->
+
+                                showPois = enabled
+
+                                if (enabled) {
+                                    // alle Kategorien wieder aktivieren
+                                    visibleCategoryIds =
+                                        poiCategories.map { it.id }.toSet()
+                                }
+                            }
                         )
                     ) {
-                        Switch(checked = showPois, onCheckedChange = null)
+                        Switch(
+                            checked = showPois,
+                            onCheckedChange = null
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("alle POI")
                     }
+
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     TextButton(
                         onClick = { showCategoryDetailPanel = true },
                         enabled = showPois,
                         modifier = Modifier.padding(start = 40.dp)
                     ) {
-                        Text("nach Kategorien")
+                        Text(
+                            "nach Kategorien (${visibleCategoryIds.size}/${poiCategories.size} sichtbar)"
+                        )
                     }
                 }
             }
@@ -361,6 +383,8 @@ fun CityMapScreen(
                                                 visibleCategoryIds + category.id
                                             else
                                                 visibleCategoryIds - category.id
+
+                                        showPois = visibleCategoryIds.size == poiCategories.size
                                     }
                                 )
                                 .padding(vertical = 8.dp),
