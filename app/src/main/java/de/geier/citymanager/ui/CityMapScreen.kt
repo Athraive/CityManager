@@ -44,7 +44,13 @@ fun CityMapScreen(
     val context = LocalContext.current
     val lore by cityViewModel.cityLore.collectAsState()
     val poiCategories by cityViewModel.poiCategories.collectAsState()
-    val factions by cityViewModel.factions.collectAsState()
+    val allFactions by cityViewModel.factions.collectAsState()
+
+    val factions =
+        if (accessContext.canEdit())
+            allFactions
+        else
+            allFactions.filter { it.visible }
 
     val personsWithFactions by mapViewModel.personsWithFactions.collectAsState()
     val poisWithFactions by mapViewModel.poisWithFactions.collectAsState()
