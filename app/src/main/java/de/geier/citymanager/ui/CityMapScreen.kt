@@ -44,6 +44,7 @@ fun CityMapScreen(
     val context = LocalContext.current
     val lore by cityViewModel.cityLore.collectAsState()
     val poiCategories by cityViewModel.poiCategories.collectAsState()
+    val factions by cityViewModel.factions.collectAsState()
 
     val personsWithFactions by mapViewModel.personsWithFactions.collectAsState()
     val poisWithFactions by mapViewModel.poisWithFactions.collectAsState()
@@ -52,26 +53,63 @@ fun CityMapScreen(
 
     var showPersons by remember { mutableStateOf(true) }
     var showPois by remember { mutableStateOf(true) }
+    var showFactions by remember { mutableStateOf(true) }
+    var showNoFaction by remember { mutableStateOf(true) }
+
     var visibilityPanelOpen by remember { mutableStateOf(false) }
 
     var visibleCategoryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var visibleFactionIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+
     var showCategoryDetailPanel by remember { mutableStateOf(false) }
+    var showFactionDetailPanel by remember { mutableStateOf(false) }
 
     LaunchedEffect(poiCategories) {
         visibleCategoryIds = poiCategories.map { it.id }.toSet()
     }
 
+    LaunchedEffect(factions) {
+        visibleFactionIds = factions.map { it.id }.toSet()
+    }
+
+    /* ---------------- FILTER LOGIC ---------------- */
+
     val persons =
-        if (showPersons)
-            personsWithFactions.map { it.person }
-        else
+        if (!showPersons)
             emptyList()
+        else
+            personsWithFactions
+                .filter {
+
+                    if (!showFactions) {
+                        true
+                    }
+                    else if (it.factionIds.isEmpty()) {
+                        showNoFaction
+                    }
+                    else {
+                        it.factionIds.any { id -> visibleFactionIds.contains(id) }
+                    }
+                }
+                .map { it.person }
 
     val pois =
         if (!showPois)
             emptyList()
         else
             poisWithFactions
+                .filter {
+
+                    if (!showFactions) {
+                        true
+                    }
+                    else if (it.factionIds.isEmpty()) {
+                        showNoFaction
+                    }
+                    else {
+                        it.factionIds.any { id -> visibleFactionIds.contains(id) }
+                    }
+                }
                 .map { it.poi }
                 .filter { visibleCategoryIds.contains(it.categoryId) }
 
@@ -108,17 +146,12 @@ fun CityMapScreen(
             .clipToBounds()
             .onSizeChanged { containerSize = it }
 
-            /* ---- Tap auf Karte schließt Kategoriepanel ---- */
-
-            .pointerInput(showCategoryDetailPanel) {
+            .pointerInput(showCategoryDetailPanel, showFactionDetailPanel) {
                 detectTapGestures {
-                    if (showCategoryDetailPanel) {
-                        showCategoryDetailPanel = false
-                    }
+                    if (showCategoryDetailPanel) showCategoryDetailPanel = false
+                    if (showFactionDetailPanel) showFactionDetailPanel = false
                 }
             }
-
-            /* ---- Map Drag / Pan ---- */
 
             .pointerInput(
                 scale,
@@ -126,10 +159,11 @@ fun CityMapScreen(
                 renderedWidth,
                 renderedHeight,
                 containerSize,
-                showCategoryDetailPanel
+                showCategoryDetailPanel,
+                showFactionDetailPanel
             ) {
 
-                if (!moveMode && !showCategoryDetailPanel) {
+                if (!moveMode && !showCategoryDetailPanel && !showFactionDetailPanel) {
 
                     detectDragGestures { change, dragAmount ->
                         change.consume()
@@ -147,15 +181,11 @@ fun CityMapScreen(
 
                             val newOffset = panOffset + dragAmount
 
-                            val maxPanX = max(
-                                0f,
-                                (renderedWidth * scale - containerWidth) / 2f
-                            )
+                            val maxPanX =
+                                max(0f, (renderedWidth * scale - containerWidth) / 2f)
 
-                            val maxPanY = max(
-                                0f,
-                                (renderedHeight * scale - containerHeight) / 2f
-                            )
+                            val maxPanY =
+                                max(0f, (renderedHeight * scale - containerHeight) / 2f)
 
                             panOffset = Offset(
                                 x = newOffset.x.coerceIn(-maxPanX, maxPanX),
@@ -182,11 +212,10 @@ fun CityMapScreen(
                     navController.navigate("add_pin/$x/$y")
                 },
                 onMovePin = { id, isPerson, x, y ->
-                    if (isPerson) {
+                    if (isPerson)
                         cityViewModel.updatePersonCoordinates(id, x, y)
-                    } else {
+                    else
                         cityViewModel.updatePoiCoordinates(id, x, y)
-                    }
                 },
                 onMoveFinished = { moveMode = false },
                 onRenderedSizeCalculated = { w, h ->
@@ -196,7 +225,7 @@ fun CityMapScreen(
             )
         }
 
-        /* ---------------- ZOOM SLIDER ---------------- */
+        /* ---------------- ZOOM ---------------- */
 
         Column(
             modifier = Modifier
@@ -205,11 +234,13 @@ fun CityMapScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .zIndex(1f)
         ) {
+
             Surface(
                 tonalElevation = 6.dp,
                 shadowElevation = 8.dp,
                 shape = RoundedCornerShape(16.dp)
             ) {
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -232,24 +263,29 @@ fun CityMapScreen(
             }
         }
 
+
         /* ---------------- TOOLBOX FAB ---------------- */
 
-        FloatingActionButton(
-            onClick = { toolboxOpen = !toolboxOpen },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 96.dp)
-                .zIndex(2f)
-        ) {
-            Icon(Icons.Default.Build, contentDescription = null)
+        if (accessContext.canEdit()) {
+
+            FloatingActionButton(
+                onClick = { toolboxOpen = !toolboxOpen },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 96.dp)
+                    .zIndex(2f)
+            ) {
+                Icon(Icons.Default.Build, contentDescription = null)
+            }
         }
 
         /* ---------------- EYE FAB ---------------- */
 
         FloatingActionButton(
             onClick = {
-                if (showCategoryDetailPanel) {
+                if (showCategoryDetailPanel || showFactionDetailPanel) {
                     showCategoryDetailPanel = false
+                    showFactionDetailPanel = false
                 } else {
                     visibilityPanelOpen = !visibilityPanelOpen
                 }
@@ -264,7 +300,14 @@ fun CityMapScreen(
 
         /* ---------------- VISIBILITY PANEL ---------------- */
 
+        val visibleFactionCount =
+            visibleFactionIds.size + if (showNoFaction) 1 else 0
+
+        val totalFactionCount =
+            factions.size + 1
+
         if (visibilityPanelOpen) {
+
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -274,9 +317,8 @@ fun CityMapScreen(
                 shadowElevation = 8.dp,
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+
+                Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
                         "Sichtbarkeit",
@@ -292,12 +334,9 @@ fun CityMapScreen(
                             onValueChange = { showPersons = it }
                         )
                     ) {
-                        Switch(
-                            checked = showPersons,
-                            onCheckedChange = null
-                        )
+                        Switch(showPersons, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("alle Personen")
+                        Text("Personen anzeigen")
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -306,36 +345,42 @@ fun CityMapScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.toggleable(
                             value = showPois,
-                            onValueChange = { enabled ->
-
-                                showPois = enabled
-
-                                if (enabled) {
-                                    // alle Kategorien wieder aktivieren
-                                    visibleCategoryIds =
-                                        poiCategories.map { it.id }.toSet()
-                                }
-                            }
+                            onValueChange = { showPois = it }
                         )
                     ) {
-                        Switch(
-                            checked = showPois,
-                            onCheckedChange = null
-                        )
+                        Switch(showPois, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("alle POI")
+                        Text("POI anzeigen")
                     }
-
-                    Spacer(modifier = Modifier.height(4.dp))
 
                     TextButton(
                         onClick = { showCategoryDetailPanel = true },
                         enabled = showPois,
                         modifier = Modifier.padding(start = 40.dp)
                     ) {
-                        Text(
-                            "nach Kategorien (${visibleCategoryIds.size}/${poiCategories.size} sichtbar)"
+                        Text("Kategorien (${visibleCategoryIds.size}/${poiCategories.size})")
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.toggleable(
+                            value = showFactions,
+                            onValueChange = { showFactions = it }
                         )
+                    ) {
+                        Switch(showFactions, null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Fraktionen anzeigen")
+                    }
+
+                    TextButton(
+                        onClick = { showFactionDetailPanel = true },
+                        enabled = showFactions,
+                        modifier = Modifier.padding(start = 40.dp)
+                    ) {
+                        Text("Fraktionen ($visibleFactionCount/$totalFactionCount)")
                     }
                 }
             }
@@ -344,6 +389,7 @@ fun CityMapScreen(
         /* ---------------- CATEGORY PANEL ---------------- */
 
         if (showCategoryDetailPanel) {
+
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -354,6 +400,7 @@ fun CityMapScreen(
                 shadowElevation = 12.dp,
                 shape = RoundedCornerShape(16.dp)
             ) {
+
                 Column(
                     modifier = Modifier
                         .padding(20.dp)
@@ -384,7 +431,8 @@ fun CityMapScreen(
                                             else
                                                 visibleCategoryIds - category.id
 
-                                        showPois = visibleCategoryIds.size == poiCategories.size
+                                        showPois =
+                                            visibleCategoryIds.size == poiCategories.size
                                     }
                                 )
                                 .padding(vertical = 8.dp),
@@ -410,23 +458,126 @@ fun CityMapScreen(
             }
         }
 
+        /* ---------------- FACTION PANEL ---------------- */
+
+        if (showFactionDetailPanel) {
+
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 240.dp, end = 16.dp)
+                    .widthIn(min = 380.dp, max = 500.dp)
+                    .zIndex(4f),
+                tonalElevation = 8.dp,
+                shadowElevation = 12.dp,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .heightIn(max = 450.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+
+                    Text(
+                        text = "Fraktionen",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .toggleable(
+                                value = showNoFaction,
+                                onValueChange = { showNoFaction = it }
+                            )
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+
+                        Text(
+                            text = "Ohne Fraktion",
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Switch(
+                            checked = showNoFaction,
+                            onCheckedChange = null
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Divider()
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    factions.forEach { faction ->
+
+                        val checked = visibleFactionIds.contains(faction.id)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .toggleable(
+                                    value = checked,
+                                    onValueChange = { isChecked ->
+                                        visibleFactionIds =
+                                            if (isChecked)
+                                                visibleFactionIds + faction.id
+                                            else
+                                                visibleFactionIds - faction.id
+                                    }
+                                )
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            Text(
+                                text = faction.name,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1
+                            )
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Switch(
+                                checked = checked,
+                                onCheckedChange = null
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         /* ---------------- TOOLBOX PANEL ---------------- */
 
-        if (toolboxOpen) {
+        if (toolboxOpen && accessContext.canEdit()) {
+
             EditToolboxPanel(
+
                 onPinAdd = {
                     toolboxOpen = false
                     placementMode = true
                     moveMode = false
                 },
+
                 onPinDelete = {
                     toolboxOpen = false
                     navController.navigate(Route.MANAGE_PINS)
                 },
+
                 onChangeMap = {
                     toolboxOpen = false
                     confirmReplaceMap = true
                 },
+
                 onMoveStart = {
                     toolboxOpen = false
                     placementMode = false
@@ -438,6 +589,7 @@ fun CityMapScreen(
         /* ---------------- CONFIRM DIALOG ---------------- */
 
         if (confirmReplaceMap) {
+
             AlertDialog(
                 onDismissRequest = { confirmReplaceMap = false },
                 title = { Text("Karte wirklich ersetzen?") },
