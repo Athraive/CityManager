@@ -30,6 +30,7 @@ import de.geier.citymanager.ui.map.MapViewModel
 import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import kotlin.math.max
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +43,8 @@ fun CityMapScreen(
 ) {
 
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val lore by cityViewModel.cityLore.collectAsState()
     val poiCategories by cityViewModel.poiCategories.collectAsState()
     val allFactions by cityViewModel.factions.collectAsState()
@@ -146,62 +149,67 @@ fun CityMapScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clipToBounds()
-            .onSizeChanged { containerSize = it }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
 
-            .pointerInput(showCategoryDetailPanel, showFactionDetailPanel) {
-                detectTapGestures {
-                    if (showCategoryDetailPanel) showCategoryDetailPanel = false
-                    if (showFactionDetailPanel) showFactionDetailPanel = false
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .clipToBounds()
+                .onSizeChanged { containerSize = it }
+
+                .pointerInput(showCategoryDetailPanel, showFactionDetailPanel) {
+                    detectTapGestures {
+                        if (showCategoryDetailPanel) showCategoryDetailPanel = false
+                        if (showFactionDetailPanel) showFactionDetailPanel = false
+                    }
                 }
-            }
 
-            .pointerInput(
-                scale,
-                moveMode,
-                renderedWidth,
-                renderedHeight,
-                containerSize,
-                showCategoryDetailPanel,
-                showFactionDetailPanel
-            ) {
+                .pointerInput(
+                    scale,
+                    moveMode,
+                    renderedWidth,
+                    renderedHeight,
+                    containerSize,
+                    showCategoryDetailPanel,
+                    showFactionDetailPanel
+                ) {
 
-                if (!moveMode && !showCategoryDetailPanel && !showFactionDetailPanel) {
+                    if (!moveMode && !showCategoryDetailPanel && !showFactionDetailPanel) {
 
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
 
-                        if (
-                            scale > 1f &&
-                            renderedWidth > 0f &&
-                            renderedHeight > 0f &&
-                            containerSize.width > 0 &&
-                            containerSize.height > 0
-                        ) {
+                            if (
+                                scale > 1f &&
+                                renderedWidth > 0f &&
+                                renderedHeight > 0f &&
+                                containerSize.width > 0 &&
+                                containerSize.height > 0
+                            ) {
 
-                            val containerWidth = containerSize.width.toFloat()
-                            val containerHeight = containerSize.height.toFloat()
+                                val containerWidth = containerSize.width.toFloat()
+                                val containerHeight = containerSize.height.toFloat()
 
-                            val newOffset = panOffset + dragAmount
+                                val newOffset = panOffset + dragAmount
 
-                            val maxPanX =
-                                max(0f, (renderedWidth * scale - containerWidth) / 2f)
+                                val maxPanX =
+                                    max(0f, (renderedWidth * scale - containerWidth) / 2f)
 
-                            val maxPanY =
-                                max(0f, (renderedHeight * scale - containerHeight) / 2f)
+                                val maxPanY =
+                                    max(0f, (renderedHeight * scale - containerHeight) / 2f)
 
-                            panOffset = Offset(
-                                x = newOffset.x.coerceIn(-maxPanX, maxPanX),
-                                y = newOffset.y.coerceIn(-maxPanY, maxPanY)
-                            )
+                                panOffset = Offset(
+                                    x = newOffset.x.coerceIn(-maxPanX, maxPanX),
+                                    y = newOffset.y.coerceIn(-maxPanY, maxPanY)
+                                )
+                            }
                         }
                     }
                 }
-            }
-    ) {
+        ) {
 
         if (lore?.mapImageUri != null) {
             MapContent(
@@ -572,6 +580,12 @@ fun CityMapScreen(
                     toolboxOpen = false
                     placementMode = true
                     moveMode = false
+
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Bitte Ort auf der Karte auswählen"
+                        )
+                    }
                 },
 
                 onPinDelete = {
@@ -616,4 +630,5 @@ fun CityMapScreen(
             )
         }
     }
+}
 }
