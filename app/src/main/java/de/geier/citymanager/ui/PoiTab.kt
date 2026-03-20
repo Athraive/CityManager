@@ -24,7 +24,8 @@ import de.geier.citymanager.ui.viewmodel.PoiViewModelFactory
 fun PoiTab(
     cityViewModel: CityViewModel,
     factions: List<Faction>,
-    accessContext: AccessContext
+    accessContext: AccessContext,
+    onShowOnMap: (String) -> Unit   // ✅ HINZUFÜGEN
 ) {
     val context = LocalContext.current
 
@@ -73,7 +74,8 @@ fun PoiTab(
             allPois = allPois,
             factions = factions,
             persons = allPersons,
-            accessContext = accessContext
+            accessContext = accessContext,
+            onShowOnMap = onShowOnMap   // ✅ HINZUFÜGEN
         )
 
     } else {
@@ -84,7 +86,8 @@ fun PoiTab(
             cityViewModel = cityViewModel,
             categoryViewModel = categoryViewModel,
             factions = visibleFactionsForPlayer,
-            accessContext = accessContext
+            accessContext = accessContext,
+            onShowOnMap = onShowOnMap   // ✅ DAS FEHLT
         )
     }
 }

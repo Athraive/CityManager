@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
@@ -14,10 +14,24 @@ import de.geier.citymanager.ui.map.MapViewModel
 fun CityOverviewTab(
     cityViewModel: CityViewModel,
     accessContext: AccessContext,
-    mapViewModel: MapViewModel
+    mapViewModel: MapViewModel,
+    focusPersonId: String? = null,
+    focusPoiId: String? = null,
+    navController: NavHostController
 ) {
-    val navController = rememberNavController()
     val cityId = accessContext.cityId
+
+    /* ---------- AUTO OPEN MAP ---------- */
+
+    LaunchedEffect(focusPersonId, focusPoiId) {
+        if (focusPersonId != null || focusPoiId != null) {
+
+            navController.navigate(Route.STADTKARTE) {
+                popUpTo(Route.STADTUEBERSICHT) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -98,7 +112,7 @@ fun CityOverviewTab(
 
 @Composable
 private fun StadtTabs(
-    navController: NavController
+    navController: NavHostController
 ) {
     val backStackEntry =
         navController.currentBackStackEntryAsState().value

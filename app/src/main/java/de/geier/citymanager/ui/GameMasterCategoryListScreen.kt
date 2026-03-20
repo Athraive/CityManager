@@ -25,7 +25,8 @@ fun GameMasterCategoryListScreen(
     allPois: List<PointOfInterest>,
     factions: List<Faction>,
     persons: List<Person>,
-    accessContext: AccessContext
+    accessContext: AccessContext,
+    onShowOnMap: (String) -> Unit
 ) {
 
     val categories by categoryViewModel.categories.collectAsState()
@@ -83,8 +84,9 @@ fun GameMasterCategoryListScreen(
             onAssignFactions = {
                 assigningFactions = true
             },
-            onPersonClick = { /* später Graph */ },
-            onFactionClick = { /* später Graph */ }
+            onPersonClick = { },
+            onFactionClick = { },
+            onShowOnMap = onShowOnMap   // ✅ EINZIGE ÄNDERUNG
         )
         return
     }

@@ -18,12 +18,13 @@ fun PlayerPoiDetailScreen(
     poi: PointOfInterest,
     factions: List<Faction>,
     assignedFactionIds: Set<String>,
-    assignedPersons: List<Person>,              // 🔹 neu
+    assignedPersons: List<Person>,
     accessContext: AccessContext,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit = {},
     onBack: () -> Unit,
-    categoryTitle: String? = null
+    categoryTitle: String? = null,
+    onShowOnMap: (String) -> Unit   // ✅ NEU
 ) {
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
@@ -34,21 +35,15 @@ fun PlayerPoiDetailScreen(
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    /* ---------------- zugeordnete & sichtbare Fraktionen ---------------- */
-
     val visibleAssignedFactions = remember(factions, assignedFactionIds) {
         factions.filter { faction ->
             faction.visible && assignedFactionIds.contains(faction.id)
         }
     }
 
-    /* ---------------- sichtbare Personen ---------------- */
-
     val visibleAssignedPersons = remember(assignedPersons) {
         assignedPersons.filter { it.visible }
     }
-
-    /* ---------------- UI ---------------- */
 
     Scaffold(
         topBar = {
@@ -98,6 +93,14 @@ fun PlayerPoiDetailScreen(
                 )
             }
 
+            /* ---------- MAP BUTTON ---------- */
+
+            Button(
+                onClick = { onShowOnMap(poi.id) }
+            ) {
+                Text("Auf Karte anzeigen")
+            }
+
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
             if (accessContext.canEdit()) {
@@ -121,7 +124,7 @@ fun PlayerPoiDetailScreen(
                 }
             }
 
-            /* ---------- Personen (read-only) ---------- */
+            /* ---------- Personen ---------- */
 
             HorizontalDivider()
             Text("Personen", style = MaterialTheme.typography.titleMedium)
@@ -203,9 +206,7 @@ fun PlayerPoiDetailScreen(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("POI löschen?") },
             text = {
-                Text(
-                    "Möchtest du den POI „${name.ifBlank { "Neuer POI" }}“ wirklich löschen?"
-                )
+                Text("Möchtest du den POI „${name.ifBlank { "Neuer POI" }}“ wirklich löschen?")
             },
             confirmButton = {
                 Button(

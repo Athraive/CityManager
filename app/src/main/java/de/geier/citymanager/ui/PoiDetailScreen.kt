@@ -25,7 +25,8 @@ fun PoiDetailScreen(
     onDelete: (PointOfInterest) -> Unit,
     onAssignFactions: () -> Unit,
     onPersonClick: (String) -> Unit,
-    onFactionClick: (String) -> Unit
+    onFactionClick: (String) -> Unit,
+    onShowOnMap: (String) -> Unit
 ) {
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
@@ -77,6 +78,15 @@ fun PoiDetailScreen(
                 )
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
+            }
+
+            /* ---------- Karte ---------- */
+
+            Button(
+                onClick = { onShowOnMap(poi.id) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Auf Karte anzeigen")
             }
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)

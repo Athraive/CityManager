@@ -20,8 +20,9 @@ import kotlinx.coroutines.flow.first
 fun PlayerCategoryListScreen(
     cityViewModel: CityViewModel,
     categoryViewModel: PoiCategoryViewModel,
-    factions: List<Faction>,          // bereits: visible == true
-    accessContext: AccessContext
+    factions: List<Faction>,
+    accessContext: AccessContext,
+    onShowOnMap: (String) -> Unit   // ✅ NEU
 ) {
     val context = LocalContext.current
     val categories by categoryViewModel.categories.collectAsState()
@@ -88,8 +89,6 @@ fun PlayerCategoryListScreen(
 
     } else {
 
-        /* ---------- Fraktions-Zuordnung ---------- */
-
         val assignedFactionIds by produceState<Set<String>>(
             initialValue = emptySet(),
             key1 = selectedPoi!!.id
@@ -102,8 +101,6 @@ fun PlayerCategoryListScreen(
                 .first()
                 .toSet()
         }
-
-        /* ---------- Personen-Zuordnung ---------- */
 
         val assignedPersons by produceState<List<Person>>(
             initialValue = emptyList(),
@@ -123,7 +120,7 @@ fun PlayerCategoryListScreen(
             value =
                 allPersons
                     .filter { it.id in personIds }
-                    .filter { it.visible }   // 🔒 Spieler sieht nur sichtbare Personen
+                    .filter { it.visible }
         }
 
         PlayerPoiDetailScreen(
@@ -132,8 +129,9 @@ fun PlayerCategoryListScreen(
             assignedFactionIds = assignedFactionIds,
             assignedPersons = assignedPersons,
             accessContext = accessContext,
-            onSave = {},          // Player: read-only
-            onBack = { selectedPoi = null }
+            onSave = {},
+            onBack = { selectedPoi = null },
+            onShowOnMap = onShowOnMap   // ✅ ENTSCHEIDEND
         )
     }
 }

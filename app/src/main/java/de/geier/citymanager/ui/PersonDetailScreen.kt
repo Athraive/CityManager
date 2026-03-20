@@ -27,7 +27,8 @@ fun PersonDetailScreen(
     onAssignFactions: () -> Unit,
     onPersonClick: (String) -> Unit,
     onPoiClick: (String) -> Unit,
-    onFactionClick: (String) -> Unit
+    onFactionClick: (String) -> Unit,
+    onShowOnMap: (String) -> Unit
 ) {
 
     var name by remember(person.id) { mutableStateOf(person.name) }
@@ -79,6 +80,15 @@ fun PersonDetailScreen(
                 )
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
+            }
+
+            /* ---------- Karte ---------- */
+
+            Button(
+                onClick = { onShowOnMap(person.id) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Auf Karte anzeigen")
             }
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)

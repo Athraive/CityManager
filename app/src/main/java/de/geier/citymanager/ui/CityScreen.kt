@@ -26,6 +26,7 @@ import de.geier.citymanager.ui.theme.*
 import kotlinx.coroutines.flow.first
 import de.geier.citymanager.ui.map.MapViewModel
 import de.geier.citymanager.ui.map.MapViewModelFactory
+import androidx.navigation.compose.rememberNavController
 
 enum class CityTab {
     CITY,
@@ -82,6 +83,11 @@ fun CityScreen(
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
     var activeDetail by remember { mutableStateOf<DetailTarget?>(null) }
+
+    var focusPersonId by remember { mutableStateOf<String?>(null) }
+    var focusPoiId by remember { mutableStateOf<String?>(null) }
+
+    val cityNavController = rememberNavController()
 
     val personViewModel: PersonViewModel = viewModel(
         factory = PersonViewModelFactory(context, accessContext)
@@ -178,7 +184,12 @@ fun CityScreen(
                                     onAssignFactions = {},
                                     onPersonClick = { activeDetail = DetailTarget.Person(it) },
                                     onPoiClick = { activeDetail = DetailTarget.Poi(it) },
-                                    onFactionClick = { activeDetail = DetailTarget.Faction(it) }
+                                    onFactionClick = { activeDetail = DetailTarget.Faction(it) },
+                                    onShowOnMap = { id ->
+                                        focusPoiId = null
+                                        focusPersonId = id
+                                        activeTab = CityTab.CITY
+                                    }
                                 )
                             }
                         }
@@ -220,7 +231,15 @@ fun CityScreen(
                                     onDelete = { cityViewModel.deletePoi(it) },
                                     onAssignFactions = {},
                                     onPersonClick = { activeDetail = DetailTarget.Person(it) },
-                                    onFactionClick = { activeDetail = DetailTarget.Faction(it) }
+                                    onFactionClick = { activeDetail = DetailTarget.Faction(it) },
+                                    onShowOnMap = { id ->
+                                        focusPersonId = null
+                                        focusPoiId = null
+
+                                        focusPoiId = id
+
+                                        activeTab = CityTab.CITY
+                                    }
                                 )
                             }
                         }
@@ -266,8 +285,19 @@ fun CityScreen(
                                     CityOverviewTab(
                                         cityViewModel = cityViewModel,
                                         accessContext = accessContext,
-                                        mapViewModel = mapViewModel
+                                        mapViewModel = mapViewModel,
+                                        focusPersonId = focusPersonId,
+                                        focusPoiId = focusPoiId,
+                                        navController = cityNavController
                                     )
+
+                                    // ✅ FIX: Fokus nach Nutzung zurücksetzen (Event-Verbrauch)
+                                    LaunchedEffect(activeTab) {
+                                        if (activeTab == CityTab.CITY) {
+                                            focusPersonId = null
+                                            focusPoiId = null
+                                        }
+                                    }
                                 }
 
                                 CityTab.PERSONS ->
@@ -279,6 +309,11 @@ fun CityScreen(
                                         accessContext = accessContext,
                                         onFactionLinkClicked = {
                                             activeDetail = DetailTarget.Faction(it)
+                                        },
+                                        onShowOnMap = { id ->
+                                            focusPersonId = id          // ✅ WICHTIG
+                                            focusPoiId = null
+                                            activeTab = CityTab.CITY
                                         }
                                     )
 
@@ -286,7 +321,12 @@ fun CityScreen(
                                     PoiTab(
                                         cityViewModel = cityViewModel,
                                         factions = factions,
-                                        accessContext = accessContext
+                                        accessContext = accessContext,
+                                        onShowOnMap = { id ->
+                                            focusPoiId = id
+                                            focusPersonId = null
+                                            activeTab = CityTab.CITY
+                                        }
                                     )
 
                                 CityTab.FACTIONS ->
