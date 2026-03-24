@@ -38,7 +38,13 @@ fun MapContent(
     onTapNormalized: (Float, Float) -> Unit,
     onMovePin: (String, Boolean, Float, Float) -> Unit,
     onMoveFinished: () -> Unit,
-    onRenderedSizeCalculated: (Float, Float) -> Unit
+    onRenderedSizeCalculated: (Float, Float) -> Unit,
+
+    // 🔥 NEU (State kommt von außen)
+    selectedPersonId: String?,
+    selectedPoiId: String?,
+    onPersonClick: (String) -> Unit,
+    onPoiClick: (String) -> Unit
 ) {
 
     var imageWidthPx by remember { mutableStateOf<Float?>(null) }
@@ -82,9 +88,6 @@ fun MapContent(
             onRenderedSizeCalculated(renderedWidth, renderedHeight)
         }
     }
-
-    var selectedId by remember { mutableStateOf<String?>(null) }
-    var selectedIsPerson by remember { mutableStateOf<Boolean?>(null) }
 
     Box(
         modifier = Modifier
@@ -130,8 +133,11 @@ fun MapContent(
                     }
 
                     if (hitId != null) {
-                        selectedId = hitId
-                        selectedIsPerson = hitIsPerson
+                        if (hitIsPerson == true) {
+                            onPersonClick(hitId)
+                        } else {
+                            onPoiClick(hitId)
+                        }
                     } else if (placementMode) {
                         val normX = (relX / renderedWidth).coerceIn(0f, 1f)
                         val normY = (relY / renderedHeight).coerceIn(0f, 1f)
@@ -139,7 +145,10 @@ fun MapContent(
                     }
                 }
             }
-            .pointerInput(moveMode, selectedId) {
+            .pointerInput(moveMode, selectedPersonId, selectedPoiId) {
+                val selectedId = selectedPersonId ?: selectedPoiId
+                val isPerson = selectedPersonId != null
+
                 if (moveMode && selectedId != null) {
                     detectDragGestures(
                         onDrag = { change, _ ->
@@ -150,15 +159,13 @@ fun MapContent(
                             val newY = (relY / renderedHeight).coerceIn(0f, 1f)
 
                             onMovePin(
-                                selectedId!!,
-                                selectedIsPerson == true,
+                                selectedId,
+                                isPerson,
                                 newX,
                                 newY
                             )
                         },
                         onDragEnd = {
-                            selectedId = null
-                            selectedIsPerson = null
                             onMoveFinished()
                         }
                     )
@@ -193,7 +200,7 @@ fun MapContent(
                         .border(1.dp, Color.White, CircleShape)
                 )
 
-                if (selectedId == it.id) {
+                if (selectedPersonId == it.id) {
                     PinLabel(it.name, x, y, scale)
                 }
             }
@@ -211,9 +218,20 @@ fun MapContent(
                         .border(1.dp, Color.White, CircleShape)
                 )
 
-                if (selectedId == it.id) {
+                if (selectedPoiId == it.id) {
                     PinLabel(it.name, x, y, scale)
                 }
+            }
+        LaunchedEffect(selectedPersonId, selectedPoiId, persons, pois) {
+            println("---- DEBUG MAP ----")
+            println("selectedPersonId = $selectedPersonId")
+            println("selectedPoiId = $selectedPoiId")
+
+            println("Persons IDs:")
+            persons.take(10).forEach { println("person.id=${it.id}") }
+
+            println("Pois IDs:")
+            pois.take(10).forEach { println("poi.id=${it.id}") }
             }
     }
 }

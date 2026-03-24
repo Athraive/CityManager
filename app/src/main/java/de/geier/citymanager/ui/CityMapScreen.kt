@@ -39,7 +39,11 @@ fun CityMapScreen(
     cityViewModel: CityViewModel,
     accessContext: AccessContext,
     navController: NavController,
-    mapViewModel: MapViewModel
+    mapViewModel: MapViewModel,
+
+    // 🔥 DAS FEHLT
+    focusPersonId: String? = null,
+    focusPoiId: String? = null
 ) {
 
     val context = LocalContext.current
@@ -81,15 +85,21 @@ fun CityMapScreen(
         visibleFactionIds = factions.map { it.id }.toSet()
     }
 
+
+    /* ---------------- SELECTION STATE (🔥 WICHTIG) ---------------- */
+
+    var selectedPersonId by remember { mutableStateOf<String?>(null) }
+    var selectedPoiId by remember { mutableStateOf<String?>(null) }
+
+
     /* ---------------- FILTER LOGIC ---------------- */
 
-    val persons =
+    val basePersons =
         if (!showPersons)
             emptyList()
         else
             personsWithFactions
                 .filter {
-
                     if (!showFactions) {
                         true
                     }
@@ -102,13 +112,29 @@ fun CityMapScreen(
                 }
                 .map { it.person }
 
-    val pois =
+// 🔥 Fokus-Person IMMER anzeigen
+    val persons = remember(basePersons, selectedPersonId, personsWithFactions) {
+
+        val focusPerson =
+            personsWithFactions
+                .map { it.person }
+                .firstOrNull { it.id == selectedPersonId }
+
+        if (focusPerson != null && basePersons.none { it.id == focusPerson.id }) {
+            basePersons + focusPerson
+        } else {
+            basePersons
+        }
+    }
+
+
+
+    val basePois =
         if (!showPois)
             emptyList()
         else
             poisWithFactions
                 .filter {
-
                     if (!showFactions) {
                         true
                     }
@@ -121,6 +147,21 @@ fun CityMapScreen(
                 }
                 .map { it.poi }
                 .filter { visibleCategoryIds.contains(it.categoryId) }
+
+// 🔥 Fokus-POI IMMER anzeigen
+    val pois = remember(basePois, selectedPoiId, poisWithFactions) {
+
+        val focusPoi =
+            poisWithFactions
+                .map { it.poi }
+                .firstOrNull { it.id == selectedPoiId }
+
+        if (focusPoi != null && basePois.none { it.id == focusPoi.id }) {
+            basePois + focusPoi
+        } else {
+            basePois
+        }
+    }
 
     /* ---------------- MAP STATE ---------------- */
 
@@ -136,6 +177,19 @@ fun CityMapScreen(
     var renderedHeight by remember { mutableStateOf(0f) }
 
     var confirmReplaceMap by remember { mutableStateOf(false) }
+
+
+    /* 🔥 NEU: Fokus von außen übernehmen */
+
+    LaunchedEffect(focusPersonId, focusPoiId) {
+        if (focusPersonId != null) {
+            selectedPersonId = focusPersonId
+            selectedPoiId = null
+        } else if (focusPoiId != null) {
+            selectedPoiId = focusPoiId
+            selectedPersonId = null
+        }
+    }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -235,6 +289,19 @@ fun CityMapScreen(
                 onRenderedSizeCalculated = { w, h ->
                     renderedWidth = w
                     renderedHeight = h
+                },
+
+                // 🔥 NEU (Pflicht!)
+                selectedPersonId = selectedPersonId,
+                selectedPoiId = selectedPoiId,
+
+                onPersonClick = {
+                    selectedPersonId = it
+                    selectedPoiId = null
+                },
+                onPoiClick = {
+                    selectedPoiId = it
+                    selectedPersonId = null
                 }
             )
         }

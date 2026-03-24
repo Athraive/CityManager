@@ -292,8 +292,11 @@ fun CityScreen(
                                     )
 
                                     // ✅ FIX: Fokus nach Nutzung zurücksetzen (Event-Verbrauch)
-                                    LaunchedEffect(activeTab) {
-                                        if (activeTab == CityTab.CITY) {
+                                    LaunchedEffect(focusPersonId, focusPoiId) {
+                                        if (focusPersonId != null || focusPoiId != null) {
+                                            // kleiner Delay, damit Map Zeit hat den Wert zu verarbeiten
+                                            kotlinx.coroutines.delay(300)
+
                                             focusPersonId = null
                                             focusPoiId = null
                                         }

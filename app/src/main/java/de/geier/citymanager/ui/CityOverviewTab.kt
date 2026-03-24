@@ -23,14 +23,18 @@ fun CityOverviewTab(
 
     /* ---------- AUTO OPEN MAP ---------- */
 
-    LaunchedEffect(focusPersonId, focusPoiId) {
-        if (focusPersonId != null || focusPoiId != null) {
+    LaunchedEffect(Unit) {
+        snapshotFlow { focusPersonId to focusPoiId }
+            .collect { (personId, poiId) ->
 
-            navController.navigate(Route.STADTKARTE) {
-                popUpTo(Route.STADTUEBERSICHT) { inclusive = false }
-                launchSingleTop = true
+                if (personId != null || poiId != null) {
+
+                    navController.navigate(Route.STADTKARTE) {
+                        popUpTo(Route.STADTUEBERSICHT) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
             }
-        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -53,7 +57,11 @@ fun CityOverviewTab(
                     cityViewModel = cityViewModel,
                     accessContext = accessContext,
                     navController = navController,
-                    mapViewModel = mapViewModel
+                    mapViewModel = mapViewModel,
+
+                    // 🔥 DAS FEHLT
+                    focusPersonId = focusPersonId,
+                    focusPoiId = focusPoiId
                 )
             }
 
