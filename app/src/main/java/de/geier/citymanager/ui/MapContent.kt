@@ -243,27 +243,41 @@ private fun PinLabel(
     y: Float,
     scale: Float
 ) {
-    Surface(
+
+    // 🔧 weiter nach rechts & höher
+    val offsetXPx = 35f / scale
+    val offsetYPx = 65f / scale
+
+    Box(
         modifier = Modifier
             .offset {
                 IntOffset(
-                    (x + 10f).roundToInt(),
-                    (y - 22f).roundToInt()
+                    (x + offsetXPx).roundToInt(),
+                    (y - offsetYPx).roundToInt()
                 )
             }
             .graphicsLayer {
                 scaleX = 1f / scale
                 scaleY = 1f / scale
                 transformOrigin = TransformOrigin(0f, 0f)
-            },
-        tonalElevation = 4.dp,
-        shadowElevation = 6.dp,
-        shape = RoundedCornerShape(8.dp)
+            }
     ) {
-        Text(
-            text = name,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelMedium
-        )
+
+        Surface(
+            tonalElevation = 4.dp,
+            shadowElevation = 6.dp,
+            shape = RoundedCornerShape(
+                topStart = 8.dp,
+                topEnd = 8.dp,
+                bottomEnd = 8.dp,
+                bottomStart = 0.dp // 🔥 „Spitze“ Richtung Pin
+            )
+        ) {
+            Text(
+                text = name,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
     }
 }
