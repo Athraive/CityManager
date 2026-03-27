@@ -41,9 +41,10 @@ fun CityMapScreen(
     navController: NavController,
     mapViewModel: MapViewModel,
 
-    // 🔥 DAS FEHLT
     focusPersonId: String? = null,
-    focusPoiId: String? = null
+    focusPoiId: String? = null,
+    onPersonBubbleClick: (String) -> Unit,
+    onPoiBubbleClick: (String) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -302,7 +303,10 @@ fun CityMapScreen(
                 onPoiClick = {
                     selectedPoiId = it
                     selectedPersonId = null
-                }
+                },
+
+                onPersonBubbleClick = onPersonBubbleClick,
+                onPoiBubbleClick = onPoiBubbleClick
             )
         }
 

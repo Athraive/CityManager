@@ -17,7 +17,11 @@ fun CityOverviewTab(
     mapViewModel: MapViewModel,
     focusPersonId: String? = null,
     focusPoiId: String? = null,
-    navController: NavHostController
+    navController: NavHostController,
+
+    // 🔥 NEU
+    onPersonBubbleClick: (String) -> Unit,
+    onPoiBubbleClick: (String) -> Unit
 ) {
     val cityId = accessContext.cityId
 
@@ -59,9 +63,12 @@ fun CityOverviewTab(
                     navController = navController,
                     mapViewModel = mapViewModel,
 
-                    // 🔥 DAS FEHLT
                     focusPersonId = focusPersonId,
-                    focusPoiId = focusPoiId
+                    focusPoiId = focusPoiId,
+
+                    // 🔥 HIER einfügen
+                    onPersonBubbleClick = onPersonBubbleClick,
+                    onPoiBubbleClick = onPoiBubbleClick
                 )
             }
 
@@ -114,6 +121,7 @@ fun CityOverviewTab(
                     cityViewModel = cityViewModel
                 )
             }
+
         }
     }
 }

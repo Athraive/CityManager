@@ -40,11 +40,12 @@ fun MapContent(
     onMoveFinished: () -> Unit,
     onRenderedSizeCalculated: (Float, Float) -> Unit,
 
-    // 🔥 NEU (State kommt von außen)
     selectedPersonId: String?,
     selectedPoiId: String?,
     onPersonClick: (String) -> Unit,
-    onPoiClick: (String) -> Unit
+    onPoiClick: (String) -> Unit,
+    onPersonBubbleClick: (String) -> Unit,
+    onPoiBubbleClick: (String) -> Unit
 ) {
 
     var imageWidthPx by remember { mutableStateOf<Float?>(null) }
@@ -201,7 +202,13 @@ fun MapContent(
                 )
 
                 if (selectedPersonId == it.id) {
-                    PinLabel(it.name, x, y, scale)
+                    PinLabel(
+                        name = it.name,
+                        x = x,
+                        y = y,
+                        scale = scale,
+                        onClick = { onPersonBubbleClick(it.id) }
+                    )
                 }
             }
 
@@ -219,9 +226,16 @@ fun MapContent(
                 )
 
                 if (selectedPoiId == it.id) {
-                    PinLabel(it.name, x, y, scale)
+                    PinLabel(
+                        name = it.name,
+                        x = x,
+                        y = y,
+                        scale = scale,
+                        onClick = { onPoiBubbleClick(it.id) }
+                    )
                 }
             }
+
         LaunchedEffect(selectedPersonId, selectedPoiId, persons, pois) {
             println("---- DEBUG MAP ----")
             println("selectedPersonId = $selectedPersonId")
@@ -232,7 +246,7 @@ fun MapContent(
 
             println("Pois IDs:")
             pois.take(10).forEach { println("poi.id=${it.id}") }
-            }
+        }
     }
 }
 
@@ -241,10 +255,10 @@ private fun PinLabel(
     name: String,
     x: Float,
     y: Float,
-    scale: Float
+    scale: Float,
+    onClick: () -> Unit
 ) {
 
-    // 🔧 weiter nach rechts & höher
     val offsetXPx = 35f / scale
     val offsetYPx = 65f / scale
 
@@ -270,14 +284,32 @@ private fun PinLabel(
                 topStart = 8.dp,
                 topEnd = 8.dp,
                 bottomEnd = 8.dp,
-                bottomStart = 0.dp // 🔥 „Spitze“ Richtung Pin
+                bottomStart = 0.dp
             )
         ) {
-            Text(
-                text = name,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelMedium
-            )
+
+            Column(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = "[Details]",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray,
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures {
+                            onClick()
+                        }
+                    }
+                )
+            }
         }
     }
 }

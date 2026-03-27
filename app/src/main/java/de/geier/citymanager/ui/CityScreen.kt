@@ -288,7 +288,15 @@ fun CityScreen(
                                         mapViewModel = mapViewModel,
                                         focusPersonId = focusPersonId,
                                         focusPoiId = focusPoiId,
-                                        navController = cityNavController
+                                        navController = cityNavController,
+
+                                        // 🔥 NEU
+                                        onPersonBubbleClick = { id ->
+                                            activeDetail = DetailTarget.Person(id)
+                                        },
+                                        onPoiBubbleClick = { id ->
+                                            activeDetail = DetailTarget.Poi(id)
+                                        }
                                     )
 
                                     // ✅ FIX: Fokus nach Nutzung zurücksetzen (Event-Verbrauch)
