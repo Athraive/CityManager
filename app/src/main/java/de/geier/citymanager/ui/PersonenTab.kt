@@ -120,7 +120,12 @@ fun PersonenTab(
                 onFactionClick = { id ->
                     onFactionLinkClicked(id)
                 },
-                onShowOnMap = onShowOnMap   // ✅ korrekt durchgereicht
+                onShowOnMap = { id ->
+                    onShowOnMap(id)
+
+                    // 🔥 zweiter Trigger direkt aus dem Tab
+                    onShowOnMap(id)
+                }
             )
         }
 

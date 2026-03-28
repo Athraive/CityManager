@@ -188,53 +188,56 @@ fun MapContent(
 
         val pinSize = 14.dp / scale
 
-        persons.filter { it.mapX != null && it.mapY != null }
-            .forEach {
-                val x = offsetX + it.mapX!! * renderedWidth
-                val y = offsetY + it.mapY!! * renderedHeight
+        if (renderedWidth > 0f && renderedHeight > 0f) {
 
-                Box(
-                    modifier = Modifier
-                        .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
-                        .size(pinSize)
-                        .background(Color.Blue, CircleShape)
-                        .border(1.dp, Color.White, CircleShape)
-                )
+            persons.filter { it.mapX != null && it.mapY != null }
+                .forEach {
+                    val x = offsetX + it.mapX!! * renderedWidth
+                    val y = offsetY + it.mapY!! * renderedHeight
 
-                if (selectedPersonId == it.id) {
-                    PinLabel(
-                        name = it.name,
-                        x = x,
-                        y = y,
-                        scale = scale,
-                        onClick = { onPersonBubbleClick(it.id) }
+                    Box(
+                        modifier = Modifier
+                            .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                            .size(pinSize)
+                            .background(Color.Blue, CircleShape)
+                            .border(1.dp, Color.White, CircleShape)
                     )
+
+                    if (selectedPersonId == it.id) {
+                        PinLabel(
+                            name = it.name,
+                            x = x,
+                            y = y,
+                            scale = scale,
+                            onClick = { onPersonBubbleClick(it.id) }
+                        )
+                    }
                 }
-            }
 
-        pois.filter { it.mapX != null && it.mapY != null }
-            .forEach {
-                val x = offsetX + it.mapX!! * renderedWidth
-                val y = offsetY + it.mapY!! * renderedHeight
+            pois.filter { it.mapX != null && it.mapY != null }
+                .forEach {
+                    val x = offsetX + it.mapX!! * renderedWidth
+                    val y = offsetY + it.mapY!! * renderedHeight
 
-                Box(
-                    modifier = Modifier
-                        .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
-                        .size(pinSize)
-                        .background(Color.Red, CircleShape)
-                        .border(1.dp, Color.White, CircleShape)
-                )
-
-                if (selectedPoiId == it.id) {
-                    PinLabel(
-                        name = it.name,
-                        x = x,
-                        y = y,
-                        scale = scale,
-                        onClick = { onPoiBubbleClick(it.id) }
+                    Box(
+                        modifier = Modifier
+                            .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                            .size(pinSize)
+                            .background(Color.Red, CircleShape)
+                            .border(1.dp, Color.White, CircleShape)
                     )
+
+                    if (selectedPoiId == it.id) {
+                        PinLabel(
+                            name = it.name,
+                            x = x,
+                            y = y,
+                            scale = scale,
+                            onClick = { onPoiBubbleClick(it.id) }
+                        )
+                    }
                 }
-            }
+        }
 
         LaunchedEffect(selectedPersonId, selectedPoiId, persons, pois) {
             println("---- DEBUG MAP ----")

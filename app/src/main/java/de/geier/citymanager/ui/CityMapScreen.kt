@@ -183,10 +183,14 @@ fun CityMapScreen(
     /* 🔥 NEU: Fokus von außen übernehmen */
 
     LaunchedEffect(focusPersonId, focusPoiId) {
+
         if (focusPersonId != null) {
+            selectedPersonId = null
             selectedPersonId = focusPersonId
             selectedPoiId = null
+
         } else if (focusPoiId != null) {
+            selectedPoiId = null
             selectedPoiId = focusPoiId
             selectedPersonId = null
         }

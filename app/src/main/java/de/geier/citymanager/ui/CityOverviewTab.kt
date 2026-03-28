@@ -17,6 +17,7 @@ fun CityOverviewTab(
     mapViewModel: MapViewModel,
     focusPersonId: String? = null,
     focusPoiId: String? = null,
+    focusTrigger: Int,   // 🔥 HINZUFÜGEN
     navController: NavHostController,
 
     // 🔥 NEU
@@ -27,18 +28,15 @@ fun CityOverviewTab(
 
     /* ---------- AUTO OPEN MAP ---------- */
 
-    LaunchedEffect(Unit) {
-        snapshotFlow { focusPersonId to focusPoiId }
-            .collect { (personId, poiId) ->
+    LaunchedEffect(focusTrigger) {
 
-                if (personId != null || poiId != null) {
+        if (focusPersonId != null || focusPoiId != null) {
 
-                    navController.navigate(Route.STADTKARTE) {
-                        popUpTo(Route.STADTUEBERSICHT) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                }
+            navController.navigate(Route.STADTKARTE) {
+                popUpTo(Route.STADTUEBERSICHT) { inclusive = false }
+                launchSingleTop = false   // 🔥 WICHTIG
             }
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
