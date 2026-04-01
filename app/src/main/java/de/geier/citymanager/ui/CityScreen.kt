@@ -297,7 +297,16 @@ fun CityScreen(
                                     )
                                 }
 
-                                CityTab.FACTIONS -> { /* unverändert */ }
+                                CityTab.FACTIONS -> {
+                                    FraktionenTab(
+                                        accessContext = accessContext,
+                                        factions = factions,
+                                        persons = allPersons,
+                                        pois = allPois,
+                                        onSave = { cityViewModel.saveFaction(it) },
+                                        onDelete = { cityViewModel.deleteFaction(it) }
+                                    )
+                                }
                             }
                         }
                     }
