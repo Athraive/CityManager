@@ -2,6 +2,10 @@
 
 package de.geier.citymanager.ui
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,7 +16,16 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun PersonDetailScreen(
@@ -37,9 +50,29 @@ fun PersonDetailScreen(
     var gameMasterNotes by remember(person.id) { mutableStateOf(person.gameMasterNotes) }
     var visible by remember(person.id) { mutableStateOf(person.visible) }
 
+    // ✅ NEU: Bild-State
+    var imageUri by remember(person.id) {
+        mutableStateOf(person.portraitImageUri)
+    }
+
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
+
+    // ✅ NEU: ImagePicker
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            imageUri = it.toString()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -80,6 +113,56 @@ fun PersonDetailScreen(
                 )
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
+            }
+
+            /* ---------- Bild ---------- */
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .width(140.dp)
+                            .heightIn(max = 220.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (imageUri != null) {
+                            AsyncImage(
+                                model = imageUri,
+                                contentDescription = "Person Bild",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(64.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (canEdit) {
+                        Button(
+                            onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
+                        ) {
+                            Text("Bild auswählen")
+                        }
+                    }
+                }
             }
 
             /* ---------- Karte ---------- */
@@ -200,7 +283,8 @@ fun PersonDetailScreen(
                             description = description,
                             playerNotes = playerNotes,
                             gameMasterNotes = gameMasterNotes,
-                            visible = visible
+                            visible = visible,
+                            portraitImageUri = imageUri   // ✅ ENTSCHEIDEND
                         )
                     )
                     onBack()
