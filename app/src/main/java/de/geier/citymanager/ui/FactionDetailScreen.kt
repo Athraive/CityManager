@@ -2,17 +2,29 @@
 
 package de.geier.citymanager.ui
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 
 @Composable
 fun FactionDetailScreen(
@@ -29,13 +41,33 @@ fun FactionDetailScreen(
 
     var name by remember(faction.id) { mutableStateOf(faction.name) }
     var description by remember(faction.id) { mutableStateOf(faction.description ?: "") }
-    var visible by remember(faction.id) { mutableStateOf(faction.visible) }
     var playerNotes by remember(faction.id) { mutableStateOf(faction.playerNotes) }
     var gameMasterNotes by remember(faction.id) { mutableStateOf(faction.gameMasterNotes) }
+    var visible by remember(faction.id) { mutableStateOf(faction.visible) }
+
+    var imageUri by remember(faction.id) {
+        mutableStateOf(faction.imageUri)
+    }
+
+    val displayImage = imageUri ?: faction.imageUri
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
+
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            imageUri = it.toString()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -78,6 +110,56 @@ fun FactionDetailScreen(
                 Text(name, style = MaterialTheme.typography.titleLarge)
             }
 
+            /* ---------- Bild ---------- */
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Column(horizontalAlignment = Alignment.End) {
+
+                    Box(
+                        modifier = Modifier
+                            .width(140.dp)
+                            .heightIn(max = 220.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (displayImage != null) {
+                            AsyncImage(
+                                model = displayImage,
+                                contentDescription = "Fraktionsbild",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(64.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (canEdit) {
+                        Button(
+                            onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
+                        ) {
+                            Text("Bild auswählen")
+                        }
+                    }
+                }
+            }
+
+            /* ---------- Beschreibung ---------- */
+
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
             if (canEdit) {
@@ -107,17 +189,12 @@ fun FactionDetailScreen(
             Text("Personen", style = MaterialTheme.typography.titleMedium)
 
             if (assignedPersons.isEmpty()) {
-                Text(
-                    "Keine Personen zugeordnet",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("Keine Personen zugeordnet", color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                assignedPersons.forEach { person ->
+                assignedPersons.forEach {
                     Text(
-                        text = "• ${person.name}",
-                        modifier = Modifier.clickable {
-                            onPersonClick(person.id)
-                        }
+                        text = "• ${it.name}",
+                        modifier = Modifier.clickable { onPersonClick(it.id) }
                     )
                 }
             }
@@ -128,17 +205,12 @@ fun FactionDetailScreen(
             Text("Orte", style = MaterialTheme.typography.titleMedium)
 
             if (assignedPois.isEmpty()) {
-                Text(
-                    "Keine Orte zugeordnet",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("Keine Orte zugeordnet", color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
-                assignedPois.forEach { poi ->
+                assignedPois.forEach {
                     Text(
-                        text = "• ${poi.name}",
-                        modifier = Modifier.clickable {
-                            onPoiClick(poi.id)
-                        }
+                        text = "• ${it.name}",
+                        modifier = Modifier.clickable { onPoiClick(it.id) }
                     )
                 }
             }
@@ -166,24 +238,23 @@ fun FactionDetailScreen(
                 )
             }
 
-            if (canEdit) {
-                Button(
-                    enabled = name.isNotBlank(),
-                    onClick = {
-                        onSave(
-                            faction.copy(
-                                name = name,
-                                description = description.takeIf { it.isNotBlank() },
-                                visible = visible,
-                                playerNotes = playerNotes,
-                                gameMasterNotes = gameMasterNotes
-                            )
+            Button(
+                enabled = name.isNotBlank(),
+                onClick = {
+                    onSave(
+                        faction.copy(
+                            name = name,
+                            description = description.takeIf { it.isNotBlank() },
+                            playerNotes = playerNotes,
+                            gameMasterNotes = gameMasterNotes,
+                            visible = visible,
+                            imageUri = imageUri
                         )
-                        onBack()
-                    }
-                ) {
-                    Text("Speichern")
+                    )
+                    onBack()
                 }
+            ) {
+                Text("Speichern")
             }
         }
     }
@@ -195,9 +266,7 @@ fun FactionDetailScreen(
             text = { Text("Möchtest du diese Fraktion wirklich löschen?") },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     onClick = {
                         onDelete(faction)
                         showDeleteConfirm = false

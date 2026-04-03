@@ -8,6 +8,8 @@ data class Faction(
     val name: String,
     val description: String? = null,
 
+    val imageUri: String? = null,   // ✅ HIER IST DER FIX
+
     /** Spieler-Notizen (gemeinsamer Pool) */
     val playerNotes: String = "",
 
