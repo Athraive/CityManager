@@ -2,16 +2,23 @@
 
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 
 @Composable
 fun PlayerPoiDetailScreen(
@@ -24,7 +31,7 @@ fun PlayerPoiDetailScreen(
     onDelete: (PointOfInterest) -> Unit = {},
     onBack: () -> Unit,
     categoryTitle: String? = null,
-    onShowOnMap: (String) -> Unit   // ✅ NEU
+    onShowOnMap: (String) -> Unit
 ) {
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
@@ -91,6 +98,35 @@ fun PlayerPoiDetailScreen(
                     label = { Text("Name") },
                     singleLine = true
                 )
+            } else {
+                Text(name, style = MaterialTheme.typography.titleLarge)
+            }
+
+            /* ---------- 🖼️ BILD (NEU) ---------- */
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 220.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (poi.imageUri != null) {
+                    AsyncImage(
+                        model = poi.imageUri,
+                        contentDescription = "POI Bild",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
             }
 
             /* ---------- MAP BUTTON ---------- */

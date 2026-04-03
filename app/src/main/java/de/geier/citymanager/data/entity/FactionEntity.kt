@@ -16,6 +16,7 @@ data class FactionEntity(
 
     val name: String,
     val description: String?,
+    val imageUri: String? = null,
     val playerNotes: String,
     val gameMasterNotes: String,
     val visible: Boolean

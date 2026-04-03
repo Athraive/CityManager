@@ -16,6 +16,7 @@ data class PointOfInterestEntity(
 
     val name: String,
     val description: String?,
+    val imageUri: String? = null,
     val categoryId: String,
     val visible: Boolean,
     val factionId: String?,

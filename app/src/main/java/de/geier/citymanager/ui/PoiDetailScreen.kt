@@ -2,17 +2,29 @@
 
 package de.geier.citymanager.ui
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 
 @Composable
 fun PoiDetailScreen(
@@ -35,9 +47,30 @@ fun PoiDetailScreen(
     var playerNotes by remember(poi.id) { mutableStateOf(poi.playerNotes) }
     var gameMasterNotes by remember(poi.id) { mutableStateOf(poi.gameMasterNotes) }
 
+    // 🔥 Wichtig: lokaler State + Fallback auf POI
+    var imageUri by remember(poi.id) {
+        mutableStateOf(poi.imageUri)
+    }
+
+    val displayImage = imageUri ?: poi.imageUri
+
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canEdit = accessContext.canEdit()
+
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            imageUri = it.toString()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -78,6 +111,54 @@ fun PoiDetailScreen(
                 )
             } else {
                 Text(name, style = MaterialTheme.typography.titleLarge)
+            }
+
+            /* ---------- Bild ---------- */
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Column(horizontalAlignment = Alignment.End) {
+
+                    Box(
+                        modifier = Modifier
+                            .width(140.dp)
+                            .heightIn(max = 220.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (displayImage != null) {
+                            AsyncImage(
+                                model = displayImage,
+                                contentDescription = "POI Bild",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(64.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (canEdit) {
+                        Button(
+                            onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
+                        ) {
+                            Text("Bild auswählen")
+                        }
+                    }
+                }
             }
 
             /* ---------- Karte ---------- */
@@ -192,7 +273,8 @@ fun PoiDetailScreen(
                             description = description.takeIf { it.isNotBlank() },
                             visible = visible,
                             playerNotes = playerNotes,
-                            gameMasterNotes = gameMasterNotes
+                            gameMasterNotes = gameMasterNotes,
+                            imageUri = imageUri
                         )
                     )
                     onBack()
@@ -207,9 +289,7 @@ fun PoiDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("Ort löschen?") },
-            text = {
-                Text("Möchtest du den Ort wirklich löschen?")
-            },
+            text = { Text("Möchtest du den Ort wirklich löschen?") },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
