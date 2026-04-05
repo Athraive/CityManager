@@ -12,4 +12,5 @@ interface CityRepository {
     suspend fun createCity(city: CityEntity)
 
     suspend fun deleteCity(cityId: String)
+    suspend fun save(city: CityEntity)
 }

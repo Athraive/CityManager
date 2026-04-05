@@ -204,4 +204,11 @@ class CityViewModel(
             personRepository.save(updated, accessContext)
         }
     }
+    fun saveCity(updated: CityEntity) {
+        if (!accessContext.canEdit()) return
+
+        viewModelScope.launch {
+            cityRepository.save(updated)
+        }
+    }
 }

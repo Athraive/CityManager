@@ -36,6 +36,13 @@ class CityRepositoryImpl(
         cityDao.insert(city)
     }
 
+    /**
+     * 🔹 NEU: Update / Save bestehender Städte
+     */
+    override suspend fun save(city: CityEntity) {
+        cityDao.insert(city) // REPLACE → Update
+    }
+
     override suspend fun deleteCity(cityId: String) {
 
         // 🔹 Manuelles Cascade – bewusst explizit

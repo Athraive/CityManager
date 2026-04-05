@@ -50,7 +50,10 @@ fun CityOverviewTab(
         ) {
 
             composable(Route.STADTUEBERSICHT) {
-                CityIntroScreen()
+                CityIntroScreen(
+                    cityViewModel = cityViewModel,
+                    accessContext = accessContext
+                )
             }
 
             composable(Route.STADTKARTE) {
