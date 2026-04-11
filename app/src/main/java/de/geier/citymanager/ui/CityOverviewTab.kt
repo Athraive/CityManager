@@ -28,13 +28,18 @@ fun CityOverviewTab(
 
     /* ---------- AUTO OPEN MAP ---------- */
 
+    val currentRoute =
+        navController.currentBackStackEntryAsState().value?.destination?.route
+
     LaunchedEffect(focusTrigger) {
 
-        if (focusPersonId != null || focusPoiId != null) {
-
+        if (
+            currentRoute == Route.STADTUEBERSICHT &&
+            (focusPersonId != null || focusPoiId != null)
+        ) {
             navController.navigate(Route.STADTKARTE) {
                 popUpTo(Route.STADTUEBERSICHT) { inclusive = false }
-                launchSingleTop = false   // 🔥 WICHTIG
+                launchSingleTop = false
             }
         }
     }
@@ -99,9 +104,8 @@ fun CityOverviewTab(
                 CityDistrictListScreen(
                     cityId = cityId,
                     cityViewModel = cityViewModel,
-                    onDistrictSelected = { id ->
-                        navController.navigate("stadtviertel/$id")
-                    }
+                    accessContext = accessContext,
+                    onDistrictSelected = { }
                 )
             }
 

@@ -11,5 +11,8 @@ data class CityDistrictEntity(
     val name: String,
     val description: String,
     val orderIndex: Int,
-    val mapKey: String? = null
+    val mapKey: String? = null,
+
+    // 🔥 NEU
+    val imageUri: String? = null
 )
