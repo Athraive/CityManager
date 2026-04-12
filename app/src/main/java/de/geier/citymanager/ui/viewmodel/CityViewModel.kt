@@ -211,4 +211,12 @@ class CityViewModel(
             cityRepository.save(updated)
         }
     }
+
+    fun saveCityLore(lore: CityLoreEntity) {
+        if (!accessContext.canEdit()) return
+
+        viewModelScope.launch {
+            cityLoreRepository.save(lore)
+        }
+    }
 }

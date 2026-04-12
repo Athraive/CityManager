@@ -123,7 +123,8 @@ fun CityOverviewTab(
             composable(Route.STADTGESCHICHTE) {
                 StadtgeschichteScreen(
                     cityId = cityId,
-                    cityViewModel = cityViewModel
+                    cityViewModel = cityViewModel,
+                    accessContext = accessContext
                 )
             }
 
