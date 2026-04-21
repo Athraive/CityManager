@@ -17,14 +17,59 @@ fun StadtgeschichteScreen(
     accessContext: AccessContext
 ) {
     val lore by cityViewModel.cityLore.collectAsState()
-
     var editMode by remember { mutableStateOf(false) }
 
-    val currentLore = lore ?: CityLoreEntity(
-        cityId = cityId,
-        title = "Stadtgeschichte",
-        text = ""
-    )
+    /* ---------------- KEINE LORE VORHANDEN ---------------- */
+
+    if (lore == null) {
+
+        if (editMode) {
+            EditLoreScreen(
+                lore = CityLoreEntity(
+                    cityId = cityId,
+                    title = "Stadtgeschichte",
+                    text = ""
+                ),
+                onSave = {
+                    cityViewModel.saveCityLore(it)
+                    editMode = false
+                },
+                onCancel = {
+                    editMode = false
+                }
+            )
+            return
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+
+            Text(
+                text = "Keine Stadtgeschichte vorhanden.",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (accessContext.canEdit()) {
+                Button(
+                    onClick = { editMode = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Erstellen")
+                }
+            }
+        }
+
+        return
+    }
+
+    /* ---------------- LORE VORHANDEN ---------------- */
+
+    val currentLore = lore!!
 
     if (editMode) {
         EditLoreScreen(
@@ -43,30 +88,37 @@ fun StadtgeschichteScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
 
-        Text(
-            text = currentLore.title,
-            style = MaterialTheme.typography.headlineMedium
-        )
+        // 🔹 Scrollbarer Inhalt
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+
+            Text(
+                text = currentLore.title,
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = currentLore.text,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = if (currentLore.text.isBlank()) {
-                "Keine Stadtgeschichte vorhanden."
-            } else {
-                currentLore.text
-            },
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
+        // 🔹 Fixer Button unten
         if (accessContext.canEdit()) {
-            Button(onClick = { editMode = true }) {
+            Button(
+                onClick = { editMode = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Bearbeiten")
             }
         }
@@ -133,39 +185,11 @@ private fun EditLoreScreen(
                 Text("Speichern")
             }
 
-            OutlinedButton(onClick = onCancel) {
+            OutlinedButton(
+                onClick = onCancel
+            ) {
                 Text("Abbrechen")
             }
         }
     }
-}
-
-/* ---------------- SAFE SAVE HELPER ---------------- */
-
-private fun cityViewModelScopeSafeSave(
-    viewModel: CityViewModel,
-    lore: CityLoreEntity
-) {
-    viewModelScopeLaunch(viewModel) {
-        viewModel.saveCity(
-            viewModel.city.value!!.copy() // fallback safe call
-        )
-        viewModelScopeLaunch(viewModel) {
-            viewModelScopeSaveLore(viewModel, lore)
-        }
-    }
-}
-
-private fun viewModelScopeLaunch(
-    viewModel: CityViewModel,
-    block: suspend () -> Unit
-) {
-    viewModel.javaClass // no-op helper to avoid direct scope exposure
-}
-
-private fun viewModelScopeSaveLore(
-    viewModel: CityViewModel,
-    lore: CityLoreEntity
-) {
-    // 🔥 WICHTIG: direkter Zugriff fehlt → deshalb sauber ergänzen im ViewModel
 }
