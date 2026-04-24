@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.CompositionLocalProvider
@@ -66,11 +67,6 @@ fun CityScreen(
             fontPreset = FontPreset.DEFAULT
         )
 
-    val typography = resolveTypography(
-        base = MaterialTheme.typography,
-        preset = cityTheme.fontPreset
-    )
-
     val personFactionRepo = PersonFactionRepository(database.personFactionDao())
     val personPoiRepo = PersonPoiRepository(database.personPoiDao())
     val poiFactionRepo = PoiFactionRepository(database.poiFactionDao())
@@ -80,8 +76,6 @@ fun CityScreen(
 
     var focusPersonId by remember { mutableStateOf<String?>(null) }
     var focusPoiId by remember { mutableStateOf<String?>(null) }
-
-    // 🔥 NEU
     var mapFocusTick by remember { mutableStateOf(0) }
 
     val cityNavController = rememberNavController()
@@ -103,11 +97,12 @@ fun CityScreen(
         LocalCityTheme provides cityTheme
     ) {
 
-        MaterialTheme(
-            typography = typography
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onBackground
         ) {
 
             Scaffold(
+                containerColor = Color.Transparent,
                 topBar = {
                     AppTopBar(
                         title = cityEntity?.name ?: "CityManager",
@@ -134,14 +129,10 @@ fun CityScreen(
                         .padding(padding)
                 ) {
 
-                    CityThemeBackground()
-
                     when (val detail = activeDetail) {
 
                         is DetailTarget.Person -> {
-
-                            val person =
-                                allPersons.firstOrNull { it.id == detail.id }
+                            val person = allPersons.firstOrNull { it.id == detail.id }
 
                             if (person != null) {
 
@@ -149,18 +140,15 @@ fun CityScreen(
                                     initialValue = emptyList<String>(),
                                     key1 = person.id
                                 ) {
-                                    value = personPoiRepo
-                                        .getPoiIdsForPerson(person.id)
-                                        .first()
+                                    value = personPoiRepo.getPoiIdsForPerson(person.id).first()
                                 }
 
                                 val assignedFactionIds by produceState(
                                     initialValue = emptyList<String>(),
                                     key1 = person.id
                                 ) {
-                                    value = personFactionRepo
-                                        .getFactionIdsForPerson(person.id)
-                                        .first()
+                                    value =
+                                        personFactionRepo.getFactionIdsForPerson(person.id).first()
                                 }
 
                                 PersonDetailScreen(
@@ -177,10 +165,10 @@ fun CityScreen(
                                     onPoiClick = { activeDetail = DetailTarget.Poi(it) },
                                     onFactionClick = { activeDetail = DetailTarget.Faction(it) },
                                     onShowOnMap = { id ->
-                                        activeDetail = null        // 🔥 DAS FEHLT
+                                        activeDetail = null
                                         focusPoiId = null
                                         focusPersonId = id
-                                        mapFocusTick++ // 🔥 FIX
+                                        mapFocusTick++
                                         activeTab = CityTab.CITY
                                     }
                                 )
@@ -188,9 +176,7 @@ fun CityScreen(
                         }
 
                         is DetailTarget.Poi -> {
-
-                            val poi =
-                                allPois.firstOrNull { it.id == detail.id }
+                            val poi = allPois.firstOrNull { it.id == detail.id }
 
                             if (poi != null) {
 
@@ -198,18 +184,14 @@ fun CityScreen(
                                     initialValue = emptyList<String>(),
                                     key1 = poi.id
                                 ) {
-                                    value = poiFactionRepo
-                                        .getFactionIdsForPoi(poi.id)
-                                        .first()
+                                    value = poiFactionRepo.getFactionIdsForPoi(poi.id).first()
                                 }
 
                                 val assignedPersonIds by produceState(
                                     initialValue = emptyList<String>(),
                                     key1 = poi.id
                                 ) {
-                                    value = personPoiRepo
-                                        .getPersonIdsForPoi(poi.id)
-                                        .first()
+                                    value = personPoiRepo.getPersonIdsForPoi(poi.id).first()
                                 }
 
                                 PoiDetailScreen(
@@ -224,23 +206,22 @@ fun CityScreen(
                                     onPersonClick = { activeDetail = DetailTarget.Person(it) },
                                     onFactionClick = { activeDetail = DetailTarget.Faction(it) },
                                     onShowOnMap = { id ->
-                                        activeDetail = null        // 🔥 DAS FEHLT
+                                        activeDetail = null
                                         focusPersonId = null
                                         focusPoiId = id
-                                        mapFocusTick++ // 🔥 FIX
+                                        mapFocusTick++
                                         activeTab = CityTab.CITY
                                     }
                                 )
                             }
                         }
 
-                        is DetailTarget.Faction -> { /* unverändert */ }
+                        is DetailTarget.Faction -> {}
 
                         null -> {
                             when (activeTab) {
 
                                 CityTab.CITY -> {
-
                                     val mapViewModel: MapViewModel = viewModel(
                                         factory = MapViewModelFactory(
                                             cityViewModel = cityViewModel,
@@ -255,9 +236,11 @@ fun CityScreen(
                                         mapViewModel = mapViewModel,
                                         focusPersonId = focusPersonId,
                                         focusPoiId = focusPoiId,
-                                        focusTrigger = mapFocusTick,   // 🔥 DAS IST DER KEY
+                                        focusTrigger = mapFocusTick,
                                         navController = cityNavController,
-                                        onPersonBubbleClick = { activeDetail = DetailTarget.Person(it) },
+                                        onPersonBubbleClick = {
+                                            activeDetail = DetailTarget.Person(it)
+                                        },
                                         onPoiBubbleClick = { activeDetail = DetailTarget.Poi(it) }
                                     )
                                 }
@@ -273,10 +256,10 @@ fun CityScreen(
                                             activeDetail = DetailTarget.Faction(it)
                                         },
                                         onShowOnMap = { id ->
-                                            activeDetail = null      // 🔥 HIER EINFÜGEN
+                                            activeDetail = null
                                             focusPersonId = id
                                             focusPoiId = null
-                                            mapFocusTick++ // 🔥 FIX
+                                            mapFocusTick++
                                             activeTab = CityTab.CITY
                                         }
                                     )
@@ -288,10 +271,10 @@ fun CityScreen(
                                         factions = factions,
                                         accessContext = accessContext,
                                         onShowOnMap = { id ->
-                                            activeDetail = null        // 🔥 DAS FEHLT
+                                            activeDetail = null
                                             focusPoiId = id
                                             focusPersonId = null
-                                            mapFocusTick++ // 🔥 FIX
+                                            mapFocusTick++
                                             activeTab = CityTab.CITY
                                         }
                                     )

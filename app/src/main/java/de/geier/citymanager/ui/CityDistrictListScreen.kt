@@ -88,6 +88,7 @@ fun CityDistrictListScreen(
         else -> {
 
             Scaffold(
+                containerColor = Color.Transparent,
                 floatingActionButton = {
                     if (accessContext.canEdit()) {
                         FloatingActionButton(
@@ -99,121 +100,127 @@ fun CityDistrictListScreen(
                 }
             ) { padding ->
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
+                // 🔥 GLOBALER FIX
+                CompositionLocalProvider(
+                    LocalContentColor provides MaterialTheme.colorScheme.onBackground
                 ) {
 
-                    // 🔥 NORMALER CONTENT
-                    Column(
-                        modifier = Modifier.fillMaxSize()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
                     ) {
 
-                        // 🔥 Stadtbild
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            modifier = Modifier.fillMaxSize()
                         ) {
 
-                            if (city?.backgroundImageUri != null) {
-                                AsyncImage(
-                                    model = city!!.backgroundImageUri,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clickable {
-                                            showCityImageFullscreen = true
-                                        }
-                                )
-                            } else {
-                                Text("Kein Stadtviertel-Bild gesetzt")
-                            }
-
-                            if (accessContext.canEdit()) {
-                                IconButton(
-                                    onClick = { cityImagePicker.launch("image/*") },
-                                    modifier = Modifier.align(Alignment.BottomEnd)
-                                ) {
-                                    Icon(Icons.Default.Image, contentDescription = null)
-                                }
-                            }
-                        }
-
-                        if (districts.isEmpty()) {
                             Box(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("Für diese Stadt sind noch keine Stadtviertel angelegt.")
+
+                                if (city?.backgroundImageUri != null) {
+                                    AsyncImage(
+                                        model = city!!.backgroundImageUri,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clickable {
+                                                showCityImageFullscreen = true
+                                            }
+                                    )
+                                } else {
+                                    Text("Kein Stadtviertel-Bild gesetzt")
+                                }
+
+                                if (accessContext.canEdit()) {
+                                    IconButton(
+                                        onClick = { cityImagePicker.launch("image/*") },
+                                        modifier = Modifier.align(Alignment.BottomEnd)
+                                    ) {
+                                        Icon(Icons.Default.Image, contentDescription = null)
+                                    }
+                                }
                             }
-                            return@Scaffold
-                        }
 
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(minSize = 140.dp),
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(districts, key = { it.id }) { district ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            selectedDistrict = district
-                                        }
+                            if (districts.isEmpty()) {
+
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
                                 ) {
+                                    Text("Für diese Stadt sind noch keine Stadtviertel angelegt.")
+                                }
 
-                                    Column {
+                            } else {
 
-                                        if (district.imageUri != null) {
-                                            AsyncImage(
-                                                model = district.imageUri,
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(100.dp)
-                                            )
-                                        }
+                                LazyVerticalGrid(
+                                    columns = GridCells.Adaptive(minSize = 140.dp),
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(districts, key = { it.id }) { district ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedDistrict = district
+                                                }
+                                        ) {
 
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Text(
-                                                text = district.name,
-                                                style = MaterialTheme.typography.titleMedium
-                                            )
+                                            Column {
 
-                                            if (district.description.isNotBlank()) {
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = district.description,
-                                                    maxLines = 2
-                                                )
+                                                if (district.imageUri != null) {
+                                                    AsyncImage(
+                                                        model = district.imageUri,
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(100.dp)
+                                                    )
+                                                }
+
+                                                Column(modifier = Modifier.padding(12.dp)) {
+                                                    Text(
+                                                        text = district.name,
+                                                        style = MaterialTheme.typography.titleMedium
+                                                    )
+
+                                                    if (district.description.isNotBlank()) {
+                                                        Spacer(modifier = Modifier.height(4.dp))
+                                                        Text(
+                                                            text = district.description,
+                                                            maxLines = 2
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // 🔥 CITY FULLSCREEN (FIXED BACKGROUND)
-                    if (showCityImageFullscreen && city?.backgroundImageUri != null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black) // 🔥 entscheidender Fix!
-                                .clickable { showCityImageFullscreen = false },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AsyncImage(
-                                model = city!!.backgroundImageUri,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize()
-                            )
+
+                            if (showCityImageFullscreen && city?.backgroundImageUri != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black)
+                                    .clickable { showCityImageFullscreen = false },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AsyncImage(
+                                    model = city!!.backgroundImageUri,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
@@ -283,11 +290,17 @@ private fun DistrictDetailPanel(
                 }
             }
 
-            Text(district.name, style = MaterialTheme.typography.headlineMedium)
+            Text(
+                text = district.name,
+                style = MaterialTheme.typography.headlineMedium
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(district.description)
+            Text(
+                text = district.description,
+                style = MaterialTheme.typography.bodyLarge
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -305,12 +318,11 @@ private fun DistrictDetailPanel(
             }
         }
 
-        // 🔥 DISTRICT FULLSCREEN (FIXED BACKGROUND)
         if (showImageFullscreen && district.imageUri != null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black) // 🔥 FIX
+                    .background(Color.Black)
                     .clickable { showImageFullscreen = false },
                 contentAlignment = Alignment.Center
             ) {
@@ -339,15 +351,38 @@ private fun EditDistrictScreen(
             .padding(16.dp)
     ) {
 
-        Text("Stadtviertel bearbeiten", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            "Stadtviertel bearbeiten",
+            style = MaterialTheme.typography.headlineSmall
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Beschreibung") })
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Beschreibung") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -382,15 +417,38 @@ private fun CreateDistrictScreen(
             .padding(16.dp)
     ) {
 
-        Text("Stadtviertel erstellen", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            "Stadtviertel erstellen",
+            style = MaterialTheme.typography.headlineSmall
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Beschreibung") })
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Beschreibung") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
