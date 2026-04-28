@@ -63,7 +63,7 @@ fun CityScreen(
 
     val cityTheme = cityEntity?.toCityTheme()
         ?: CityTheme(
-            stylePreset = CityStylePreset.SCIFI,
+            stylePreset = CityStylePreset.URBAN_GREY,
             backgroundImageUri = null,
             fontPreset = FontPreset.DEFAULT
         )
@@ -71,7 +71,8 @@ fun CityScreen(
 
     val typography = resolveTypography(
         base = MaterialTheme.typography,
-        preset = cityTheme.fontPreset
+        preset = cityTheme.fontPreset,
+        stylePreset = cityTheme.stylePreset
     )
 
     val personFactionRepo = PersonFactionRepository(database.personFactionDao())

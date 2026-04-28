@@ -10,7 +10,13 @@ import de.geier.citymanager.data.entity.CityEntity
  * --------------------------------------------------- */
 fun CityEntity.toCityTheme(): CityTheme =
     CityTheme(
-        stylePreset = CityStylePreset.from(stylePreset),
+        stylePreset = when (stylePreset) {
+            "SCIFI" -> CityStylePreset.URBAN_GREY
+            "FANTASY" -> CityStylePreset.PARCHEMENT
+            "ASIA" -> CityStylePreset.BLOSSOM
+            "WESTERN" -> CityStylePreset.DUST
+            else -> CityStylePreset.from(stylePreset)
+        },
         backgroundImageUri = backgroundImageUri,
         fontPreset = FontPreset.from(fontPreset)
     )
@@ -21,7 +27,7 @@ fun CityEntity.toCityTheme(): CityTheme =
 fun CityTheme.toColorScheme(): ColorScheme {
     return when (stylePreset) {
 
-        CityStylePreset.SCIFI -> darkColorScheme(
+        CityStylePreset.URBAN_GREY -> darkColorScheme(
             primary = Color(0xFF8FA3B0),
             secondary = Color(0xFF5F6F7A),
             tertiary = Color(0xFFB0C4D4),
@@ -32,7 +38,7 @@ fun CityTheme.toColorScheme(): ColorScheme {
             onSurface = Color(0xFFE6EEF3)
         )
 
-        CityStylePreset.FANTASY -> darkColorScheme(
+        CityStylePreset.PARCHEMENT -> darkColorScheme(
             primary = Color(0xFFD6C5A3),
             secondary = Color(0xFFA89F91),
             tertiary = Color(0xFFE8DFC8),
@@ -43,7 +49,7 @@ fun CityTheme.toColorScheme(): ColorScheme {
             onSurface = Color(0xFFF2EDE3)
         )
 
-        CityStylePreset.ASIA -> darkColorScheme(
+        CityStylePreset.BLOSSOM -> darkColorScheme(
             primary = Color(0xFFBFA2DB),
             secondary = Color(0xFF8C6FA5),
             tertiary = Color(0xFFE8D8F5),
@@ -54,7 +60,7 @@ fun CityTheme.toColorScheme(): ColorScheme {
             onSurface = Color(0xFFF1E9F7)
         )
 
-        CityStylePreset.WESTERN -> darkColorScheme(
+        CityStylePreset.DUST -> darkColorScheme(
             primary = Color(0xFFC2A27A),
             secondary = Color(0xFF8E6E4A),
             tertiary = Color(0xFFE0C7A2),

@@ -9,6 +9,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.geier.citymanager.ui.background.CityThemePresets
+import de.geier.citymanager.ui.theme.CityStylePreset
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModel
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
 
@@ -27,8 +28,9 @@ fun CreateCityScreen(
     var cityName by remember { mutableStateOf("") }
     var cityCode by remember { mutableStateOf("") }
 
-    var selectedTheme by remember { mutableStateOf("DEFAULT") }
-    var selectedStylePreset by remember { mutableStateOf("SCIFI") }
+    // DEFAULT entfernt → sinnvoller Startwert
+    var selectedTheme by remember { mutableStateOf("SCIFI") }
+    var selectedStylePreset by remember { mutableStateOf(CityStylePreset.URBAN_GREY.name) }
 
     var themeExpanded by remember { mutableStateOf(false) }
     var styleExpanded by remember { mutableStateOf(false) }
@@ -95,7 +97,13 @@ fun CreateCityScreen(
         ) {
 
             OutlinedTextField(
-                value = selectedTheme,
+                value = when (selectedTheme) {
+                    "SCIFI" -> "Scifi"
+                    "WESTERN" -> "Western"
+                    "ASIA" -> "Asia"
+                    "MEDIEVAL" -> "Medieval"
+                    else -> selectedTheme
+                },
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Schriftstil") },
@@ -108,15 +116,26 @@ fun CreateCityScreen(
                 expanded = themeExpanded,
                 onDismissRequest = { themeExpanded = false }
             ) {
-                CityThemePresets.presets.forEach { theme ->
-                    DropdownMenuItem(
-                        text = { Text(theme) },
-                        onClick = {
-                            selectedTheme = theme
-                            themeExpanded = false
-                        }
-                    )
-                }
+                CityThemePresets.presets
+                    .filter { it != "modern" } // DEFAULT raus
+                    .forEach { theme ->
+
+                        val displayName = theme.replaceFirstChar { it.uppercase() }
+
+                        DropdownMenuItem(
+                            text = { Text(displayName) },
+                            onClick = {
+                                selectedTheme = when (theme) {
+                                    "scifi" -> "SCIFI"
+                                    "western" -> "WESTERN"
+                                    "asia" -> "ASIA"
+                                    "medieval" -> "MEDIEVAL"
+                                    else -> "SCIFI"
+                                }
+                                themeExpanded = false
+                            }
+                        )
+                    }
             }
         }
 
@@ -128,10 +147,16 @@ fun CreateCityScreen(
         ) {
 
             OutlinedTextField(
-                value = selectedStylePreset,
+                value = when (selectedStylePreset) {
+                    CityStylePreset.URBAN_GREY.name -> "Urban Grey"
+                    CityStylePreset.PARCHEMENT.name -> "Parchement"
+                    CityStylePreset.BLOSSOM.name -> "Blossom"
+                    CityStylePreset.DUST.name -> "Dust"
+                    else -> selectedStylePreset
+                },
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Stil") },
+                label = { Text("Farbschema") },
                 modifier = Modifier
                     .menuAnchor()
                     .fillMaxWidth()
@@ -141,11 +166,20 @@ fun CreateCityScreen(
                 expanded = styleExpanded,
                 onDismissRequest = { styleExpanded = false }
             ) {
-                listOf("SCIFI", "FANTASY", "ASIA", "WESTERN").forEach { style ->
+                CityStylePreset.entries.forEach { style ->
                     DropdownMenuItem(
-                        text = { Text(style) },
+                        text = {
+                            Text(
+                                when (style) {
+                                    CityStylePreset.URBAN_GREY -> "Urban Grey"
+                                    CityStylePreset.PARCHEMENT -> "Parchement"
+                                    CityStylePreset.BLOSSOM -> "Blossom"
+                                    CityStylePreset.DUST -> "Dust"
+                                }
+                            )
+                        },
                         onClick = {
-                            selectedStylePreset = style
+                            selectedStylePreset = style.name
                             styleExpanded = false
                         }
                     )
@@ -162,7 +196,7 @@ fun CreateCityScreen(
                     viewModel.createCity(
                         name = cityName.trim(),
                         gameMasterCode = cityCode,
-                        backgroundPreset = "WHITE", // 🔥 Fallback (temporär)
+                        backgroundPreset = "WHITE",
                         fontPreset = selectedTheme,
                         stylePreset = selectedStylePreset
                     ) { newId ->

@@ -2,11 +2,12 @@ package de.geier.citymanager.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.sp
 
 fun resolveTypography(
     base: Typography,
-    preset: FontPreset
+    preset: FontPreset,
+    stylePreset: CityStylePreset
 ): Typography {
 
     val fontFamily = when (preset) {
@@ -17,14 +18,31 @@ fun resolveTypography(
         FontPreset.ASIA -> FontFamily.SansSerif
     }
 
+    // STYLE-EINFLUSS (angepasst auf neue Presets)
+    val headlineSpacing = when (stylePreset) {
+        CityStylePreset.URBAN_GREY -> 1.5.sp
+        CityStylePreset.PARCHEMENT -> 0.3.sp
+        CityStylePreset.BLOSSOM -> 0.sp
+        CityStylePreset.DUST -> 0.8.sp
+    }
+
     return Typography(
         displayLarge = base.displayLarge.copy(fontFamily = fontFamily),
         displayMedium = base.displayMedium.copy(fontFamily = fontFamily),
         displaySmall = base.displaySmall.copy(fontFamily = fontFamily),
 
-        headlineLarge = base.headlineLarge.copy(fontFamily = fontFamily),
-        headlineMedium = base.headlineMedium.copy(fontFamily = fontFamily),
-        headlineSmall = base.headlineSmall.copy(fontFamily = fontFamily),
+        headlineLarge = base.headlineLarge.copy(
+            fontFamily = fontFamily,
+            letterSpacing = headlineSpacing
+        ),
+        headlineMedium = base.headlineMedium.copy(
+            fontFamily = fontFamily,
+            letterSpacing = headlineSpacing
+        ),
+        headlineSmall = base.headlineSmall.copy(
+            fontFamily = fontFamily,
+            letterSpacing = headlineSpacing
+        ),
 
         titleLarge = base.titleLarge.copy(fontFamily = fontFamily),
         titleMedium = base.titleMedium.copy(fontFamily = fontFamily),
