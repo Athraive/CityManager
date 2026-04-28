@@ -19,12 +19,13 @@ data class CityEntity(
     val createdAt: Long,
 
     /* =====================================================
-     * THEME
-     * ===================================================== */
+ * THEME
+ * ===================================================== */
 
     val backgroundPreset: String = "WHITE",
     val backgroundImageUri: String? = null,
     val fontPreset: String = "DEFAULT",
+    val stylePreset: String = "SCIFI",
 
     /* =====================================================
      * OVERVIEW (NEU)

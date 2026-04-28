@@ -8,7 +8,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import de.geier.citymanager.ui.background.CityBackgroundPresets
 import de.geier.citymanager.ui.background.CityThemePresets
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModel
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
@@ -29,10 +28,13 @@ fun CreateCityScreen(
     var cityCode by remember { mutableStateOf("") }
 
     var selectedTheme by remember { mutableStateOf("DEFAULT") }
-    var selectedBackgroundPreset by remember { mutableStateOf("WHITE") }
+    var selectedStylePreset by remember { mutableStateOf("SCIFI") }
 
     var themeExpanded by remember { mutableStateOf(false) }
-    var bgExpanded by remember { mutableStateOf(false) }
+    var styleExpanded by remember { mutableStateOf(false) }
+
+    val isNameValid = cityName.isNotBlank()
+    val isCodeValid = cityCode.length == 4
 
     Column(
         modifier = Modifier
@@ -52,8 +54,17 @@ fun CreateCityScreen(
             value = cityName,
             onValueChange = { cityName = it },
             label = { Text("Stadtname") },
+            isError = !isNameValid,
             modifier = Modifier.fillMaxWidth()
         )
+
+        if (!isNameValid) {
+            Text(
+                "Bitte Stadtname eingeben",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         /* ---------------- SL Code ---------------- */
 
@@ -64,10 +75,19 @@ fun CreateCityScreen(
             },
             label = { Text("SL-Code (4-stellig)") },
             visualTransformation = PasswordVisualTransformation(),
+            isError = !isCodeValid,
             modifier = Modifier.fillMaxWidth()
         )
 
-        /* ---------------- Font Preset Dropdown ---------------- */
+        if (!isCodeValid) {
+            Text(
+                "Code muss genau 4 Zeichen haben",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        /* ---------------- Font Preset ---------------- */
 
         ExposedDropdownMenuBox(
             expanded = themeExpanded,
@@ -100,34 +120,33 @@ fun CreateCityScreen(
             }
         }
 
-        /* ---------------- Background Preset Dropdown ---------------- */
+        /* ---------------- Style Preset ---------------- */
 
         ExposedDropdownMenuBox(
-            expanded = bgExpanded,
-            onExpandedChange = { bgExpanded = !bgExpanded }
+            expanded = styleExpanded,
+            onExpandedChange = { styleExpanded = !styleExpanded }
         ) {
 
             OutlinedTextField(
-                value = selectedBackgroundPreset,
+                value = selectedStylePreset,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Hintergrund (Preset)") },
+                label = { Text("Stil") },
                 modifier = Modifier
                     .menuAnchor()
                     .fillMaxWidth()
             )
 
             ExposedDropdownMenu(
-                expanded = bgExpanded,
-                onDismissRequest = { bgExpanded = false }
+                expanded = styleExpanded,
+                onDismissRequest = { styleExpanded = false }
             ) {
-
-                CityBackgroundPresets.presets.forEach { preset ->
+                listOf("SCIFI", "FANTASY", "ASIA", "WESTERN").forEach { style ->
                     DropdownMenuItem(
-                        text = { Text(preset) },
+                        text = { Text(style) },
                         onClick = {
-                            selectedBackgroundPreset = preset
-                            bgExpanded = false
+                            selectedStylePreset = style
+                            styleExpanded = false
                         }
                     )
                 }
@@ -140,18 +159,17 @@ fun CreateCityScreen(
 
             Button(
                 onClick = {
-                    if (cityName.isNotBlank() && cityCode.length == 4) {
-
-                        viewModel.createCity(
-                            name = cityName.trim(),
-                            gameMasterCode = cityCode,
-                            backgroundPreset = selectedBackgroundPreset,
-                            fontPreset = selectedTheme
-                        ) { newId ->
-                            onCityCreated(newId)
-                        }
+                    viewModel.createCity(
+                        name = cityName.trim(),
+                        gameMasterCode = cityCode,
+                        backgroundPreset = "WHITE", // 🔥 Fallback (temporär)
+                        fontPreset = selectedTheme,
+                        stylePreset = selectedStylePreset
+                    ) { newId ->
+                        onCityCreated(newId)
                     }
-                }
+                },
+                enabled = isNameValid && isCodeValid
             ) {
                 Text("Erstellen")
             }

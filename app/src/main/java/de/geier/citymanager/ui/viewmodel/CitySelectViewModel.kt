@@ -26,6 +26,7 @@ class CitySelectViewModel(
         gameMasterCode: String,
         backgroundPreset: String,
         fontPreset: String,
+        stylePreset: String,
         onCreated: (String) -> Unit
     ) {
         val newId = UUID.randomUUID().toString()
@@ -35,9 +36,14 @@ class CitySelectViewModel(
             name = name,
             gameMasterCode = gameMasterCode,
             createdAt = System.currentTimeMillis(),
+
+            // Alt (noch vorhanden, aber später entfernbar)
             backgroundPreset = backgroundPreset,
             backgroundImageUri = null,
-            fontPreset = fontPreset
+
+            // Aktiv genutzt
+            fontPreset = fontPreset,
+            stylePreset = stylePreset
         )
 
         viewModelScope.launch {
