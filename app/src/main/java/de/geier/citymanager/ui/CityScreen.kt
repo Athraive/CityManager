@@ -29,6 +29,7 @@ import de.geier.citymanager.ui.map.MapViewModel
 import de.geier.citymanager.ui.map.MapViewModelFactory
 import androidx.navigation.compose.rememberNavController
 import de.geier.citymanager.ui.theme.toColorScheme
+import de.geier.citymanager.data.preferences.UserPreferences
 
 enum class CityTab {
     CITY,
@@ -51,6 +52,8 @@ fun CityScreen(
 
     val context = LocalContext.current
     val database = DatabaseProvider.getDatabase(context)
+    val userPrefs = remember { UserPreferences(context) }
+    val fontScale by userPrefs.fontScale.collectAsState(initial = 1.0f)
 
     val cityEntity by produceState<CityEntity?>(
         initialValue = null,
@@ -72,7 +75,8 @@ fun CityScreen(
     val typography = resolveTypography(
         base = MaterialTheme.typography,
         preset = cityTheme.fontPreset,
-        stylePreset = cityTheme.stylePreset
+        stylePreset = cityTheme.stylePreset,
+        fontScale = fontScale
     )
 
     val personFactionRepo = PersonFactionRepository(database.personFactionDao())

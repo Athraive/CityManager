@@ -174,7 +174,7 @@ fun CityIntroScreen(
                 minLines = 4
             )
         } else if (description.isNotBlank()) {
-            Text(description)
+            Text(description, style = MaterialTheme.typography.bodyMedium)
         }
 
         /* ---------- SAVE ---------- */
@@ -221,9 +221,17 @@ private fun EditableField(
             modifier = Modifier.fillMaxWidth()
         )
     } else if (value.isNotBlank()) {
-        Row {
-            Text("$label: ", modifier = Modifier.width(140.dp))
-            Text(value)
+
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

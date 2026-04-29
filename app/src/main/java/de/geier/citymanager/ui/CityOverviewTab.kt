@@ -9,6 +9,8 @@ import androidx.navigation.compose.*
 import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.map.MapViewModel
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun CityOverviewTab(
@@ -148,9 +150,10 @@ private fun StadtTabs(
         Route.STADTGESCHICHTE to "Stadtgeschichte"
     )
 
-    TabRow(
+    ScrollableTabRow(
         selectedTabIndex =
-            tabs.indexOfFirst { it.first == currentRoute }.coerceAtLeast(0)
+            tabs.indexOfFirst { it.first == currentRoute }.coerceAtLeast(0),
+        edgePadding = 8.dp
     ) {
         tabs.forEach { (route, title) ->
             Tab(
@@ -165,7 +168,14 @@ private fun StadtTabs(
                         }
                     }
                 },
-                text = { Text(title) }
+                text = {
+                    Text(
+                        text = title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
             )
         }
     }

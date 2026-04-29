@@ -7,18 +7,36 @@ import androidx.compose.ui.unit.sp
 fun resolveTypography(
     base: Typography,
     preset: FontPreset,
-    stylePreset: CityStylePreset
+    stylePreset: CityStylePreset,
+    fontScale: Float
 ): Typography {
 
-    val fontFamily = when (preset) {
+    val headlineFont = when (preset) {
         FontPreset.DEFAULT -> FontFamily.Default
-        FontPreset.MEDIEVAL -> FontFamily.Serif
-        FontPreset.SCIFI -> FontFamily.Monospace
-        FontPreset.WESTERN -> FontFamily.Serif
-        FontPreset.ASIA -> FontFamily.SansSerif
+        FontPreset.MEDIEVAL -> MedievalFont
+        FontPreset.SCIFI -> ScifiFont
+        FontPreset.WESTERN -> WesternFont
+        FontPreset.ASIA -> AsiaFont
     }
 
-    // STYLE-EINFLUSS (angepasst auf neue Presets)
+    val bodyFont = FontFamily.Default
+
+    val headlineScale = when (preset) {
+        FontPreset.SCIFI -> 1.0f
+        FontPreset.MEDIEVAL -> 1.1f
+        FontPreset.WESTERN -> 1.05f
+        FontPreset.ASIA -> 1.15f
+        FontPreset.DEFAULT -> 1.0f
+    }
+
+    val titleScale = when (preset) {
+        FontPreset.SCIFI -> 1.0f
+        FontPreset.MEDIEVAL -> 1.08f
+        FontPreset.WESTERN -> 1.05f
+        FontPreset.ASIA -> 1.1f
+        FontPreset.DEFAULT -> 1.0f
+    }
+
     val headlineSpacing = when (stylePreset) {
         CityStylePreset.URBAN_GREY -> 1.5.sp
         CityStylePreset.PARCHEMENT -> 0.3.sp
@@ -27,33 +45,78 @@ fun resolveTypography(
     }
 
     return Typography(
-        displayLarge = base.displayLarge.copy(fontFamily = fontFamily),
-        displayMedium = base.displayMedium.copy(fontFamily = fontFamily),
-        displaySmall = base.displaySmall.copy(fontFamily = fontFamily),
 
+        /* ---------------- Display ---------------- */
+        displayLarge = base.displayLarge.copy(
+            fontFamily = headlineFont,
+            fontSize = base.displayLarge.fontSize * fontScale
+        ),
+        displayMedium = base.displayMedium.copy(
+            fontFamily = headlineFont,
+            fontSize = base.displayMedium.fontSize * fontScale
+        ),
+        displaySmall = base.displaySmall.copy(
+            fontFamily = headlineFont,
+            fontSize = base.displaySmall.fontSize * fontScale
+        ),
+
+        /* ---------------- Headlines ---------------- */
         headlineLarge = base.headlineLarge.copy(
-            fontFamily = fontFamily,
-            letterSpacing = headlineSpacing
+            fontFamily = headlineFont,
+            letterSpacing = headlineSpacing,
+            fontSize = base.headlineLarge.fontSize * headlineScale * fontScale
         ),
         headlineMedium = base.headlineMedium.copy(
-            fontFamily = fontFamily,
-            letterSpacing = headlineSpacing
+            fontFamily = headlineFont,
+            letterSpacing = headlineSpacing,
+            fontSize = base.headlineMedium.fontSize * headlineScale * fontScale
         ),
         headlineSmall = base.headlineSmall.copy(
-            fontFamily = fontFamily,
-            letterSpacing = headlineSpacing
+            fontFamily = headlineFont,
+            letterSpacing = headlineSpacing,
+            fontSize = base.headlineSmall.fontSize * headlineScale * fontScale
         ),
 
-        titleLarge = base.titleLarge.copy(fontFamily = fontFamily),
-        titleMedium = base.titleMedium.copy(fontFamily = fontFamily),
-        titleSmall = base.titleSmall.copy(fontFamily = fontFamily),
+        /* ---------------- Titles ---------------- */
+        titleLarge = base.titleLarge.copy(
+            fontFamily = headlineFont,
+            fontSize = base.titleLarge.fontSize * titleScale * fontScale
+        ),
+        titleMedium = base.titleMedium.copy(
+            fontFamily = headlineFont,
+            fontSize = base.titleMedium.fontSize * titleScale * fontScale
+        ),
+        titleSmall = base.titleSmall.copy(
+            fontFamily = headlineFont,
+            fontSize = base.titleSmall.fontSize * titleScale * fontScale
+        ),
 
-        bodyLarge = base.bodyLarge.copy(fontFamily = fontFamily),
-        bodyMedium = base.bodyMedium.copy(fontFamily = fontFamily),
-        bodySmall = base.bodySmall.copy(fontFamily = fontFamily),
+        /* ---------------- Body ---------------- */
+        bodyLarge = base.bodyLarge.copy(
+            fontFamily = bodyFont,
+            fontSize = base.bodyLarge.fontSize * fontScale
+        ),
+        bodyMedium = base.bodyMedium.copy(
+            fontFamily = bodyFont,
+            fontSize = base.bodyMedium.fontSize * fontScale
+        ),
+        bodySmall = base.bodySmall.copy(
+            fontFamily = bodyFont,
+            fontSize = base.bodySmall.fontSize * fontScale
+        ),
 
-        labelLarge = base.labelLarge.copy(fontFamily = fontFamily),
-        labelMedium = base.labelMedium.copy(fontFamily = fontFamily),
-        labelSmall = base.labelSmall.copy(fontFamily = fontFamily),
+        /* ---------------- Labels ---------------- */
+        labelLarge = base.labelLarge.copy(
+            fontFamily = headlineFont,
+            fontSize = base.labelLarge.fontSize * fontScale
+        ),
+        labelMedium = base.labelMedium.copy(
+            fontFamily = headlineFont,
+            fontSize = base.labelMedium.fontSize * fontScale
+        ),
+        labelSmall = base.labelSmall.copy(
+            fontFamily = headlineFont,
+            fontSize = base.labelSmall.fontSize * fontScale
+        ),
     )
 }
