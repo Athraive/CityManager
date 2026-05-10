@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import de.geier.citymanager.data.entity.CityEntity
 import de.geier.citymanager.ui.background.CityThemePresets
 import de.geier.citymanager.ui.theme.CityStylePreset
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModel
@@ -17,7 +18,11 @@ import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
 @Composable
 fun CreateCityScreen(
     onCityCreated: (String) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+
+    existingCity: CityEntity? = null,
+
+    onCityUpdated: (() -> Unit)? = null
 ) {
 
     val context = LocalContext.current
@@ -26,14 +31,23 @@ fun CreateCityScreen(
         factory = CitySelectViewModelFactory(context)
     )
 
-    var cityName by remember { mutableStateOf("") }
-    var cityCode by remember { mutableStateOf("") }
+    var cityName by remember(existingCity) {
+        mutableStateOf(existingCity?.name ?: "")
+    }
 
-    // DEFAULT entfernt → sinnvoller Startwert
-    var selectedTheme by remember { mutableStateOf("SCIFI") }
+    var cityCode by remember(existingCity) {
+        mutableStateOf(existingCity?.gameMasterCode ?: "")
+    }
 
-    var selectedStylePreset by remember {
-        mutableStateOf(CityStylePreset.URBAN_GREY.name)
+    var selectedTheme by remember(existingCity) {
+        mutableStateOf(existingCity?.fontPreset ?: "SCIFI")
+    }
+
+    var selectedStylePreset by remember(existingCity) {
+        mutableStateOf(
+            existingCity?.stylePreset
+                ?: CityStylePreset.URBAN_GREY.name
+        )
     }
 
     var themeExpanded by remember { mutableStateOf(false) }
@@ -51,7 +65,12 @@ fun CreateCityScreen(
     ) {
 
         Text(
-            text = "Neue Stadt anlegen",
+            text =
+                if (existingCity == null)
+                    "Neue Stadt anlegen"
+                else
+                    "Stadt bearbeiten",
+
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -59,17 +78,27 @@ fun CreateCityScreen(
 
         OutlinedTextField(
             value = cityName,
-            onValueChange = { cityName = it },
-            label = { Text("Stadtname") },
+
+            onValueChange = {
+                cityName = it
+            },
+
+            label = {
+                Text("Stadtname")
+            },
+
             isError = !isNameValid,
+
             modifier = Modifier.fillMaxWidth()
         )
 
         if (!isNameValid) {
 
             Text(
-                "Bitte Stadtname eingeben",
+                text = "Bitte Stadtname eingeben",
+
                 color = MaterialTheme.colorScheme.error,
+
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -83,9 +112,12 @@ fun CreateCityScreen(
                 if (it.length <= 4) cityCode = it
             },
 
-            label = { Text("SL-Code (4-stellig)") },
+            label = {
+                Text("SL-Code (4-stellig)")
+            },
 
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation =
+                PasswordVisualTransformation(),
 
             isError = !isCodeValid,
 
@@ -95,8 +127,10 @@ fun CreateCityScreen(
         if (!isCodeValid) {
 
             Text(
-                "Code muss genau 4 Zeichen haben",
+                text = "Code muss genau 4 Zeichen haben",
+
                 color = MaterialTheme.colorScheme.error,
+
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -105,15 +139,24 @@ fun CreateCityScreen(
 
         ExposedDropdownMenuBox(
             expanded = themeExpanded,
-            onExpandedChange = { themeExpanded = !themeExpanded }
+
+            onExpandedChange = {
+                themeExpanded = !themeExpanded
+            }
         ) {
 
             OutlinedTextField(
+
                 value = when (selectedTheme) {
-                    "SCIFI" -> "Scifi"
-                    "WESTERN" -> "Western"
-                    "ASIA" -> "Asia"
-                    "MEDIEVAL" -> "Medieval"
+
+                    "SCIFI" -> "Cyber Tech"
+
+                    "WESTERN" -> "Frontier"
+
+                    "ASIA" -> "Sakura"
+
+                    "MEDIEVAL" -> "Kingdom"
+
                     else -> selectedTheme
                 },
 
@@ -121,7 +164,9 @@ fun CreateCityScreen(
 
                 readOnly = true,
 
-                label = { Text("Schriftstil") },
+                label = {
+                    Text("Schriftstil")
+                },
 
                 modifier = Modifier
                     .menuAnchor()
@@ -130,17 +175,31 @@ fun CreateCityScreen(
 
             ExposedDropdownMenu(
                 expanded = themeExpanded,
-                onDismissRequest = { themeExpanded = false }
+
+                onDismissRequest = {
+                    themeExpanded = false
+                }
             ) {
 
                 CityThemePresets.presets
                     .filter { it != "modern" }
                     .forEach { theme ->
 
-                        val displayName =
-                            theme.replaceFirstChar { it.uppercase() }
+                        val displayName = when (theme) {
+
+                            "scifi" -> "Cyber Tech"
+
+                            "western" -> "Frontier"
+
+                            "asia" -> "Sakura"
+
+                            "medieval" -> "Kingdom"
+
+                            else -> theme
+                        }
 
                         DropdownMenuItem(
+
                             text = {
                                 Text(displayName)
                             },
@@ -148,10 +207,15 @@ fun CreateCityScreen(
                             onClick = {
 
                                 selectedTheme = when (theme) {
+
                                     "scifi" -> "SCIFI"
+
                                     "western" -> "WESTERN"
+
                                     "asia" -> "ASIA"
+
                                     "medieval" -> "MEDIEVAL"
+
                                     else -> "SCIFI"
                                 }
 
@@ -166,18 +230,33 @@ fun CreateCityScreen(
 
         ExposedDropdownMenuBox(
             expanded = styleExpanded,
-            onExpandedChange = { styleExpanded = !styleExpanded }
+
+            onExpandedChange = {
+                styleExpanded = !styleExpanded
+            }
         ) {
 
             OutlinedTextField(
+
                 value = when (selectedStylePreset) {
 
-                    CityStylePreset.URBAN_GREY.name -> "Urban Grey"
-                    CityStylePreset.PARCHEMENT.name -> "Old Parchement"
-                    CityStylePreset.BLOSSOM.name -> "Cherry Blossom"
-                    CityStylePreset.DUST.name -> "Dusty Road"
-                    CityStylePreset.FILM_NOIR.name -> "Film Noir"
-                    CityStylePreset.NEON_MATRIX.name -> "Neon Matrix"
+                    CityStylePreset.URBAN_GREY.name ->
+                        "Urban Grey"
+
+                    CityStylePreset.PARCHEMENT.name ->
+                        "Old Parchement"
+
+                    CityStylePreset.BLOSSOM.name ->
+                        "Cherry Blossom"
+
+                    CityStylePreset.DUST.name ->
+                        "Dusty Road"
+
+                    CityStylePreset.FILM_NOIR.name ->
+                        "Film Noir"
+
+                    CityStylePreset.NEON_MATRIX.name ->
+                        "Neon Matrix"
 
                     else -> selectedStylePreset
                 },
@@ -186,7 +265,9 @@ fun CreateCityScreen(
 
                 readOnly = true,
 
-                label = { Text("Farbschema") },
+                label = {
+                    Text("Farbschema")
+                },
 
                 modifier = Modifier
                     .menuAnchor()
@@ -195,7 +276,10 @@ fun CreateCityScreen(
 
             ExposedDropdownMenu(
                 expanded = styleExpanded,
-                onDismissRequest = { styleExpanded = false }
+
+                onDismissRequest = {
+                    styleExpanded = false
+                }
             ) {
 
                 CityStylePreset.entries.forEach { style ->
@@ -241,31 +325,63 @@ fun CreateCityScreen(
         /* ---------------- Buttons ---------------- */
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement =
+                Arrangement.spacedBy(12.dp)
         ) {
 
             Button(
+
                 onClick = {
 
-                    viewModel.createCity(
-                        name = cityName.trim(),
-                        gameMasterCode = cityCode,
+                    if (existingCity == null) {
 
-                        backgroundPreset = "WHITE",
+                        /* ---------------- CREATE ---------------- */
 
-                        fontPreset = selectedTheme,
-                        stylePreset = selectedStylePreset
+                        viewModel.createCity(
+                            name = cityName.trim(),
 
-                    ) { newId ->
+                            gameMasterCode = cityCode,
 
-                        onCityCreated(newId)
+                            backgroundPreset = "WHITE",
+
+                            fontPreset = selectedTheme,
+
+                            stylePreset = selectedStylePreset
+
+                        ) { newId ->
+
+                            onCityCreated(newId)
+                        }
+
+                    } else {
+
+                        /* ---------------- UPDATE ---------------- */
+
+                        viewModel.saveCity(
+                            existingCity.copy(
+                                name = cityName.trim(),
+
+                                gameMasterCode = cityCode,
+
+                                fontPreset = selectedTheme,
+
+                                stylePreset = selectedStylePreset
+                            )
+                        )
+
+                        onCityUpdated?.invoke()
                     }
                 },
 
                 enabled = isNameValid && isCodeValid
             ) {
 
-                Text("Erstellen")
+                Text(
+                    if (existingCity == null)
+                        "Erstellen"
+                    else
+                        "Speichern"
+                )
             }
 
             OutlinedButton(

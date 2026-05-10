@@ -52,6 +52,14 @@ class CitySelectViewModel(
         }
     }
 
+    fun saveCity(city: CityEntity) {
+
+        viewModelScope.launch {
+
+            repository.save(city)
+        }
+    }
+
     fun deleteCity(cityId: String) {
         viewModelScope.launch {
             repository.deleteCity(cityId)

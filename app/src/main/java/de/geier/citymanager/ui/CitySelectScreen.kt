@@ -17,8 +17,10 @@ import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
 @Composable
 fun CitySelectScreen(
     onCitySelected: (String) -> Unit,
-    onCreateCity: () -> Unit
+    onCreateCity: () -> Unit,
+    onEditCity: (String) -> Unit
 ) {
+
     val context = LocalContext.current
 
     val viewModel: CitySelectViewModel = viewModel(
@@ -45,20 +47,33 @@ fun CitySelectScreen(
         ) {
 
             items(cities) { city ->
+
                 CityItem(
                     city = city,
-                    onEnter = { onCitySelected(city.id) },
-                    onDelete = { viewModel.deleteCity(city.id) }
+
+                    onEnter = {
+                        onCitySelected(city.id)
+                    },
+
+                    onEdit = {
+                        onEditCity(city.id)
+                    },
+
+                    onDelete = {
+                        viewModel.deleteCity(city.id)
+                    }
                 )
             }
 
             item {
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedButton(
                     onClick = onCreateCity,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+
                     Text("➕ Neue Stadt anlegen")
                 }
             }
@@ -70,16 +85,37 @@ fun CitySelectScreen(
 private fun CityItem(
     city: CityEntity,
     onEnter: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+
+    var showEditDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var enteredCode by remember {
+        mutableStateOf("")
+    }
+
+    var codeError by remember {
+        mutableStateOf(false)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
+
             horizontalArrangement = Arrangement.SpaceBetween,
+
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -88,16 +124,235 @@ private fun CityItem(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
 
-                TextButton(onClick = onEnter) {
+                TextButton(
+                    onClick = onEnter
+                ) {
                     Text("Betreten")
                 }
 
-                TextButton(onClick = onDelete) {
+                TextButton(
+                    onClick = {
+                        enteredCode = ""
+                        codeError = false
+                        showEditDialog = true
+                    }
+                ) {
+                    Text("Bearbeiten")
+                }
+
+                TextButton(
+                    onClick = {
+                        enteredCode = ""
+                        codeError = false
+                        showDeleteDialog = true
+                    }
+                ) {
                     Text("Löschen")
                 }
             }
         }
+    }
+
+    /* ---------------------------------------------------
+     * EDIT DIALOG
+     * --------------------------------------------------- */
+
+    if (showEditDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showEditDialog = false
+            },
+
+            title = {
+                Text("Stadt bearbeiten")
+            },
+
+            text = {
+
+                Column {
+
+                    Text(
+                        "Bitte SL-Code eingeben."
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = enteredCode,
+
+                        onValueChange = {
+                            enteredCode = it
+                            codeError = false
+                        },
+
+                        label = {
+                            Text("SL-Code")
+                        },
+
+                        isError = codeError,
+
+                        singleLine = true
+                    )
+
+                    if (codeError) {
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text = "Falscher Code",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        if (enteredCode == city.gameMasterCode) {
+
+                            showEditDialog = false
+                            onEdit()
+
+                        } else {
+
+                            codeError = true
+                        }
+                    }
+                ) {
+                    Text("Bestätigen")
+                }
+            },
+
+            dismissButton = {
+
+                OutlinedButton(
+                    onClick = {
+                        showEditDialog = false
+                    }
+                ) {
+                    Text("Abbrechen")
+                }
+            }
+        )
+    }
+
+    /* ---------------------------------------------------
+     * DELETE DIALOG
+     * --------------------------------------------------- */
+
+    if (showDeleteDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showDeleteDialog = false
+            },
+
+            title = {
+                Text("Stadt löschen")
+            },
+
+            text = {
+
+                Column {
+
+                    Text(
+                        "Diese Aktion kann nicht rückgängig gemacht werden."
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        "Bitte SL-Code eingeben, um die Stadt zu löschen."
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = enteredCode,
+
+                        onValueChange = {
+                            enteredCode = it
+                            codeError = false
+                        },
+
+                        label = {
+                            Text("SL-Code")
+                        },
+
+                        isError = codeError,
+
+                        singleLine = true
+                    )
+
+                    if (codeError) {
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text = "Falscher Code",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+
+            confirmButton = {
+
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor =
+                            MaterialTheme.colorScheme.error
+                    ),
+
+                    onClick = {
+
+                        if (enteredCode == city.gameMasterCode) {
+
+                            showDeleteDialog = false
+                            onDelete()
+
+                        } else {
+
+                            codeError = true
+                        }
+                    }
+                ) {
+                    Text("Löschen")
+                }
+            },
+
+            dismissButton = {
+
+                OutlinedButton(
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Abbrechen")
+                }
+            }
+        )
     }
 }
