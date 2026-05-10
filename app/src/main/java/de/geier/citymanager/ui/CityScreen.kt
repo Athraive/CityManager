@@ -129,6 +129,7 @@ fun CityScreen(
                     bottomBar = {
                         if (activeDetail == null) {
                             CityBottomBar(
+                                cityName = cityEntity?.name ?: "Stadt",
                                 activeTab = activeTab,
                                 accessContext = accessContext,
                                 onTabSelected = { tab ->
