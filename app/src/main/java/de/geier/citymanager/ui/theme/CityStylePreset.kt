@@ -4,7 +4,9 @@ enum class CityStylePreset {
     URBAN_GREY,
     PARCHEMENT,
     BLOSSOM,
-    DUST;
+    DUST,
+    FILM_NOIR,
+    NEON_MATRIX;
 
     companion object {
         fun from(value: String?): CityStylePreset =

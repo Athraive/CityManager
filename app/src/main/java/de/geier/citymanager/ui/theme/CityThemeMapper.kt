@@ -70,5 +70,31 @@ fun CityTheme.toColorScheme(): ColorScheme {
             onBackground = Color(0xFFF3E7D8),
             onSurface = Color(0xFFF3E7D8)
         )
+
+        CityStylePreset.FILM_NOIR -> darkColorScheme(
+            primary = Color(0xFFE0E0E0),
+            secondary = Color(0xFFB0B0B0),
+            tertiary = Color(0xFFF5F5F5),
+
+            background = Color(0xFF050505),
+            surface = Color(0xFF111111),
+
+            onPrimary = Color.Black,
+            onBackground = Color(0xFFF2F2F2),
+            onSurface = Color(0xFFF2F2F2)
+        )
+
+        CityStylePreset.NEON_MATRIX -> darkColorScheme(
+            primary = Color(0xFF00FF66),
+            secondary = Color(0xFF00CC55),
+            tertiary = Color(0xFF88FFAA),
+
+            background = Color(0xFF020402),
+            surface = Color(0xFF0A120A),
+
+            onPrimary = Color.Black,
+            onBackground = Color(0xFFB8FFC8),
+            onSurface = Color(0xFFB8FFC8)
+        )
     }
 }
