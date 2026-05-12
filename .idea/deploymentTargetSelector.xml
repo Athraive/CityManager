@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="CityManager">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-04-29T18:24:01.189588900Z">
+        <DropdownSelection timestamp="2026-05-12T18:19:50.704147500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=ae974f4e" />
