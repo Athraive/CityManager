@@ -149,13 +149,13 @@ fun CreateCityScreen(
 
                 value = when (selectedTheme) {
 
-                    "SCIFI" -> "Cyber Tech"
+                    "SCIFI" -> "Future World"
 
-                    "WESTERN" -> "Frontier"
+                    "WESTERN" -> "Western Frontier"
 
-                    "ASIA" -> "Sakura"
+                    "ASIA" -> "Jade Empire"
 
-                    "MEDIEVAL" -> "Kingdom"
+                    "MEDIEVAL" -> "Old Kingdom"
 
                     else -> selectedTheme
                 },
@@ -187,13 +187,13 @@ fun CreateCityScreen(
 
                         val displayName = when (theme) {
 
-                            "scifi" -> "Cyber Tech"
+                            "scifi" -> "Future Tech"
 
-                            "western" -> "Frontier"
+                            "western" -> "Western Frontier"
 
-                            "asia" -> "Sakura"
+                            "asia" -> "Jade Empire"
 
-                            "medieval" -> "Kingdom"
+                            "medieval" -> "Old Kingdom"
 
                             else -> theme
                         }

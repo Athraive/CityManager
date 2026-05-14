@@ -1,5 +1,7 @@
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,10 +9,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import de.geier.citymanager.R
 import de.geier.citymanager.data.entity.CityEntity
+import de.geier.citymanager.ui.theme.AsiaFont
+import de.geier.citymanager.ui.theme.CityStylePreset
+import de.geier.citymanager.ui.theme.FontPreset
+import de.geier.citymanager.ui.theme.MedievalFont
+import de.geier.citymanager.ui.theme.ScifiFont
+import de.geier.citymanager.ui.theme.WesternFont
+import de.geier.citymanager.ui.theme.displayName
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModel
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
 
@@ -29,52 +45,81 @@ fun CitySelectScreen(
 
     val cities by viewModel.cities.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
 
-        Text(
-            text = "Stadt auswählen",
-            style = MaterialTheme.typography.headlineMedium
+        Image(
+            painter = painterResource(
+                id = R.drawable.start_background
+            ),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.32f)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Color.Black.copy(alpha = 0.25f)
+                )
+        )
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
 
-            items(cities) { city ->
+            Text(
+                text = "Stadt auswählen",
+                style = MaterialTheme.typography.headlineMedium
+            )
 
-                CityItem(
-                    city = city,
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
-                    onEnter = {
-                        onCitySelected(city.id)
-                    },
+            LazyColumn(
+                verticalArrangement =
+                    Arrangement.spacedBy(16.dp)
+            ) {
 
-                    onEdit = {
-                        onEditCity(city.id)
-                    },
+                items(cities) { city ->
 
-                    onDelete = {
-                        viewModel.deleteCity(city.id)
+                    CityItem(
+                        city = city,
+
+                        onEnter = {
+                            onCitySelected(city.id)
+                        },
+
+                        onEdit = {
+                            onEditCity(city.id)
+                        },
+
+                        onDelete = {
+                            viewModel.deleteCity(city.id)
+                        }
+                    )
+                }
+
+                item {
+
+                    Spacer(
+                        modifier = Modifier.height(16.dp)
+                    )
+
+                    OutlinedButton(
+                        onClick = onCreateCity,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        Text("➕ Neue Stadt anlegen")
                     }
-                )
-            }
-
-            item {
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedButton(
-                    onClick = onCreateCity,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    Text("➕ Neue Stadt anlegen")
                 }
             }
         }
@@ -88,6 +133,58 @@ private fun CityItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+
+    val fontPreset =
+        FontPreset.from(city.fontPreset)
+
+    val stylePreset =
+        CityStylePreset.from(city.stylePreset)
+
+    val headlineFont = when (fontPreset) {
+
+        FontPreset.DEFAULT ->
+            FontFamily.Default
+
+        FontPreset.SCIFI ->
+            ScifiFont
+
+        FontPreset.WESTERN ->
+            WesternFont
+
+        FontPreset.ASIA ->
+            AsiaFont
+
+        FontPreset.MEDIEVAL ->
+            MedievalFont
+    }
+
+    val headlineSpacing = when (stylePreset) {
+
+        CityStylePreset.NEON_MATRIX -> 2.sp
+
+        CityStylePreset.URBAN_GREY -> 1.5.sp
+
+        CityStylePreset.DUST -> 0.8.sp
+
+        CityStylePreset.FILM_NOIR -> 0.2.sp
+
+        CityStylePreset.PARCHEMENT -> 0.3.sp
+
+        CityStylePreset.BLOSSOM -> 0.sp
+    }
+
+    val headlineScale = when (fontPreset) {
+
+        FontPreset.DEFAULT -> 1.0f
+
+        FontPreset.SCIFI -> 1.0f
+
+        FontPreset.WESTERN -> 1.03f
+
+        FontPreset.ASIA -> 1.08f
+
+        FontPreset.MEDIEVAL -> 1.15f
+    }
 
     var showEditDialog by remember {
         mutableStateOf(false)
@@ -106,33 +203,72 @@ private fun CityItem(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth(),
+
+        onClick = {
+            onEnter()
+        },
+
+        colors = CardDefaults.cardColors(
+            containerColor =
+                MaterialTheme.colorScheme.surface.copy(
+                    alpha = 0.88f
+                )
+        )
     ) {
 
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-
-            horizontalArrangement = Arrangement.SpaceBetween,
-
-            verticalAlignment = Alignment.CenterVertically
+                .padding(20.dp)
         ) {
 
             Text(
                 text = city.name,
-                style = MaterialTheme.typography.titleMedium
+
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFamily = headlineFont,
+                    letterSpacing = headlineSpacing,
+                    fontSize =
+                        MaterialTheme.typography.headlineSmall.fontSize *
+                                headlineScale
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
+
+            Text(
+                text =
+                    "${stylePreset.displayName()} • " +
+                            fontPreset.displayName(),
+
+                style = MaterialTheme.typography.bodyMedium,
+
+                color =
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.End
             ) {
-
-                TextButton(
-                    onClick = onEnter
-                ) {
-                    Text("Betreten")
-                }
 
                 TextButton(
                     onClick = {
