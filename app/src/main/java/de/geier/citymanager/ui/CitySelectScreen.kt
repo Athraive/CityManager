@@ -5,11 +5,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +21,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import de.geier.citymanager.R
 import de.geier.citymanager.data.entity.CityEntity
 import de.geier.citymanager.ui.theme.AsiaFont
@@ -218,76 +222,131 @@ private fun CityItem(
         )
     ) {
 
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(20.dp),
+
+            verticalAlignment = Alignment.CenterVertically
         ) {
 
-            Text(
-                text = city.name,
+            Box(
+                modifier = Modifier
+                    .size(82.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant
+                    ),
 
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontFamily = headlineFont,
-                    letterSpacing = headlineSpacing,
-                    fontSize =
-                        MaterialTheme.typography.headlineSmall.fontSize *
-                                headlineScale
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
-
-            Text(
-                text =
-                    "${stylePreset.displayName()} • " +
-                            fontPreset.displayName(),
-
-                style = MaterialTheme.typography.bodyMedium,
-
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.End
+                contentAlignment = Alignment.Center
             ) {
 
-                TextButton(
-                    onClick = {
-                        enteredCode = ""
-                        codeError = false
-                        showEditDialog = true
-                    }
-                ) {
-                    Text("Bearbeiten")
-                }
+                if (city.coatOfArmsUri != null) {
 
-                TextButton(
-                    onClick = {
-                        enteredCode = ""
-                        codeError = false
-                        showDeleteDialog = true
-                    }
+                    AsyncImage(
+                        model = city.coatOfArmsUri,
+                        contentDescription = "Wappen",
+
+                        modifier = Modifier.fillMaxSize(),
+
+                        contentScale = ContentScale.Fit
+                    )
+
+                } else {
+
+                    Icon(
+                        imageVector =
+                            Icons.Default.LocationCity,
+
+                        contentDescription = null,
+
+                        modifier = Modifier.size(40.dp),
+
+                        tint =
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.width(18.dp)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+                    text = city.name,
+
+                    style =
+                        MaterialTheme.typography.headlineSmall.copy(
+                            fontFamily = headlineFont,
+                            letterSpacing = headlineSpacing,
+
+                            fontSize =
+                                MaterialTheme.typography
+                                    .headlineSmall
+                                    .fontSize * headlineScale
+                        ),
+
+                    color =
+                        MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(
+                    modifier = Modifier.height(6.dp)
+                )
+
+                Text(
+                    text =
+                        "${stylePreset.displayName()} • " +
+                                fontPreset.displayName(),
+
+                    style = MaterialTheme.typography.bodyMedium,
+
+                    color =
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
+
+                HorizontalDivider(
+                    color =
+                        MaterialTheme.colorScheme.outlineVariant
+                )
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.End
                 ) {
-                    Text("Löschen")
+
+                    TextButton(
+                        onClick = {
+                            enteredCode = ""
+                            codeError = false
+                            showEditDialog = true
+                        }
+                    ) {
+                        Text("Bearbeiten")
+                    }
+
+                    TextButton(
+                        onClick = {
+                            enteredCode = ""
+                            codeError = false
+                            showDeleteDialog = true
+                        }
+                    ) {
+                        Text("Löschen")
+                    }
                 }
             }
         }
