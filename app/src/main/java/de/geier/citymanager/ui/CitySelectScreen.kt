@@ -33,6 +33,7 @@ import de.geier.citymanager.ui.theme.WesternFont
 import de.geier.citymanager.ui.theme.displayName
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModel
 import de.geier.citymanager.ui.viewmodel.CitySelectViewModelFactory
+import de.geier.citymanager.ui.components.PinCodeField
 
 @Composable
 fun CitySelectScreen(
@@ -380,21 +381,13 @@ private fun CityItem(
                         modifier = Modifier.height(12.dp)
                     )
 
-                    OutlinedTextField(
+                    PinCodeField(
                         value = enteredCode,
 
                         onValueChange = {
                             enteredCode = it
                             codeError = false
-                        },
-
-                        label = {
-                            Text("SL-Code")
-                        },
-
-                        isError = codeError,
-
-                        singleLine = true
+                        }
                     )
 
                     if (codeError) {
@@ -425,6 +418,7 @@ private fun CityItem(
                         } else {
 
                             codeError = true
+                            enteredCode = ""
                         }
                     }
                 ) {
@@ -481,21 +475,13 @@ private fun CityItem(
                         modifier = Modifier.height(12.dp)
                     )
 
-                    OutlinedTextField(
+                    PinCodeField(
                         value = enteredCode,
 
                         onValueChange = {
                             enteredCode = it
                             codeError = false
-                        },
-
-                        label = {
-                            Text("SL-Code")
-                        },
-
-                        isError = codeError,
-
-                        singleLine = true
+                        }
                     )
 
                     if (codeError) {
@@ -531,6 +517,7 @@ private fun CityItem(
                         } else {
 
                             codeError = true
+                            enteredCode = ""
                         }
                     }
                 ) {

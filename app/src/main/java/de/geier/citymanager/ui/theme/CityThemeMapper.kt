@@ -25,76 +25,121 @@ fun CityEntity.toCityTheme(): CityTheme =
  * Theme → Colors
  * --------------------------------------------------- */
 fun CityTheme.toColorScheme(): ColorScheme {
+
     return when (stylePreset) {
 
+        /* =====================================================
+         * URBAN GREY
+         * ===================================================== */
+
         CityStylePreset.URBAN_GREY -> darkColorScheme(
-            primary = Color(0xFF8FA3B0),
-            secondary = Color(0xFF5F6F7A),
-            tertiary = Color(0xFFB0C4D4),
-            background = Color(0xFF0F1418),
-            surface = Color(0xFF1A2228),
+
+            background = Color(0xFF111417),
+            surface = Color(0xFF1C2328),
+
+            primary = Color(0xFF7F919C),
+            secondary = Color(0xFF56636B),
+            tertiary = Color(0xFFA8B8C2),
+
             onPrimary = Color.Black,
-            onBackground = Color(0xFFE6EEF3),
-            onSurface = Color(0xFFE6EEF3)
+
+            onBackground = Color(0xFFF0F2F3),
+            onSurface = Color(0xFFF0F2F3)
         )
+
+        /* =====================================================
+         * WORN PARCHMENT
+         * ===================================================== */
 
         CityStylePreset.PARCHEMENT -> darkColorScheme(
-            primary = Color(0xFFD6C5A3),
-            secondary = Color(0xFFA89F91),
-            tertiary = Color(0xFFE8DFC8),
-            background = Color(0xFF1B1A17),
-            surface = Color(0xFF2A2823),
+
+            background = Color(0xFF1E1A16),
+            surface = Color(0xFF322920),
+
+            primary = Color(0xFFD7C19A),
+            secondary = Color(0xFFA8906D),
+            tertiary = Color(0xFFE9D9BF),
+
             onPrimary = Color.Black,
-            onBackground = Color(0xFFF2EDE3),
-            onSurface = Color(0xFFF2EDE3)
+
+            onBackground = Color(0xFFF5EBDD),
+            onSurface = Color(0xFFF5EBDD)
         )
+
+        /* =====================================================
+         * CHERRY BLOSSOM
+         * ===================================================== */
 
         CityStylePreset.BLOSSOM -> darkColorScheme(
-            primary = Color(0xFFBFA2DB),
-            secondary = Color(0xFF8C6FA5),
-            tertiary = Color(0xFFE8D8F5),
-            background = Color(0xFF141018),
-            surface = Color(0xFF201A26),
+
+            background = Color(0xFF181218),
+            surface = Color(0xFF2A1F2A),
+
+            primary = Color(0xFFD7B6C9),
+            secondary = Color(0xFFA98099),
+            tertiary = Color(0xFFF0D9E4),
+
             onPrimary = Color.Black,
-            onBackground = Color(0xFFF1E9F7),
-            onSurface = Color(0xFFF1E9F7)
+
+            onBackground = Color(0xFFFFEEF5),
+            onSurface = Color(0xFFFFEEF5)
         )
+
+        /* =====================================================
+         * DUSTY ROAD
+         * ===================================================== */
 
         CityStylePreset.DUST -> darkColorScheme(
-            primary = Color(0xFFC2A27A),
-            secondary = Color(0xFF8E6E4A),
-            tertiary = Color(0xFFE0C7A2),
-            background = Color(0xFF1A1410),
-            surface = Color(0xFF2A211A),
+
+            background = Color(0xFF1B140F),
+            surface = Color(0xFF30231A),
+
+            primary = Color(0xFFC8A67A),
+            secondary = Color(0xFF8C6947),
+            tertiary = Color(0xFFE3C49D),
+
             onPrimary = Color.Black,
-            onBackground = Color(0xFFF3E7D8),
-            onSurface = Color(0xFFF3E7D8)
+
+            onBackground = Color(0xFFF6E7D5),
+            onSurface = Color(0xFFF6E7D5)
         )
+
+        /* =====================================================
+         * FILM NOIR
+         * ===================================================== */
 
         CityStylePreset.FILM_NOIR -> darkColorScheme(
-            primary = Color(0xFFE0E0E0),
-            secondary = Color(0xFFB0B0B0),
-            tertiary = Color(0xFFF5F5F5),
 
             background = Color(0xFF050505),
-            surface = Color(0xFF111111),
+            surface = Color(0xFF101010),
+
+            primary = Color(0xFFD0D0D0),
+            secondary = Color(0xFF808080),
+            tertiary = Color(0xFFF0F0F0),
 
             onPrimary = Color.Black,
-            onBackground = Color(0xFFF2F2F2),
-            onSurface = Color(0xFFF2F2F2)
+
+            onBackground = Color(0xFFF5F5F5),
+            onSurface = Color(0xFFF5F5F5)
         )
 
+        /* =====================================================
+         * NEON MATRIX
+         * ===================================================== */
+
         CityStylePreset.NEON_MATRIX -> darkColorScheme(
-            primary = Color(0xFF00FF66),
-            secondary = Color(0xFF00CC55),
-            tertiary = Color(0xFF88FFAA),
 
             background = Color(0xFF020402),
-            surface = Color(0xFF0A120A),
+            surface = Color(0xFF0B120B),
+
+            primary = Color(0xFF3CFF88),
+            secondary = Color(0xFF1FAF5C),
+            tertiary = Color(0xFF8DFFC0),
 
             onPrimary = Color.Black,
-            onBackground = Color(0xFFB8FFC8),
-            onSurface = Color(0xFFB8FFC8)
+
+            onBackground = Color(0xFFE4FFE9),
+            onSurface = Color(0xFFE4FFE9)
         )
     }
 }
