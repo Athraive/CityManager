@@ -12,7 +12,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +30,7 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
 import kotlin.math.max
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.DashboardCustomize
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -170,7 +170,6 @@ fun CityMapScreen(
 
     /* ---------------- MAP STATE ---------------- */
 
-    var fabMenuOpen by remember { mutableStateOf(false) }
 
     var placementMode by remember { mutableStateOf(false) }
     var moveMode by remember { mutableStateOf(false) }
@@ -353,19 +352,28 @@ fun CityMapScreen(
 
             /* ---------------- MAIN FAB ---------------- */
 
-            FloatingActionButton(
-                onClick = {
-                    fabMenuOpen = !fabMenuOpen
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 96.dp)
-                    .zIndex(2f)
-            ) {
-                Icon(
-                    Icons.Default.Build,
-                    contentDescription = null
-                )
+            if (accessContext.canEdit()) {
+
+                FloatingActionButton(
+                    onClick = {
+                        activePanel =
+                            if (activePanel == MapPanel.TOOLBOX)
+                                MapPanel.NONE
+                            else
+                                MapPanel.TOOLBOX
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 96.dp)
+                        .zIndex(2f),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ) {
+                    Icon(
+                        Icons.Default.DashboardCustomize,
+                        contentDescription = null
+                    )
+                }
             }
 
             /* ---------------- LAYER CONTROL ---------------- */
@@ -391,34 +399,6 @@ fun CityMapScreen(
                 )
             }
 
-            /* ---------------- FAB MENU ---------------- */
-
-            if (fabMenuOpen) {
-
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 168.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-
-
-                    if (accessContext.canEdit()) {
-                        SmallFloatingActionButton(
-                            onClick = {
-                                activePanel = MapPanel.TOOLBOX
-                                fabMenuOpen = false
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Build,
-                                contentDescription = null
-                            )
-                        }
-
-                    }
-                }
-            }
 
 
             /* ---------------- VISIBILITY PANEL ---------------- */
