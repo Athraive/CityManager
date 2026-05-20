@@ -13,7 +13,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +30,7 @@ import de.geier.citymanager.ui.navigation.Route
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import kotlin.math.max
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Layers
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -368,6 +368,29 @@ fun CityMapScreen(
                 )
             }
 
+            /* ---------------- LAYER CONTROL ---------------- */
+
+            SmallFloatingActionButton(
+                onClick = {
+                    activePanel =
+                        if (activePanel == MapPanel.VISIBILITY)
+                            MapPanel.NONE
+                        else
+                            MapPanel.VISIBILITY
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 16.dp)
+                    .zIndex(2f),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ) {
+                Icon(
+                    Icons.Default.Layers,
+                    contentDescription = null
+                )
+            }
+
             /* ---------------- FAB MENU ---------------- */
 
             if (fabMenuOpen) {
@@ -379,25 +402,8 @@ fun CityMapScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                    SmallFloatingActionButton(
-                        onClick = {
-                            activePanel =
-                                if (activePanel == MapPanel.VISIBILITY)
-                                    MapPanel.NONE
-                                else
-                                    MapPanel.VISIBILITY
-
-                            fabMenuOpen = false
-                        }
-                    ) {
-                        Icon(
-                            Icons.Default.RemoveRedEye,
-                            contentDescription = null
-                        )
-                    }
 
                     if (accessContext.canEdit()) {
-
                         SmallFloatingActionButton(
                             onClick = {
                                 activePanel = MapPanel.TOOLBOX
@@ -409,6 +415,7 @@ fun CityMapScreen(
                                 contentDescription = null
                             )
                         }
+
                     }
                 }
             }
