@@ -10,10 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.Alignment
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun EditToolboxPanel(
+    onClose: () -> Unit,
     onPinAdd: () -> Unit,
     onPinDelete: () -> Unit,
     onChangeMap: () -> Unit,
@@ -50,10 +52,24 @@ fun EditToolboxPanel(
                     .padding(20.dp)
             ) {
 
-                Text(
-                    text = "Edit-Toolbox",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text = "Edit-Toolbox",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    TextButton(
+                        onClick = onClose,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text("✕")
+                    }
+                }
 
                 Spacer(Modifier.height(24.dp))
 

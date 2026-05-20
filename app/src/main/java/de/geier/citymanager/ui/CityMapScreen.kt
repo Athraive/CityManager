@@ -33,6 +33,14 @@ import kotlin.math.max
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
+
+private enum class MapPanel {
+    NONE,
+    VISIBILITY,
+    CATEGORIES,
+    FACTIONS,
+    TOOLBOX
+}
 @Composable
 fun CityMapScreen(
     cityId: String,
@@ -70,13 +78,14 @@ fun CityMapScreen(
     var showFactions by remember { mutableStateOf(true) }
     var showNoFaction by remember { mutableStateOf(true) }
 
-    var visibilityPanelOpen by remember { mutableStateOf(false) }
+    var activePanel by remember {
+        mutableStateOf(MapPanel.NONE)
+    }
+
 
     var visibleCategoryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var visibleFactionIds by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    var showCategoryDetailPanel by remember { mutableStateOf(false) }
-    var showFactionDetailPanel by remember { mutableStateOf(false) }
 
     LaunchedEffect(poiCategories) {
         visibleCategoryIds = poiCategories.map { it.id }.toSet()
@@ -103,11 +112,9 @@ fun CityMapScreen(
                 .filter {
                     if (!showFactions) {
                         true
-                    }
-                    else if (it.factionIds.isEmpty()) {
+                    } else if (it.factionIds.isEmpty()) {
                         showNoFaction
-                    }
-                    else {
+                    } else {
                         it.factionIds.any { id -> visibleFactionIds.contains(id) }
                     }
                 }
@@ -129,7 +136,6 @@ fun CityMapScreen(
     }
 
 
-
     val basePois =
         if (!showPois)
             emptyList()
@@ -138,11 +144,9 @@ fun CityMapScreen(
                 .filter {
                     if (!showFactions) {
                         true
-                    }
-                    else if (it.factionIds.isEmpty()) {
+                    } else if (it.factionIds.isEmpty()) {
                         showNoFaction
-                    }
-                    else {
+                    } else {
                         it.factionIds.any { id -> visibleFactionIds.contains(id) }
                     }
                 }
@@ -166,7 +170,6 @@ fun CityMapScreen(
 
     /* ---------------- MAP STATE ---------------- */
 
-    var toolboxOpen by remember { mutableStateOf(false) }
     var fabMenuOpen by remember { mutableStateOf(false) }
 
     var placementMode by remember { mutableStateOf(false) }
@@ -221,12 +224,6 @@ fun CityMapScreen(
                 .clipToBounds()
                 .onSizeChanged { containerSize = it }
 
-                .pointerInput(showCategoryDetailPanel, showFactionDetailPanel) {
-                    detectTapGestures {
-                        if (showCategoryDetailPanel) showCategoryDetailPanel = false
-                        if (showFactionDetailPanel) showFactionDetailPanel = false
-                    }
-                }
 
                 .pointerInput(
                     scale,
@@ -234,11 +231,10 @@ fun CityMapScreen(
                     renderedWidth,
                     renderedHeight,
                     containerSize,
-                    showCategoryDetailPanel,
-                    showFactionDetailPanel
+                    activePanel
                 ) {
 
-                    if (!moveMode && !showCategoryDetailPanel && !showFactionDetailPanel) {
+                    if (!moveMode && activePanel == MapPanel.NONE) {
 
                         detectDragGestures { change, dragAmount ->
                             change.consume()
@@ -272,87 +268,87 @@ fun CityMapScreen(
                 }
         ) {
 
-        if (lore?.mapImageUri != null) {
-            MapContent(
-                mapImageUri = lore!!.mapImageUri!!,
-                persons = persons,
-                pois = pois,
-                containerSize = containerSize,
-                scale = scale,
-                panOffset = panOffset,
-                placementMode = placementMode,
-                moveMode = moveMode,
-                onTapNormalized = { x, y ->
-                    placementMode = false
-                    navController.navigate("add_pin/$x/$y")
-                },
-                onMovePin = { id, isPerson, x, y ->
-                    if (isPerson)
-                        cityViewModel.updatePersonCoordinates(id, x, y)
-                    else
-                        cityViewModel.updatePoiCoordinates(id, x, y)
-                },
-                onMoveFinished = { moveMode = false },
-                onRenderedSizeCalculated = { w, h ->
-                    renderedWidth = w
-                    renderedHeight = h
-                },
+            if (lore?.mapImageUri != null) {
+                MapContent(
+                    mapImageUri = lore!!.mapImageUri!!,
+                    persons = persons,
+                    pois = pois,
+                    containerSize = containerSize,
+                    scale = scale,
+                    panOffset = panOffset,
+                    placementMode = placementMode,
+                    moveMode = moveMode,
+                    onTapNormalized = { x, y ->
+                        placementMode = false
+                        navController.navigate("add_pin/$x/$y")
+                    },
+                    onMovePin = { id, isPerson, x, y ->
+                        if (isPerson)
+                            cityViewModel.updatePersonCoordinates(id, x, y)
+                        else
+                            cityViewModel.updatePoiCoordinates(id, x, y)
+                    },
+                    onMoveFinished = { moveMode = false },
+                    onRenderedSizeCalculated = { w, h ->
+                        renderedWidth = w
+                        renderedHeight = h
+                    },
 
-                // 🔥 NEU (Pflicht!)
-                selectedPersonId = selectedPersonId,
-                selectedPoiId = selectedPoiId,
+                    // 🔥 NEU (Pflicht!)
+                    selectedPersonId = selectedPersonId,
+                    selectedPoiId = selectedPoiId,
 
-                onPersonClick = {
-                    selectedPersonId = it
-                    selectedPoiId = null
-                },
-                onPoiClick = {
-                    selectedPoiId = it
-                    selectedPersonId = null
-                },
+                    onPersonClick = {
+                        selectedPersonId = it
+                        selectedPoiId = null
+                    },
+                    onPoiClick = {
+                        selectedPoiId = it
+                        selectedPersonId = null
+                    },
 
-                onPersonBubbleClick = onPersonBubbleClick,
-                onPoiBubbleClick = onPoiBubbleClick
-            )
-        }
+                    onPersonBubbleClick = onPersonBubbleClick,
+                    onPoiBubbleClick = onPoiBubbleClick
+                )
+            }
 
-        /* ---------------- ZOOM ---------------- */
+            /* ---------------- ZOOM ---------------- */
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .zIndex(1f)
-        ) {
-
-            Surface(
-                tonalElevation = 6.dp,
-                shadowElevation = 8.dp,
-                shape = RoundedCornerShape(16.dp)
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .zIndex(1f)
             ) {
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                Surface(
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp,
+                    shape = RoundedCornerShape(16.dp)
                 ) {
 
-                    Icon(Icons.Default.Search, contentDescription = null)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
 
-                    Slider(
-                        value = scale,
-                        onValueChange = {
-                            scale = it
-                            if (scale == 1f) panOffset = Offset.Zero
-                        },
-                        valueRange = 1f..5f,
-                        modifier = Modifier.weight(1f)
-                    )
+                        Icon(Icons.Default.Search, contentDescription = null)
+
+                        Slider(
+                            value = scale,
+                            onValueChange = {
+                                scale = it
+                                if (scale == 1f) panOffset = Offset.Zero
+                            },
+                            valueRange = 1f..5f,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
-        }
 
 
             /* ---------------- MAIN FAB ---------------- */
@@ -385,7 +381,12 @@ fun CityMapScreen(
 
                     SmallFloatingActionButton(
                         onClick = {
-                            visibilityPanelOpen = !visibilityPanelOpen
+                            activePanel =
+                                if (activePanel == MapPanel.VISIBILITY)
+                                    MapPanel.NONE
+                                else
+                                    MapPanel.VISIBILITY
+
                             fabMenuOpen = false
                         }
                     ) {
@@ -399,7 +400,7 @@ fun CityMapScreen(
 
                         SmallFloatingActionButton(
                             onClick = {
-                                toolboxOpen = true
+                                activePanel = MapPanel.TOOLBOX
                                 fabMenuOpen = false
                             }
                         ) {
@@ -413,241 +414,223 @@ fun CityMapScreen(
             }
 
 
+            /* ---------------- VISIBILITY PANEL ---------------- */
 
-        /* ---------------- VISIBILITY PANEL ---------------- */
+            val visibleFactionCount =
+                visibleFactionIds.size + if (showNoFaction) 1 else 0
 
-        val visibleFactionCount =
-            visibleFactionIds.size + if (showNoFaction) 1 else 0
+            val totalFactionCount =
+                factions.size + 1
 
-        val totalFactionCount =
-            factions.size + 1
+            if (activePanel == MapPanel.VISIBILITY) {
 
-        if (visibilityPanelOpen) {
-
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 240.dp)
-                    .zIndex(3f),
-                tonalElevation = 6.dp,
-                shadowElevation = 8.dp,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-
-                Column(modifier = Modifier.padding(16.dp)) {
-
-                    Text(
-                        "Sichtbarkeit",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.toggleable(
-                            value = showPersons,
-                            onValueChange = { showPersons = it }
-                        )
-                    ) {
-                        Switch(showPersons, null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Personen anzeigen")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.toggleable(
-                            value = showPois,
-                            onValueChange = { showPois = it }
-                        )
-                    ) {
-                        Switch(showPois, null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("POI anzeigen")
-                    }
-
-                    TextButton(
-                        onClick = { showCategoryDetailPanel = true },
-                        enabled = showPois,
-                        modifier = Modifier.padding(start = 40.dp)
-                    ) {
-                        Text("Kategorien (${visibleCategoryIds.size}/${poiCategories.size})")
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.toggleable(
-                            value = showFactions,
-                            onValueChange = { showFactions = it }
-                        )
-                    ) {
-                        Switch(showFactions, null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Fraktionen anzeigen")
-                    }
-
-                    TextButton(
-                        onClick = { showFactionDetailPanel = true },
-                        enabled = showFactions,
-                        modifier = Modifier.padding(start = 40.dp)
-                    ) {
-                        Text("Fraktionen ($visibleFactionCount/$totalFactionCount)")
-                    }
-                }
-            }
-        }
-
-        /* ---------------- CATEGORY PANEL ---------------- */
-
-        if (showCategoryDetailPanel) {
-
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 240.dp, end = 16.dp)
-                    .widthIn(min = 380.dp, max = 500.dp)
-                    .zIndex(4f),
-                tonalElevation = 8.dp,
-                shadowElevation = 12.dp,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-
-                Column(
+                Surface(
                     modifier = Modifier
-                        .padding(20.dp)
-                        .heightIn(max = 450.dp)
-                        .verticalScroll(rememberScrollState())
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 240.dp)
+                        .zIndex(3f),
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp,
+                    shape = RoundedCornerShape(16.dp)
                 ) {
 
-                    Text(
-                        text = "POI-Kategorien",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    poiCategories.forEach { category ->
-
-                        val checked = visibleCategoryIds.contains(category.id)
+                    Column(modifier = Modifier.padding(16.dp)) {
 
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .toggleable(
-                                    value = checked,
-                                    onValueChange = { isChecked ->
-                                        visibleCategoryIds =
-                                            if (isChecked)
-                                                visibleCategoryIds + category.id
-                                            else
-                                                visibleCategoryIds - category.id
-
-                                        showPois =
-                                            visibleCategoryIds.size == poiCategories.size
-                                    }
-                                )
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
 
                             Text(
-                                text = category.title,
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1
+                                "Sichtbarkeit",
+                                style = MaterialTheme.typography.titleMedium
                             )
 
-                            Spacer(modifier = Modifier.width(16.dp))
+                            TextButton(
+                                onClick = {
+                                    activePanel = MapPanel.NONE
+                                },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("✕")
+                            }
+                        }
 
-                            Switch(
-                                checked = checked,
-                                onCheckedChange = null
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.toggleable(
+                                value = showPersons,
+                                onValueChange = { showPersons = it }
                             )
+                        ) {
+                            Switch(showPersons, null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Personen anzeigen")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.toggleable(
+                                value = showPois,
+                                onValueChange = { showPois = it }
+                            )
+                        ) {
+                            Switch(showPois, null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("POI anzeigen")
+                        }
+
+                        TextButton(
+                            onClick = {
+                                activePanel = MapPanel.CATEGORIES
+                            },
+                            enabled = showPois,
+                            modifier = Modifier.padding(start = 40.dp)
+                        ) {
+                            Text("Kategorien (${visibleCategoryIds.size}/${poiCategories.size})")
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.toggleable(
+                                value = showFactions,
+                                onValueChange = { showFactions = it }
+                            )
+                        ) {
+                            Switch(showFactions, null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Fraktionen anzeigen")
+                        }
+
+                        TextButton(
+                            onClick = {
+                                activePanel = MapPanel.FACTIONS
+                            },
+                            enabled = showFactions,
+                            modifier = Modifier.padding(start = 40.dp)
+                        ) {
+                            Text("Fraktionen ($visibleFactionCount/$totalFactionCount)")
                         }
                     }
                 }
             }
-        }
 
-        /* ---------------- FACTION PANEL ---------------- */
 
-        if (showFactionDetailPanel) {
+            /* ---------------- CATEGORY PANEL ---------------- */
 
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 240.dp, end = 16.dp)
-                    .widthIn(min = 380.dp, max = 500.dp)
-                    .zIndex(4f),
-                tonalElevation = 8.dp,
-                shadowElevation = 12.dp,
-                shape = RoundedCornerShape(16.dp)
-            ) {
+            if (activePanel == MapPanel.CATEGORIES) {
 
-                Column(
+                Surface(
                     modifier = Modifier
-                        .padding(20.dp)
-                        .heightIn(max = 450.dp)
-                        .verticalScroll(rememberScrollState())
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 240.dp, end = 16.dp)
+                        .widthIn(min = 380.dp, max = 500.dp)
+                        .zIndex(4f),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 12.dp,
+                    shape = RoundedCornerShape(16.dp)
                 ) {
 
-                    Text(
-                        text = "Fraktionen",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .toggleable(
-                                value = showNoFaction,
-                                onValueChange = { showNoFaction = it }
-                            )
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(20.dp)
+                            .heightIn(max = 450.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
 
                         Text(
-                            text = "Ohne Fraktion",
-                            modifier = Modifier.weight(1f)
+                            text = "POI-Kategorien",
+                            style = MaterialTheme.typography.titleMedium
                         )
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        Switch(
-                            checked = showNoFaction,
-                            onCheckedChange = null
-                        )
+                        poiCategories.forEach { category ->
+
+                            val checked = visibleCategoryIds.contains(category.id)
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .toggleable(
+                                        value = checked,
+                                        onValueChange = { isChecked ->
+                                            visibleCategoryIds =
+                                                if (isChecked)
+                                                    visibleCategoryIds + category.id
+                                                else
+                                                    visibleCategoryIds - category.id
+
+                                            showPois =
+                                                visibleCategoryIds.size == poiCategories.size
+                                        }
+                                    )
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+
+                                Text(
+                                    text = category.title,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Switch(
+                                    checked = checked,
+                                    onCheckedChange = null
+                                )
+                            }
+                        }
                     }
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Divider()
-                    Spacer(modifier = Modifier.height(12.dp))
 
-                    factions.forEach { faction ->
+            /* ---------------- FACTION PANEL ---------------- */
 
-                        val checked = visibleFactionIds.contains(faction.id)
+            if (activePanel == MapPanel.FACTIONS) {
+
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 240.dp, end = 16.dp)
+                        .widthIn(min = 380.dp, max = 500.dp)
+                        .zIndex(4f),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 12.dp,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+
+                    Column(
+                        modifier = Modifier
+                            .padding(20.dp)
+                            .heightIn(max = 450.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+
+                        Text(
+                            text = "Fraktionen",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .toggleable(
-                                    value = checked,
-                                    onValueChange = { isChecked ->
-                                        visibleFactionIds =
-                                            if (isChecked)
-                                                visibleFactionIds + faction.id
-                                            else
-                                                visibleFactionIds - faction.id
-                                    }
+                                    value = showNoFaction,
+                                    onValueChange = { showNoFaction = it }
                                 )
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -655,82 +638,129 @@ fun CityMapScreen(
                         ) {
 
                             Text(
-                                text = faction.name,
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1
+                                text = "Ohne Fraktion",
+                                modifier = Modifier.weight(1f)
                             )
 
                             Spacer(modifier = Modifier.width(16.dp))
 
                             Switch(
-                                checked = checked,
+                                checked = showNoFaction,
                                 onCheckedChange = null
                             )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Divider()
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        factions.forEach { faction ->
+
+                            val checked = visibleFactionIds.contains(faction.id)
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .toggleable(
+                                        value = checked,
+                                        onValueChange = { isChecked ->
+                                            visibleFactionIds =
+                                                if (isChecked)
+                                                    visibleFactionIds + faction.id
+                                                else
+                                                    visibleFactionIds - faction.id
+                                        }
+                                    )
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+
+                                Text(
+                                    text = faction.name,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Switch(
+                                    checked = checked,
+                                    onCheckedChange = null
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        /* ---------------- TOOLBOX PANEL ---------------- */
+            /* ---------------- TOOLBOX PANEL ---------------- */
 
-        if (toolboxOpen && accessContext.canEdit()) {
+            if (
+                activePanel == MapPanel.TOOLBOX &&
+                accessContext.canEdit()
+            ) {
 
-            EditToolboxPanel(
+                EditToolboxPanel(
 
-                onPinAdd = {
-                    toolboxOpen = false
-                    placementMode = true
-                    moveMode = false
+                    onClose = {
+                        activePanel = MapPanel.NONE
+                    },
 
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            "Bitte Ort auf der Karte auswählen"
-                        )
-                    }
-                },
+                    onPinAdd = {
+                        activePanel = MapPanel.NONE
+                        placementMode = true
+                        moveMode = false
 
-                onPinDelete = {
-                    toolboxOpen = false
-                    navController.navigate(Route.MANAGE_PINS)
-                },
-
-                onChangeMap = {
-                    toolboxOpen = false
-                    confirmReplaceMap = true
-                },
-
-                onMoveStart = {
-                    toolboxOpen = false
-                    placementMode = false
-                    moveMode = true
-                }
-            )
-        }
-
-        /* ---------------- CONFIRM DIALOG ---------------- */
-
-        if (confirmReplaceMap) {
-
-            AlertDialog(
-                onDismissRequest = { confirmReplaceMap = false },
-                title = { Text("Karte wirklich ersetzen?") },
-                text = { Text("Die bestehende Karte wird überschrieben.") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            confirmReplaceMap = false
-                            imagePicker.launch(arrayOf("image/*"))
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                "Bitte Ort auf der Karte auswählen"
+                            )
                         }
-                    ) { Text("Ersetzen") }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { confirmReplaceMap = false }
-                    ) { Text("Abbrechen") }
-                }
-            )
+                    },
+
+                    onPinDelete = {
+
+                        navController.navigate(Route.MANAGE_PINS)
+                    },
+
+                    onChangeMap = {
+
+                        confirmReplaceMap = true
+                    },
+
+                    onMoveStart = {
+                        activePanel = MapPanel.NONE
+                        placementMode = false
+                        moveMode = true
+                    }
+                )
+            }
+
+            /* ---------------- CONFIRM DIALOG ---------------- */
+
+            if (confirmReplaceMap) {
+
+                AlertDialog(
+                    onDismissRequest = { confirmReplaceMap = false },
+                    title = { Text("Karte wirklich ersetzen?") },
+                    text = { Text("Die bestehende Karte wird überschrieben.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                confirmReplaceMap = false
+                                imagePicker.launch(arrayOf("image/*"))
+                            }
+                        ) { Text("Ersetzen") }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { confirmReplaceMap = false }
+                        ) { Text("Abbrechen") }
+                    }
+                )
+            }
         }
     }
 }
-}
+
