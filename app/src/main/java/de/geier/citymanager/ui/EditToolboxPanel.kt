@@ -59,10 +59,7 @@ fun EditToolboxPanel(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    Text(
-                        text = "Edit-Toolbox",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text("Edit-Toolbox")
 
                     TextButton(
                         onClick = onClose,
@@ -118,6 +115,9 @@ private fun ToolboxButton(
         shape = RoundedCornerShape(14.dp),
         colors = colors
     ) {
-        Text(text)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }

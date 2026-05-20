@@ -430,10 +430,7 @@ fun CityMapScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
 
-                            Text(
-                                "Sichtbarkeit",
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                            Text("Sichtbarkeit")
 
                             TextButton(
                                 onClick = {
@@ -471,6 +468,7 @@ fun CityMapScreen(
                             Switch(showPois, null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("POI anzeigen")
+
                         }
 
                         TextButton(
@@ -481,6 +479,7 @@ fun CityMapScreen(
                             modifier = Modifier.padding(start = 40.dp)
                         ) {
                             Text("Kategorien (${visibleCategoryIds.size}/${poiCategories.size})")
+
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -495,6 +494,7 @@ fun CityMapScreen(
                             Switch(showFactions, null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Fraktionen anzeigen")
+
                         }
 
                         TextButton(
@@ -505,6 +505,7 @@ fun CityMapScreen(
                             modifier = Modifier.padding(start = 40.dp)
                         ) {
                             Text("Fraktionen ($visibleFactionCount/$totalFactionCount)")
+
                         }
                     }
                 }
