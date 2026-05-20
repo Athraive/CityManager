@@ -1,7 +1,6 @@
 package de.geier.citymanager.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -99,23 +98,38 @@ fun MapContent(
                 translationX = panOffset.x
                 translationY = panOffset.y
             }
+
+            /* ---------------- TAPS ---------------- */
+
             .pointerInput(moveMode, placementMode) {
+
                 detectTapGestures { tap ->
 
-                    if (renderedWidth == 0f) return@detectTapGestures
+                    if (renderedWidth == 0f) {
+                        return@detectTapGestures
+                    }
 
                     val relX = tap.x - offsetX
                     val relY = tap.y - offsetY
-                    val radius = 24f
+
+                    val radius = 42f / scale
 
                     var hitId: String? = null
                     var hitIsPerson: Boolean? = null
 
                     persons.forEach {
+
                         if (it.mapX != null && it.mapY != null) {
+
                             val px = it.mapX!! * renderedWidth
                             val py = it.mapY!! * renderedHeight
-                            if (sqrt((relX - px).pow(2) + (relY - py).pow(2)) <= radius) {
+
+                            if (
+                                sqrt(
+                                    (relX - px).pow(2) +
+                                            (relY - py).pow(2)
+                                ) <= radius
+                            ) {
                                 hitId = it.id
                                 hitIsPerson = true
                             }
@@ -123,10 +137,18 @@ fun MapContent(
                     }
 
                     pois.forEach {
+
                         if (it.mapX != null && it.mapY != null) {
+
                             val px = it.mapX!! * renderedWidth
                             val py = it.mapY!! * renderedHeight
-                            if (sqrt((relX - px).pow(2) + (relY - py).pow(2)) <= radius) {
+
+                            if (
+                                sqrt(
+                                    (relX - px).pow(2) +
+                                            (relY - py).pow(2)
+                                ) <= radius
+                            ) {
                                 hitId = it.id
                                 hitIsPerson = false
                             }
@@ -134,30 +156,72 @@ fun MapContent(
                     }
 
                     if (hitId != null) {
+
                         if (hitIsPerson == true) {
-                            onPersonClick(hitId)
+
+                            if (selectedPersonId == hitId) {
+                                onPersonBubbleClick(hitId)
+                            } else {
+                                onPersonClick(hitId)
+                            }
+
                         } else {
-                            onPoiClick(hitId)
+
+                            if (selectedPoiId == hitId) {
+                                onPoiBubbleClick(hitId)
+                            } else {
+                                onPoiClick(hitId)
+                            }
                         }
+
                     } else if (placementMode) {
-                        val normX = (relX / renderedWidth).coerceIn(0f, 1f)
-                        val normY = (relY / renderedHeight).coerceIn(0f, 1f)
+
+                        val normX =
+                            (relX / renderedWidth)
+                                .coerceIn(0f, 1f)
+
+                        val normY =
+                            (relY / renderedHeight)
+                                .coerceIn(0f, 1f)
+
                         onTapNormalized(normX, normY)
                     }
                 }
             }
-            .pointerInput(moveMode, selectedPersonId, selectedPoiId) {
-                val selectedId = selectedPersonId ?: selectedPoiId
-                val isPerson = selectedPersonId != null
+
+            /* ---------------- DRAG ---------------- */
+
+            .pointerInput(
+                moveMode,
+                selectedPersonId,
+                selectedPoiId
+            ) {
+
+                val selectedId =
+                    selectedPersonId ?: selectedPoiId
+
+                val isPerson =
+                    selectedPersonId != null
 
                 if (moveMode && selectedId != null) {
-                    detectDragGestures(
-                        onDrag = { change, _ ->
-                            val relX = change.position.x - offsetX
-                            val relY = change.position.y - offsetY
 
-                            val newX = (relX / renderedWidth).coerceIn(0f, 1f)
-                            val newY = (relY / renderedHeight).coerceIn(0f, 1f)
+                    detectDragGestures(
+
+                        onDrag = { change, _ ->
+
+                            val relX =
+                                change.position.x - offsetX
+
+                            val relY =
+                                change.position.y - offsetY
+
+                            val newX =
+                                (relX / renderedWidth)
+                                    .coerceIn(0f, 1f)
+
+                            val newY =
+                                (relY / renderedHeight)
+                                    .coerceIn(0f, 1f)
 
                             onMovePin(
                                 selectedId,
@@ -166,6 +230,7 @@ fun MapContent(
                                 newY
                             )
                         },
+
                         onDragEnd = {
                             onMoveFinished()
                         }
@@ -190,65 +255,113 @@ fun MapContent(
 
         if (renderedWidth > 0f && renderedHeight > 0f) {
 
-            persons.filter { it.mapX != null && it.mapY != null }
+            /* ---------------- PERSONS ---------------- */
+
+            persons
+                .filter {
+                    it.mapX != null && it.mapY != null
+                }
                 .forEach {
-                    val x = offsetX + it.mapX!! * renderedWidth
-                    val y = offsetY + it.mapY!! * renderedHeight
+
+                    val x =
+                        offsetX + it.mapX!! * renderedWidth
+
+                    val y =
+                        offsetY + it.mapY!! * renderedHeight
 
                     Box(
                         modifier = Modifier
-                            .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                            .offset {
+                                IntOffset(
+                                    x.roundToInt(),
+                                    y.roundToInt()
+                                )
+                            }
                             .size(pinSize)
-                            .background(Color.Blue, CircleShape)
-                            .border(1.dp, Color.White, CircleShape)
+                            .background(
+                                Color(0xFF5C7FA3),
+                                CircleShape
+                            )
                     )
 
                     if (selectedPersonId == it.id) {
+
                         PinLabel(
                             name = it.name,
                             x = x,
                             y = y,
                             scale = scale,
-                            onClick = { onPersonBubbleClick(it.id) }
+                            onClick = {
+                                onPersonBubbleClick(it.id)
+                            }
                         )
                     }
                 }
 
-            pois.filter { it.mapX != null && it.mapY != null }
+            /* ---------------- POIS ---------------- */
+
+            pois
+                .filter {
+                    it.mapX != null && it.mapY != null
+                }
                 .forEach {
-                    val x = offsetX + it.mapX!! * renderedWidth
-                    val y = offsetY + it.mapY!! * renderedHeight
+
+                    val x =
+                        offsetX + it.mapX!! * renderedWidth
+
+                    val y =
+                        offsetY + it.mapY!! * renderedHeight
 
                     Box(
                         modifier = Modifier
-                            .offset { IntOffset(x.roundToInt(), y.roundToInt()) }
+                            .offset {
+                                IntOffset(
+                                    x.roundToInt(),
+                                    y.roundToInt()
+                                )
+                            }
                             .size(pinSize)
-                            .background(Color.Red, CircleShape)
-                            .border(1.dp, Color.White, CircleShape)
+                            .background(
+                                Color(0xFFA35C5C),
+                                CircleShape
+                            )
                     )
 
                     if (selectedPoiId == it.id) {
+
                         PinLabel(
                             name = it.name,
                             x = x,
                             y = y,
                             scale = scale,
-                            onClick = { onPoiBubbleClick(it.id) }
+                            onClick = {
+                                onPoiBubbleClick(it.id)
+                            }
                         )
                     }
                 }
         }
 
-        LaunchedEffect(selectedPersonId, selectedPoiId, persons, pois) {
+        LaunchedEffect(
+            selectedPersonId,
+            selectedPoiId,
+            persons,
+            pois
+        ) {
+
             println("---- DEBUG MAP ----")
             println("selectedPersonId = $selectedPersonId")
             println("selectedPoiId = $selectedPoiId")
 
             println("Persons IDs:")
-            persons.take(10).forEach { println("person.id=${it.id}") }
+            persons.take(10).forEach {
+                println("person.id=${it.id}")
+            }
 
             println("Pois IDs:")
-            pois.take(10).forEach { println("poi.id=${it.id}") }
+            pois.take(10).forEach {
+                println("poi.id=${it.id}")
+            }
         }
     }
 }
@@ -281,6 +394,7 @@ private fun PinLabel(
     ) {
 
         Surface(
+            onClick = onClick,
             tonalElevation = 4.dp,
             shadowElevation = 6.dp,
             shape = RoundedCornerShape(
@@ -292,7 +406,10 @@ private fun PinLabel(
         ) {
 
             Column(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                modifier = Modifier.padding(
+                    horizontal = 10.dp,
+                    vertical = 6.dp
+                )
             ) {
 
                 Text(
@@ -300,17 +417,14 @@ private fun PinLabel(
                     style = MaterialTheme.typography.labelMedium
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(
+                    modifier = Modifier.height(2.dp)
+                )
 
                 Text(
-                    text = "[Details]",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
-                    modifier = Modifier.pointerInput(Unit) {
-                        detectTapGestures {
-                            onClick()
-                        }
-                    }
+                    text = "Tippen für Details",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
                 )
             }
         }
