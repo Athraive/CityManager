@@ -167,6 +167,8 @@ fun CityMapScreen(
     /* ---------------- MAP STATE ---------------- */
 
     var toolboxOpen by remember { mutableStateOf(false) }
+    var fabMenuOpen by remember { mutableStateOf(false) }
+
     var placementMode by remember { mutableStateOf(false) }
     var moveMode by remember { mutableStateOf(false) }
 
@@ -353,39 +355,64 @@ fun CityMapScreen(
         }
 
 
-        /* ---------------- TOOLBOX FAB ---------------- */
-
-        if (accessContext.canEdit()) {
+            /* ---------------- MAIN FAB ---------------- */
 
             FloatingActionButton(
-                onClick = { toolboxOpen = !toolboxOpen },
+                onClick = {
+                    fabMenuOpen = !fabMenuOpen
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 96.dp)
                     .zIndex(2f)
             ) {
-                Icon(Icons.Default.Build, contentDescription = null)
+                Icon(
+                    Icons.Default.Build,
+                    contentDescription = null
+                )
             }
-        }
 
-        /* ---------------- EYE FAB ---------------- */
+            /* ---------------- FAB MENU ---------------- */
 
-        FloatingActionButton(
-            onClick = {
-                if (showCategoryDetailPanel || showFactionDetailPanel) {
-                    showCategoryDetailPanel = false
-                    showFactionDetailPanel = false
-                } else {
-                    visibilityPanelOpen = !visibilityPanelOpen
+            if (fabMenuOpen) {
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 168.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    SmallFloatingActionButton(
+                        onClick = {
+                            visibilityPanelOpen = !visibilityPanelOpen
+                            fabMenuOpen = false
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.RemoveRedEye,
+                            contentDescription = null
+                        )
+                    }
+
+                    if (accessContext.canEdit()) {
+
+                        SmallFloatingActionButton(
+                            onClick = {
+                                toolboxOpen = true
+                                fabMenuOpen = false
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Build,
+                                contentDescription = null
+                            )
+                        }
+                    }
                 }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 168.dp)
-                .zIndex(2f)
-        ) {
-            Icon(Icons.Default.RemoveRedEye, contentDescription = null)
-        }
+            }
+
+
 
         /* ---------------- VISIBILITY PANEL ---------------- */
 
