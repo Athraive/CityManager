@@ -416,9 +416,10 @@ fun CityMapScreen(
                         .align(Alignment.BottomEnd)
                         .padding(end = 16.dp, bottom = 240.dp)
                         .zIndex(3f),
-                    tonalElevation = 6.dp,
-                    shadowElevation = 8.dp,
-                    shape = RoundedCornerShape(16.dp)
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    tonalElevation = 4.dp,
+                    shadowElevation = 4.dp,
+                    shape = RoundedCornerShape(24.dp)
                 ) {
 
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -520,9 +521,10 @@ fun CityMapScreen(
                         .padding(bottom = 240.dp, end = 16.dp)
                         .widthIn(min = 380.dp, max = 500.dp)
                         .zIndex(4f),
-                    tonalElevation = 8.dp,
-                    shadowElevation = 12.dp,
-                    shape = RoundedCornerShape(16.dp)
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    tonalElevation = 4.dp,
+                    shadowElevation = 6.dp,
+                    shape = RoundedCornerShape(24.dp)
                 ) {
 
                     Column(

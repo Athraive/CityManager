@@ -42,9 +42,10 @@ fun EditToolboxPanel(
 
         Surface(
             modifier = Modifier.width(panelWidth),
-            shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp),
-            tonalElevation = 6.dp,
-            shadowElevation = 8.dp
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+            shape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp),
+            tonalElevation = 4.dp,
+            shadowElevation = 6.dp
         ) {
 
             Column(
