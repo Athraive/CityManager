@@ -23,6 +23,8 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
+import androidx.compose.foundation.border
+import androidx.compose.ui.Alignment
 
 @Composable
 fun MapContent(
@@ -279,10 +281,21 @@ fun MapContent(
                             }
                             .size(pinSize)
                             .background(
-                                Color(0xFF5C7FA3),
+                                Color(0xFF1A1A1A),
                                 CircleShape
-                            )
-                    )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(pinSize * 0.45f)
+                                .background(
+                                    Color(0xFF6FA8DC),
+                                    CircleShape
+                                )
+                        )
+                    }
 
                     if (selectedPersonId == it.id) {
 
@@ -322,10 +335,21 @@ fun MapContent(
                             }
                             .size(pinSize)
                             .background(
-                                Color(0xFFA35C5C),
-                                CircleShape
-                            )
-                    )
+                                Color(0xFF1A1A1A),
+                                RoundedCornerShape(2.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(pinSize * 0.45f)
+                                .background(
+                                    Color(0xFFC04BFF),
+                                    RoundedCornerShape(1.dp)
+                                )
+                        )
+                    }
 
                     if (selectedPoiId == it.id) {
 
