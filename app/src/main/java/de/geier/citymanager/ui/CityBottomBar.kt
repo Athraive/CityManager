@@ -138,6 +138,7 @@ private fun BottomTabButton(
 
         Text(
             text = text,
+            style = MaterialTheme.typography.bodyMedium,
             color =
                 if (selected)
                     MaterialTheme.colorScheme.primary

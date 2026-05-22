@@ -22,18 +22,18 @@ fun resolveTypography(
     val bodyFont = FontFamily.Default
 
     val headlineScale = when (preset) {
-        FontPreset.SCIFI -> 1.0f
-        FontPreset.MEDIEVAL -> 1.1f
-        FontPreset.WESTERN -> 1.05f
-        FontPreset.ASIA -> 1.15f
+        FontPreset.SCIFI -> 1.08f
+        FontPreset.MEDIEVAL -> 1.22f
+        FontPreset.WESTERN -> 1.10f
+        FontPreset.ASIA -> 1.18f
         FontPreset.DEFAULT -> 1.0f
     }
 
     val titleScale = when (preset) {
-        FontPreset.SCIFI -> 1.0f
-        FontPreset.MEDIEVAL -> 1.08f
-        FontPreset.WESTERN -> 1.05f
-        FontPreset.ASIA -> 1.1f
+        FontPreset.SCIFI -> 1.06f
+        FontPreset.MEDIEVAL -> 1.18f
+        FontPreset.WESTERN -> 1.08f
+        FontPreset.ASIA -> 1.14f
         FontPreset.DEFAULT -> 1.0f
     }
 
@@ -147,17 +147,26 @@ fun resolveTypography(
 
         labelLarge = base.labelLarge.copy(
             fontFamily = headlineFont,
-            fontSize = base.labelLarge.fontSize * fontScale
+            fontSize =
+                base.labelLarge.fontSize *
+                        titleScale *
+                        fontScale
         ),
 
         labelMedium = base.labelMedium.copy(
             fontFamily = headlineFont,
-            fontSize = base.labelMedium.fontSize * fontScale
+            fontSize =
+                base.labelMedium.fontSize *
+                        titleScale *
+                        fontScale
         ),
 
         labelSmall = base.labelSmall.copy(
             fontFamily = headlineFont,
-            fontSize = base.labelSmall.fontSize * fontScale
+            fontSize =
+                base.labelSmall.fontSize *
+                        titleScale *
+                        fontScale
         ),
     )
 }
