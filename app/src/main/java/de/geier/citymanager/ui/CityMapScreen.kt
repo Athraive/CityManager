@@ -334,7 +334,7 @@ fun CityMapScreen(
                     onPoiBubbleClick = onPoiBubbleClick
                 )
             }
-
+/*
             /* ---------------- ZOOM ---------------- */
 
             Column(
@@ -372,7 +372,7 @@ fun CityMapScreen(
                     }
                 }
             }
-
+*/
 
             /* ---------------- MAIN FAB ---------------- */
 

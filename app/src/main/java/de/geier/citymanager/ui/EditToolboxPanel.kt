@@ -24,7 +24,7 @@ fun EditToolboxPanel(
 
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
     val calculatedWidthDp =
-        (screenWidthDp * 0.55f).coerceAtMost(420f)
+        (screenWidthDp * 0.68f).coerceAtMost(460f)
 
     val panelWidth: Dp = calculatedWidthDp.dp
 

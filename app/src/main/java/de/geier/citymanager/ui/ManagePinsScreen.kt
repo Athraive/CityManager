@@ -32,10 +32,18 @@ fun ManagePinsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pins verwalten") },
+                title = {
+                    Text(
+                        text = "Pins verwalten",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
                 actions = {
                     TextButton(onClick = { navController.popBackStack() }) {
-                        Text("Abbrechen")
+                        Text(
+                            text = "Abbrechen",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             )
@@ -54,13 +62,23 @@ fun ManagePinsScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Personen") }
+                    text = {
+                        Text(
+                            text = "Personen",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 )
 
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("POIs") }
+                    text = {
+                        Text(
+                            text = "POIs",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 )
             }
 
@@ -72,7 +90,10 @@ fun ManagePinsScreen(
                 poisWithPins
 
             if (list.isEmpty()) {
-                Text("Keine Pins vorhanden.")
+                Text(
+                    text = "Keine Pins vorhanden.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             } else {
 
                 Column(
@@ -89,7 +110,10 @@ fun ManagePinsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
 
-                                Text(person.name)
+                                Text(
+                                    text = person.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
 
                                 Checkbox(
                                     checked = selectedPersons.contains(person.id),
@@ -113,7 +137,10 @@ fun ManagePinsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
 
-                                Text(poi.name)
+                                Text(
+                                    text = poi.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
 
                                 Checkbox(
                                     checked = selectedPois.contains(poi.id),
@@ -138,7 +165,10 @@ fun ManagePinsScreen(
                     enabled = selectedPersons.isNotEmpty() || selectedPois.isNotEmpty(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Ausgewählte Pins löschen")
+                    Text(
+                        text = "Ausgewählte Pins löschen",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
@@ -147,8 +177,18 @@ fun ManagePinsScreen(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Wirklich löschen?") },
-            text = { Text("Die ausgewählten Pins werden entfernt.") },
+            title = {
+                Text(
+                    text = "Wirklich löschen?",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            text = {
+                Text(
+                    text = "Die ausgewählten Pins werden entfernt.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -165,14 +205,20 @@ fun ManagePinsScreen(
                         navController.popBackStack()
                     }
                 ) {
-                    Text("Löschen")
+                    Text(
+                        text = "Löschen",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { confirmDelete = false }
                 ) {
-                    Text("Abbrechen")
+                    Text(
+                        text = "Abbrechen",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         )

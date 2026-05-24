@@ -34,12 +34,20 @@ fun AddPinScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pin hinzufügen") },
+                title = {
+                    Text(
+                        text = "Pin hinzufügen",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
                 actions = {
                     TextButton(
                         onClick = { navController.popBackStack() }
                     ) {
-                        Text("Abbrechen")
+                        Text(
+                            text = "Abbrechen",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             )
@@ -58,13 +66,23 @@ fun AddPinScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Personen") }
+                    text = {
+                        Text(
+                            text = "Personen",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 )
 
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("POIs") }
+                    text = {
+                        Text(
+                            text = "POIs",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 )
             }
 
@@ -73,7 +91,10 @@ fun AddPinScreen(
             if (selectedTab == 0) {
 
                 if (personsWithoutPin.isEmpty()) {
-                    Text("Alle Personen haben bereits einen Pin.")
+                    Text(
+                        text = "Alle Personen haben bereits einen Pin.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 } else {
 
                     Column(
@@ -97,7 +118,10 @@ fun AddPinScreen(
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp)
                             ) {
-                                Text(person.name)
+                                Text(
+                                    text = person.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
                         }
                     }
@@ -106,7 +130,10 @@ fun AddPinScreen(
             } else {
 
                 if (poisWithoutPin.isEmpty()) {
-                    Text("Alle POIs haben bereits einen Pin.")
+                    Text(
+                        text = "Alle POIs haben bereits einen Pin.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 } else {
 
                     Column(
@@ -130,7 +157,10 @@ fun AddPinScreen(
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp)
                             ) {
-                                Text(poi.name)
+                                Text(
+                                    text = poi.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
                         }
                     }
