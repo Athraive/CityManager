@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.PersonViewModel
 import java.util.Locale
 import java.util.UUID
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun PersonenTab(
@@ -184,17 +185,27 @@ fun PersonenTab(
                             groupedPersons.forEach { (letter, personsInGroup) ->
 
                                 item {
-                                    Text(
-                                        text = letter,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
-                                            ),
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleSmall
-                                    )
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    ) {
+
+                                        Text(
+                                            text = letter,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 4.dp
+                                            )
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
                                 }
 
                                 items(personsInGroup, key = { it.id }) { person ->
