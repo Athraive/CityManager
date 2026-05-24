@@ -31,6 +31,7 @@ import kotlin.math.max
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.DashboardCustomize
+import androidx.compose.foundation.gestures.detectTransformGestures
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -225,7 +226,6 @@ fun CityMapScreen(
 
 
                 .pointerInput(
-                    scale,
                     moveMode,
                     renderedWidth,
                     renderedHeight,
@@ -235,32 +235,56 @@ fun CityMapScreen(
 
                     if (!moveMode && activePanel == MapPanel.NONE) {
 
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
+                        detectTransformGestures { _, pan, zoom, _ ->
 
                             if (
-                                scale > 1f &&
                                 renderedWidth > 0f &&
                                 renderedHeight > 0f &&
                                 containerSize.width > 0 &&
                                 containerSize.height > 0
                             ) {
 
-                                val containerWidth = containerSize.width.toFloat()
-                                val containerHeight = containerSize.height.toFloat()
+                                // ---------------- ZOOM ----------------
 
-                                val newOffset = panOffset + dragAmount
+                                val newScale =
+                                    (scale * zoom)
+                                        .coerceIn(1f, 5f)
+
+                                scale = newScale
+
+                                // ---------------- PAN ----------------
+
+                                val containerWidth =
+                                    containerSize.width.toFloat()
+
+                                val containerHeight =
+                                    containerSize.height.toFloat()
+
+                                val newOffset =
+                                    panOffset + pan
 
                                 val maxPanX =
-                                    max(0f, (renderedWidth * scale - containerWidth) / 2f)
+                                    max(
+                                        0f,
+                                        (renderedWidth * scale - containerWidth) / 2f
+                                    )
 
                                 val maxPanY =
-                                    max(0f, (renderedHeight * scale - containerHeight) / 2f)
+                                    max(
+                                        0f,
+                                        (renderedHeight * scale - containerHeight) / 2f
+                                    )
 
                                 panOffset = Offset(
                                     x = newOffset.x.coerceIn(-maxPanX, maxPanX),
                                     y = newOffset.y.coerceIn(-maxPanY, maxPanY)
                                 )
+
+                                // Reset wenn komplett rausgezoomt
+
+                                if (scale <= 1f) {
+                                    panOffset = Offset.Zero
+                                }
                             }
                         }
                     }
