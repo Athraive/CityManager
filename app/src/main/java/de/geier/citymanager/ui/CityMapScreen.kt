@@ -502,7 +502,10 @@ fun CityMapScreen(
                             enabled = showPois,
                             modifier = Modifier.padding(start = 40.dp)
                         ) {
-                            Text("Kategorien (${visibleCategoryIds.size}/${poiCategories.size})")
+                            Text(
+                                text = "Kategorien (${visibleCategoryIds.size}/${poiCategories.size})",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
 
                         }
 
@@ -528,7 +531,10 @@ fun CityMapScreen(
                             enabled = showFactions,
                             modifier = Modifier.padding(start = 40.dp)
                         ) {
-                            Text("Fraktionen ($visibleFactionCount/$totalFactionCount)")
+                            Text(
+                                text = "Fraktionen ($visibleFactionCount/$totalFactionCount)",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
 
                         }
                     }
@@ -559,10 +565,29 @@ fun CityMapScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
 
-                        Text(
-                            text = "POI-Kategorien",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            Text(
+                                text = "POI-Kategorien",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+
+                            TextButton(
+                                onClick = {
+                                    activePanel = MapPanel.VISIBILITY
+                                },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(
+                                    text = "✕",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -632,10 +657,29 @@ fun CityMapScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
 
-                        Text(
-                            text = "Fraktionen",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            Text(
+                                text = "Fraktionen",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+
+                            TextButton(
+                                onClick = {
+                                    activePanel = MapPanel.VISIBILITY
+                                },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(
+                                    text = "✕",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
