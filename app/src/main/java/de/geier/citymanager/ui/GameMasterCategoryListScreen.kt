@@ -16,7 +16,15 @@ import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PoiViewModel
 import java.util.UUID
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GameMasterCategoryListScreen(
     categoryViewModel: PoiCategoryViewModel,
@@ -153,32 +161,59 @@ fun GameMasterCategoryListScreen(
 
         if (selectedCategory == null) {
 
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(categories) { category ->
-                    Row(
+
+                items(
+                    categories.sortedBy { it.title.lowercase() }
+                ) { category ->
+
+                    val poiCount =
+                        allPois.count { it.categoryId == category.id }
+
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .combinedClickable(
+                                onClick = {
+                                    selectedCategory = category
+                                },
+                                onLongClick = {
+                                    editingCategory = category
+                                }
+                            ),
+                        shape = RoundedCornerShape(20.dp),
+                        tonalElevation = 2.dp,
+                        shadowElevation = 2.dp,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     ) {
-                        Text(
-                            "${category.icon} ${category.title}",
+
+                        Column(
                             modifier = Modifier
-                                .weight(1f)
-                                .clickable { selectedCategory = category }
-                        )
-                        Text(
-                            "✏",
-                            modifier = Modifier.clickable {
-                                editingCategory = category
-                            }
-                        )
+                                .padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+
+                            Text(
+                                text = category.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2
+                            )
+
+                            Text(
+                                text = "$poiCount Orte",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -194,18 +229,53 @@ fun GameMasterCategoryListScreen(
                     .padding(padding)
             ) {
 
-                Text(
-                    "← ${selectedCategory!!.title}",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clickable { selectedCategory = null }
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    ) {
+
+                        Text(
+                            text = selectedCategory!!.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .clickable { selectedCategory = null }
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 4.dp
+                                )
+                        )
+                    }
+
+                    selectedCategory!!
+                        .description
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { description ->
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                                    .copy(alpha = 0.85f)
+                            )
+                        }
+                }
+
 
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(poisInCategory) { poi ->
+                    items(
+                        poisInCategory.sortedBy { it.name.lowercase() }
+                    ) { poi ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -213,9 +283,19 @@ fun GameMasterCategoryListScreen(
                                     selectedPoi = poi
                                     poiViewModel.selectPoi(poi)
                                 }
-                                .padding(vertical = 8.dp)
+                                .padding(
+                                    vertical = 10.dp,
+                                    horizontal = 4.dp
+                                )
                         ) {
-                            Text("• ${poi.name}")
+                            Text(
+                                text = poi.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(
+                                    vertical = 6.dp,
+                                    horizontal = 4.dp
+                                )
+                            )
                         }
                     }
                 }
