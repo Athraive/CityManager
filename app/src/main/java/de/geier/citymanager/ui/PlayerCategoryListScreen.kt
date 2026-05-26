@@ -162,6 +162,10 @@ fun PlayerCategoryListScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
+
+                                        searchPanelVisible = false
+                                        searchQuery = ""
+
                                         selectedCategory = category
                                     },
                                 shape = RoundedCornerShape(16.dp),
@@ -225,7 +229,17 @@ fun PlayerCategoryListScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
+
+                                        val category =
+                                            categories.firstOrNull {
+                                                it.id == poi.categoryId
+                                            }
+
+                                        selectedCategory = category
                                         selectedPoi = poi
+
+                                        searchPanelVisible = false
+                                        searchQuery = ""
                                     },
                                 shape = RoundedCornerShape(16.dp),
                                 tonalElevation = 2.dp
@@ -375,7 +389,9 @@ fun PlayerCategoryListScreen(
                         }
                 },
                 onClose = {
+
                     searchPanelVisible = false
+                    searchQuery = ""
                 }
             )
 
@@ -395,25 +411,38 @@ fun PlayerCategoryListScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme
-                            .surfaceVariant
-                            .copy(alpha = 0.6f)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
 
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme
+                                .surfaceVariant
+                                .copy(alpha = 0.6f)
+                        ) {
+
+                            Text(
+                                text = selectedCategory!!.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(
+                                    horizontal = 12.dp,
+                                    vertical = 4.dp
+                                )
+                            )
+                        }
+
                         Text(
-                            text = selectedCategory!!.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            text = "✕",
+                            style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier
                                 .clickable {
                                     selectedCategory = null
                                 }
-                                .padding(
-                                    horizontal = 12.dp,
-                                    vertical = 4.dp
-                                )
+                                .padding(8.dp)
                         )
                     }
 
