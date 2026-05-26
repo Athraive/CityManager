@@ -411,40 +411,42 @@ fun PlayerCategoryListScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme
+                            .surfaceVariant
+                            .copy(alpha = 0.6f)
                     ) {
 
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme
-                                .surfaceVariant
-                                .copy(alpha = 0.6f)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(
+                                horizontal = 12.dp,
+                                vertical = 4.dp
+                            )
                         ) {
 
                             Text(
                                 text = selectedCategory!!.title,
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 4.dp
-                                )
+                                fontWeight = FontWeight.SemiBold
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = "✕",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .clickable {
+                                        selectedCategory = null
+                                    }
                             )
                         }
-
-                        Text(
-                            text = "✕",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier
-                                .clickable {
-                                    selectedCategory = null
-                                }
-                                .padding(8.dp)
-                        )
                     }
+
+
 
                     selectedCategory!!
                         .description

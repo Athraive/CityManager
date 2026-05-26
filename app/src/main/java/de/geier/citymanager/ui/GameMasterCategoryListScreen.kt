@@ -2,27 +2,28 @@
 
 package de.geier.citymanager.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import de.geier.citymanager.ui.viewmodel.CityViewModel
-import de.geier.citymanager.ui.viewmodel.PoiViewModel
-import java.util.UUID
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import de.geier.citymanager.ui.viewmodel.CityViewModel
+import de.geier.citymanager.ui.viewmodel.PoiViewModel
+import java.util.UUID
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -39,20 +40,101 @@ fun GameMasterCategoryListScreen(
 
     val categories by categoryViewModel.categories.collectAsState()
 
-    var selectedCategory by remember { mutableStateOf<PoiCategory?>(null) }
-    var selectedPoi by remember { mutableStateOf<PointOfInterest?>(null) }
-    var editingCategory by remember { mutableStateOf<PoiCategory?>(null) }
-    var assigningFactions by remember { mutableStateOf(false) }
+    var selectedCategory by remember {
+        mutableStateOf<PoiCategory?>(null)
+    }
+
+    var selectedPoi by remember {
+        mutableStateOf<PointOfInterest?>(null)
+    }
+
+    var editingCategory by remember {
+        mutableStateOf<PoiCategory?>(null)
+    }
+
+    var assigningFactions by remember {
+        mutableStateOf(false)
+    }
+
+    var searchPanelVisible by remember {
+        mutableStateOf(false)
+    }
+
+    var searchQuery by remember {
+        mutableStateOf("")
+    }
+
+    var selectedSearchCategories by remember(categories) {
+        mutableStateOf(
+            categories
+                .filter { it.visible }
+                .map { it.id }
+                .toSet()
+        )
+    }
+
+    val searchActive = searchPanelVisible
+
+    val hasSearchQuery =
+        searchQuery.isNotBlank()
+
+    val filteredCategories =
+        categories
+            .filter { it.visible }
+            .filter {
+
+                if (!hasSearchQuery) {
+                    return@filter false
+                }
+
+                val matchesCategory =
+                    it.title.contains(
+                        searchQuery,
+                        ignoreCase = true
+                    )
+
+                val matchesFilter =
+                    selectedSearchCategories.contains(it.id)
+
+                matchesCategory && matchesFilter
+            }
+
+    val filteredPois =
+        allPois
+            .filter { poi ->
+
+                if (!hasSearchQuery) {
+                    return@filter false
+                }
+
+                val matchesName =
+                    poi.name.contains(
+                        searchQuery,
+                        ignoreCase = true
+                    )
+
+                val matchesCategory =
+                    selectedSearchCategories.contains(
+                        poi.categoryId
+                    )
+
+                matchesName && matchesCategory
+            }
+
+    val searchPanelWidth =
+        220.dp
 
     /* ---------------- ASSIGN FACTIONS ---------------- */
 
     if (assigningFactions && selectedPoi != null) {
+
         AssignFactionsToPoiScreen(
             poi = selectedPoi!!,
             factions = factions,
             poiViewModel = poiViewModel,
             onBack = { assigningFactions = false }
         )
+
         return
     }
 
@@ -94,8 +176,9 @@ fun GameMasterCategoryListScreen(
             },
             onPersonClick = { },
             onFactionClick = { },
-            onShowOnMap = onShowOnMap   // ✅ EINZIGE ÄNDERUNG
+            onShowOnMap = onShowOnMap
         )
+
         return
     }
 
@@ -122,23 +205,29 @@ fun GameMasterCategoryListScreen(
                 }
             }
         )
+
         return
     }
 
-    /* ---------------- LIST ---------------- */
+    /* ---------------- MAIN ---------------- */
 
     Scaffold(
         floatingActionButton = {
+
             FloatingActionButton(
                 onClick = {
+
                     if (selectedCategory == null) {
+
                         editingCategory = PoiCategory(
                             id = UUID.randomUUID().toString(),
                             title = "",
                             icon = "📁",
                             visible = true
                         )
+
                     } else {
+
                         val newPoi = PointOfInterest(
                             id = UUID.randomUUID().toString(),
                             name = "",
@@ -149,153 +238,442 @@ fun GameMasterCategoryListScreen(
                             playerNotes = "",
                             gameMasterNotes = ""
                         )
+
                         selectedPoi = newPoi
                         poiViewModel.selectPoi(newPoi)
                     }
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Hinzufügen")
+
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Hinzufügen"
+                )
             }
         }
     ) { padding ->
 
-        if (selectedCategory == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            if (selectedCategory == null) {
 
-                items(
-                    categories.sortedBy { it.title.lowercase() }
-                ) { category ->
+                if (searchActive) {
 
-                    val poiCount =
-                        allPois.count { it.categoryId == category.id }
-
-                    Surface(
+                    LazyColumn(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {
-                                    selectedCategory = category
-                                },
-                                onLongClick = {
-                                    editingCategory = category
-                                }
-                            ),
-                        shape = RoundedCornerShape(20.dp),
-                        tonalElevation = 2.dp,
-                        shadowElevation = 2.dp,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            .fillMaxSize()
+                            .padding(start = searchPanelWidth),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement =
+                            Arrangement.spacedBy(16.dp)
                     ) {
 
-                        Column(
-                            modifier = Modifier
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
+                        if (filteredCategories.isNotEmpty()) {
 
-                            Text(
-                                text = category.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 2
-                            )
+                            item {
 
-                            Text(
-                                text = "$poiCount Orte",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                                Text(
+                                    text = "Kategorien",
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodyMedium,
+                                    fontWeight =
+                                        FontWeight.SemiBold
+                                )
+                            }
+
+                            items(filteredCategories) { category ->
+
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+
+                                            selectedCategory = category
+
+                                            searchPanelVisible = false
+                                            searchQuery = ""
+                                        },
+                                    shape = RoundedCornerShape(16.dp),
+                                    tonalElevation = 2.dp
+                                ) {
+
+                                    Column(
+                                        modifier =
+                                            Modifier.padding(16.dp)
+                                    ) {
+
+                                        Text(
+                                            text = category.title,
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .titleMedium
+                                        )
+
+                                        category.description
+                                            ?.takeIf {
+                                                it.isNotBlank()
+                                            }
+                                            ?.let { description ->
+
+                                                Spacer(
+                                                    modifier =
+                                                        Modifier.height(4.dp)
+                                                )
+
+                                                Text(
+                                                    text = description,
+                                                    style =
+                                                        MaterialTheme
+                                                            .typography
+                                                            .bodySmall,
+                                                    color =
+                                                        MaterialTheme
+                                                            .colorScheme
+                                                            .onSurfaceVariant
+                                                )
+                                            }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (filteredPois.isNotEmpty()) {
+
+                            item {
+
+                                Text(
+                                    text = "Orte",
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodyMedium,
+                                    fontWeight =
+                                        FontWeight.SemiBold
+                                )
+                            }
+
+                            items(filteredPois.sortedBy { it.name }) { poi ->
+
+                                val categoryName =
+                                    categories.firstOrNull {
+                                        it.id == poi.categoryId
+                                    }?.title ?: ""
+
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+
+                                            val category =
+                                                categories.firstOrNull {
+                                                    it.id == poi.categoryId
+                                                }
+
+                                            selectedCategory = category
+                                            selectedPoi = poi
+
+                                            poiViewModel.selectPoi(poi)
+
+                                            searchPanelVisible = false
+                                            searchQuery = ""
+                                        },
+                                    shape = RoundedCornerShape(16.dp),
+                                    tonalElevation = 2.dp
+                                ) {
+
+                                    Column(
+                                        modifier =
+                                            Modifier.padding(16.dp)
+                                    ) {
+
+                                        Text(
+                                            text = poi.name,
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .titleMedium
+                                        )
+
+                                        Spacer(
+                                            modifier =
+                                                Modifier.height(4.dp)
+                                        )
+
+                                        Text(
+                                            text = categoryName,
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .bodySmall,
+                                            color =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                } else {
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement =
+                            Arrangement.spacedBy(12.dp),
+                        verticalArrangement =
+                            Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        items(
+                            categories.sortedBy {
+                                it.title.lowercase()
+                            }
+                        ) { category ->
+
+                            val poiCount =
+                                allPois.count {
+                                    it.categoryId == category.id
+                                }
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .combinedClickable(
+                                        onClick = {
+                                            selectedCategory = category
+                                        },
+                                        onLongClick = {
+                                            editingCategory = category
+                                        }
+                                    ),
+                                shape = RoundedCornerShape(20.dp),
+                                tonalElevation = 2.dp,
+                                shadowElevation = 2.dp,
+                                color =
+                                    MaterialTheme
+                                        .colorScheme
+                                        .surfaceVariant
+                                        .copy(alpha = 0.5f)
+                            ) {
+
+                                Column(
+                                    modifier =
+                                        Modifier.padding(18.dp),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(10.dp)
+                                ) {
+
+                                    Text(
+                                        text = category.title,
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .titleMedium,
+                                        fontWeight =
+                                            FontWeight.SemiBold,
+                                        maxLines = 2
+                                    )
+
+                                    Text(
+                                        text = "$poiCount Orte",
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodySmall,
+                                        color =
+                                            MaterialTheme
+                                                .colorScheme
+                                                .onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-        } else {
-
-            val poisInCategory =
-                allPois.filter { it.categoryId == selectedCategory!!.id }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    IconButton(
+                        onClick = {
+                            searchPanelVisible = true
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                            .size(56.dp)
                     ) {
 
-                        Text(
-                            text = selectedCategory!!.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier
-                                .clickable { selectedCategory = null }
-                                .padding(
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            tonalElevation = 4.dp,
+                            shadowElevation = 4.dp,
+                            color = MaterialTheme.colorScheme
+                                .surface
+                                .copy(alpha = 0.92f)
+                        ) {
+
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Suche"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                SearchToolboxPanel(
+                    visible = searchPanelVisible,
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = {
+                        searchQuery = it
+                    },
+                    categories =
+                        categories.filter { it.visible },
+                    selectedCategoryIds =
+                        selectedSearchCategories,
+                    onToggleCategory = { categoryId ->
+
+                        selectedSearchCategories =
+                            if (
+                                selectedSearchCategories.contains(categoryId)
+                            ) {
+                                selectedSearchCategories - categoryId
+                            } else {
+                                selectedSearchCategories + categoryId
+                            }
+                    },
+                    onClose = {
+
+                        searchPanelVisible = false
+                        searchQuery = ""
+                    }
+                )
+
+            } else {
+
+                val poisInCategory =
+                    allPois.filter {
+                        it.categoryId == selectedCategory!!.id
+                    }
+
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme
+                                .surfaceVariant
+                                .copy(alpha = 0.6f)
+                        ) {
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(
                                     horizontal = 12.dp,
                                     vertical = 4.dp
                                 )
-                        )
+                            ) {
+
+                                Text(
+                                    text = selectedCategory!!.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Text(
+                                    text = "✕",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier
+                                        .clickable {
+                                            selectedCategory = null
+                                        }
+                                )
+                            }
+                        }
+
+                        selectedCategory!!
+                            .description
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let { description ->
+
+                                Spacer(
+                                    modifier = Modifier.height(12.dp)
+                                )
+
+                                Text(
+                                    text = description,
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodySmall,
+                                    color =
+                                        MaterialTheme
+                                            .colorScheme
+                                            .onSurfaceVariant
+                                            .copy(alpha = 0.85f)
+                                )
+                            }
                     }
 
-                    selectedCategory!!
-                        .description
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let { description ->
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement =
+                            Arrangement.spacedBy(8.dp)
+                    ) {
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                        items(
+                            poisInCategory.sortedBy {
+                                it.name.lowercase()
+                            }
+                        ) { poi ->
 
-                            Text(
-                                text = description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme
-                                    .onSurfaceVariant
-                                    .copy(alpha = 0.85f)
-                            )
-                        }
-                }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedPoi = poi
+                                        poiViewModel.selectPoi(poi)
+                                    }
+                                    .padding(
+                                        vertical = 10.dp,
+                                        horizontal = 4.dp
+                                    )
+                            ) {
 
-
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(
-                        poisInCategory.sortedBy { it.name.lowercase() }
-                    ) { poi ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selectedPoi = poi
-                                    poiViewModel.selectPoi(poi)
-                                }
-                                .padding(
-                                    vertical = 10.dp,
-                                    horizontal = 4.dp
+                                Text(
+                                    text = poi.name,
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .titleMedium
                                 )
-                        ) {
-                            Text(
-                                text = poi.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(
-                                    vertical = 6.dp,
-                                    horizontal = 4.dp
-                                )
-                            )
+                            }
                         }
                     }
                 }
