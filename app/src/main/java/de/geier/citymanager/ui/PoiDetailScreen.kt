@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.compose.ui.text.font.FontFamily
 
 @Composable
 fun PoiDetailScreen(
@@ -106,7 +107,8 @@ fun PoiDetailScreen(
                     value = name,
                     onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Name") },
+                    label = { Text("Name",
+                        fontFamily = FontFamily.SansSerif) },
                     singleLine = true
                 )
             } else {
@@ -155,7 +157,8 @@ fun PoiDetailScreen(
                         Button(
                             onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
                         ) {
-                            Text("Bild auswählen")
+                            Text("Bild auswählen",
+                                fontFamily = FontFamily.SansSerif)
                         }
                     }
                 }
@@ -167,10 +170,16 @@ fun PoiDetailScreen(
                 onClick = { onShowOnMap(poi.id) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Auf Karte anzeigen")
+                Text("Auf Karte anzeigen",
+                    fontFamily = FontFamily.SansSerif)
             }
 
-            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Beschreibung",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = FontFamily.SansSerif
+                )
+            )
 
             if (canEdit) {
                 OutlinedTextField(
@@ -189,14 +198,20 @@ fun PoiDetailScreen(
                         checked = visible,
                         onCheckedChange = { visible = it }
                     )
-                    Text("Für Spieler sichtbar")
+                    Text("Für Spieler sichtbar",
+                        fontFamily = FontFamily.SansSerif)
                 }
             }
 
             /* ---------- Fraktionen ---------- */
 
             HorizontalDivider()
-            Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Fraktionen",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = FontFamily.SansSerif
+                )
+            )
 
             if (assignedFactions.isEmpty()) {
                 Text(
@@ -216,14 +231,22 @@ fun PoiDetailScreen(
 
             if (canEdit) {
                 Button(onClick = onAssignFactions) {
-                    Text("Fraktionen zuweisen")
+                    Text(
+                        "Fraktionen zuweisen",
+                        fontFamily = FontFamily.SansSerif
+                    )
                 }
             }
 
             /* ---------- Personen ---------- */
 
             HorizontalDivider()
-            Text("Personen", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Personen",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = FontFamily.SansSerif
+                )
+            )
 
             if (assignedPersons.isEmpty()) {
                 Text(
@@ -244,9 +267,17 @@ fun PoiDetailScreen(
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-            Text("Notizen", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Notizen",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontFamily = FontFamily.SansSerif
+                )
+            )
 
-            Text("Spieler-Notizen")
+            Text(
+                "Spieler-Notizen",
+                fontFamily = FontFamily.SansSerif
+            )
             OutlinedTextField(
                 value = playerNotes,
                 onValueChange = { playerNotes = it },
@@ -255,7 +286,10 @@ fun PoiDetailScreen(
             )
 
             if (canEdit) {
-                Text("SL-Notizen")
+                Text(
+                    "SL-Notizen",
+                    fontFamily = FontFamily.SansSerif
+                )
                 OutlinedTextField(
                     value = gameMasterNotes,
                     onValueChange = { gameMasterNotes = it },
@@ -280,7 +314,8 @@ fun PoiDetailScreen(
                     onBack()
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    fontFamily = FontFamily.SansSerif)
             }
         }
     }
@@ -288,8 +323,10 @@ fun PoiDetailScreen(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Ort löschen?") },
-            text = { Text("Möchtest du den Ort wirklich löschen?") },
+            title = { Text("Ort löschen?",
+                fontFamily = FontFamily.SansSerif) },
+            text = { Text("Möchtest du den Ort wirklich löschen?",
+                fontFamily = FontFamily.SansSerif) },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
@@ -301,12 +338,14 @@ fun PoiDetailScreen(
                         onBack()
                     }
                 ) {
-                    Text("Löschen")
+                    Text("Löschen",
+                        fontFamily = FontFamily.SansSerif)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Abbrechen")
+                    Text("Abbrechen",
+                        fontFamily = FontFamily.SansSerif)
                 }
             }
         )
