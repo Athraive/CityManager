@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.compose.ui.text.font.FontFamily
 
 @Composable
 fun FactionDetailScreen(
@@ -152,7 +153,8 @@ fun FactionDetailScreen(
                         Button(
                             onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
                         ) {
-                            Text("Bild auswählen")
+                            Text("Bild auswählen",
+                                fontFamily = FontFamily.SansSerif)
                         }
                     }
                 }
@@ -254,7 +256,8 @@ fun FactionDetailScreen(
                     onBack()
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    fontFamily = FontFamily.SansSerif)
             }
         }
     }
@@ -273,12 +276,14 @@ fun FactionDetailScreen(
                         onBack()
                     }
                 ) {
-                    Text("Löschen")
+                    Text("Löschen",
+                        fontFamily = FontFamily.SansSerif)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Abbrechen")
+                    Text("Abbrechen",
+                        fontFamily = FontFamily.SansSerif)
                 }
             }
         )

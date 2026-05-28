@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.text.font.FontFamily
 
 @Composable
 fun PersonDetailScreen(
@@ -46,6 +47,9 @@ fun PersonDetailScreen(
 
     var name by remember(person.id) { mutableStateOf(person.name) }
     var description by remember(person.id) { mutableStateOf(person.description) }
+    var shortDescription by remember(person.id) {
+        mutableStateOf(person.shortDescription)
+    }
     var playerNotes by remember(person.id) { mutableStateOf(person.playerNotes) }
     var gameMasterNotes by remember(person.id) { mutableStateOf(person.gameMasterNotes) }
     var visible by remember(person.id) { mutableStateOf(person.visible) }
@@ -77,7 +81,7 @@ fun PersonDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(name.ifBlank { "Person" }) },
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Schließen")
@@ -103,75 +107,123 @@ fun PersonDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            if (canEdit) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            } else {
-                Text(name, style = MaterialTheme.typography.titleLarge)
-            }
+            /* ---------- Character Header ---------- */
 
-            /* ---------- Bild ---------- */
-
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                Column(
-                    horizontalAlignment = Alignment.End
+                Box(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .heightIn(max = 260.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
                 ) {
 
-                    Box(
-                        modifier = Modifier
-                            .width(140.dp)
-                            .heightIn(max = 220.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (imageUri != null) {
-                            AsyncImage(
-                                model = imageUri,
-                                contentDescription = "Person Bild",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(64.dp)
+                    if (imageUri != null) {
+
+                        AsyncImage(
+                            model = imageUri,
+                            contentDescription = "Person Bild",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+
+                    } else {
+
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(72.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (canEdit) {
+
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        label = {
+                            Text(
+                                "Name",
+                                fontFamily = FontFamily.SansSerif
                             )
                         }
-                    }
+                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    if (canEdit) {
-                        Button(
-                            onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
-                        ) {
-                            Text("Bild auswählen")
+                    OutlinedTextField(
+                        value = shortDescription,
+                        onValueChange = { shortDescription = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        label = {
+                            Text(
+                                "Kurzbeschreibung",
+                                fontFamily = FontFamily.SansSerif
+                            )
                         }
+                    )
+
+                } else {
+
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    if (shortDescription.isNotBlank()) {
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = shortDescription,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (canEdit) {
+
+                    OutlinedButton(
+                        onClick = {
+                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        }
+                    ) {
+
+                        Text(
+                            "Bild auswählen",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = FontFamily.SansSerif
+                        )
                     }
                 }
             }
 
             /* ---------- Karte ---------- */
 
-            Button(
+            OutlinedButton(
                 onClick = { onShowOnMap(person.id) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Auf Karte anzeigen")
+                Text(
+                    "Auf Karte anzeigen",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = FontFamily.SansSerif
+                )
             }
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
@@ -220,7 +272,8 @@ fun PersonDetailScreen(
 
             if (canEdit) {
                 Button(onClick = onAssignFactions) {
-                    Text("Fraktionen zuweisen")
+                    Text("Fraktionen zuweisen",
+                        fontFamily = FontFamily.SansSerif)
                 }
             }
 
@@ -247,7 +300,8 @@ fun PersonDetailScreen(
 
             if (canEdit) {
                 Button(onClick = onAssignPois) {
-                    Text("Orte zuweisen")
+                    Text("Orte zuweisen",
+                        fontFamily = FontFamily.SansSerif)
                 }
             }
 
@@ -280,17 +334,19 @@ fun PersonDetailScreen(
                     onSave(
                         person.copy(
                             name = name,
+                            shortDescription = shortDescription,
                             description = description,
                             playerNotes = playerNotes,
                             gameMasterNotes = gameMasterNotes,
                             visible = visible,
-                            portraitImageUri = imageUri   // ✅ ENTSCHEIDEND
+                            portraitImageUri = imageUri
                         )
                     )
                     onBack()
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    fontFamily = FontFamily.SansSerif)
             }
         }
     }

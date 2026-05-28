@@ -10,6 +10,8 @@ data class Person(
     val id: String,
     val name: String,
     val description: String,
+
+    val shortDescription: String = "",
     val portraitImageUri: String? = null,
     val visible: Boolean = true,
     val playerNotes: String = "",
