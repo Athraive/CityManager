@@ -154,7 +154,14 @@ fun AppNavHost() {
 
                     selectedRole = role
 
-                    navController.navigate(Screen.City.route)
+                    navController.navigate(Screen.City.route) {
+
+                        popUpTo("role_select") {
+                            inclusive = true
+                        }
+
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -162,6 +169,12 @@ fun AppNavHost() {
         /* ---------------- City ---------------- */
 
         composable(Screen.City.route) {
+
+            LaunchedEffect(Unit) {
+                println(
+                    "CITY SCREEN ENTER role=$selectedRole city=$selectedCityId"
+                )
+            }
 
             CityScreenGate(
                 role = selectedRole,

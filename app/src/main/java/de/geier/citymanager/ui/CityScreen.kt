@@ -239,7 +239,82 @@ fun CityScreen(
                                 }
                             }
 
-                            is DetailTarget.Faction -> {}
+                            is DetailTarget.Faction -> {
+
+                                val faction =
+                                    factions.firstOrNull { it.id == detail.id }
+
+                                if (faction != null) {
+
+                                    val assignedPersons by produceState<List<Person>>(
+                                        initialValue = emptyList(),
+                                        key1 = faction.id
+                                    ) {
+
+                                        val result = mutableListOf<Person>()
+
+                                        allPersons.forEach { person ->
+
+                                            val factionIds =
+                                                personFactionRepo
+                                                    .getFactionIdsForPerson(person.id)
+                                                    .first()
+
+                                            if (faction.id in factionIds) {
+                                                result.add(person)
+                                            }
+                                        }
+
+                                        value =
+                                            if (accessContext.canEdit())
+                                                result
+                                            else
+                                                result.filter { it.visible }
+                                    }
+
+                                    val assignedPois by produceState<List<PointOfInterest>>(
+                                        initialValue = emptyList(),
+                                        key1 = faction.id
+                                    ) {
+
+                                        val result = mutableListOf<PointOfInterest>()
+
+                                        allPois.forEach { poi ->
+
+                                            val factionIds =
+                                                poiFactionRepo
+                                                    .getFactionIdsForPoi(poi.id)
+                                                    .first()
+
+                                            if (faction.id in factionIds) {
+                                                result.add(poi)
+                                            }
+                                        }
+
+                                        value =
+                                            if (accessContext.canEdit())
+                                                result
+                                            else
+                                                result.filter { it.visible }
+                                    }
+
+                                    FactionDetailScreen(
+                                        faction = faction,
+                                        assignedPersons = assignedPersons,
+                                        assignedPois = assignedPois,
+                                        accessContext = accessContext,
+                                        onBack = { activeDetail = null },
+                                        onSave = { cityViewModel.saveFaction(it) },
+                                        onDelete = { cityViewModel.deleteFaction(it) },
+                                        onPersonClick = {
+                                            activeDetail = DetailTarget.Person(it)
+                                        },
+                                        onPoiClick = {
+                                            activeDetail = DetailTarget.Poi(it)
+                                        }
+                                    )
+                                }
+                            }
 
                             null -> {
                                 when (activeTab) {

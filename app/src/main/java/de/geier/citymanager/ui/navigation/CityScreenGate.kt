@@ -23,12 +23,13 @@ fun CityScreenGate(
 
     val context = LocalContext.current
 
-    val accessContext = remember {
-        AccessContext(
-            role = role,
-            cityId = cityId
-        )
-    }
+    val accessContext = AccessContext(
+        role = role,
+        cityId = cityId
+    )
+    println(
+        "CityScreenGate: role=$role accessRole=${accessContext.role} cityId=$cityId"
+    )
 
     val cityViewModel: CityViewModel = viewModel(
         factory = CityViewModelFactory(
