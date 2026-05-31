@@ -26,6 +26,7 @@ fun PersonenTab(
     categories: List<PoiCategory>,
     accessContext: AccessContext,
     onFactionLinkClicked: (String) -> Unit,
+    onPoiLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
 ) {
 
@@ -117,7 +118,11 @@ fun PersonenTab(
                 onAssignPois = { showAssignPois = true },
                 onAssignFactions = { showAssignFactions = true },
                 onPersonClick = { },
-                onPoiClick = { },
+
+                onPoiClick = { id ->
+                    onPoiLinkClicked(id)
+                },
+
                 onFactionClick = { id ->
                     onFactionLinkClicked(id)
                 },

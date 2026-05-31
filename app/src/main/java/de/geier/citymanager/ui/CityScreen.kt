@@ -352,9 +352,15 @@ fun CityScreen(
                                             pois = allPois,
                                             categories = categories,
                                             accessContext = accessContext,
+
                                             onFactionLinkClicked = {
                                                 activeDetail = DetailTarget.Faction(it)
                                             },
+
+                                            onPoiLinkClicked = {
+                                                activeDetail = DetailTarget.Poi(it)
+                                            },
+
                                             onShowOnMap = { id ->
                                                 activeDetail = null
                                                 focusPersonId = id
@@ -370,6 +376,15 @@ fun CityScreen(
                                             cityViewModel = cityViewModel,
                                             factions = factions,
                                             accessContext = accessContext,
+
+                                            onPersonLinkClicked = {
+                                                activeDetail = DetailTarget.Person(it)
+                                            },
+
+                                            onFactionLinkClicked = {
+                                                activeDetail = DetailTarget.Faction(it)
+                                            },
+
                                             onShowOnMap = { id ->
                                                 activeDetail = null
                                                 focusPoiId = id

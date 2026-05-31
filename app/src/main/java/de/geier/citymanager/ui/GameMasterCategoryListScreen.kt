@@ -35,6 +35,8 @@ fun GameMasterCategoryListScreen(
     factions: List<Faction>,
     persons: List<Person>,
     accessContext: AccessContext,
+    onPersonLinkClicked: (String) -> Unit,
+    onFactionLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
 ) {
 
@@ -174,8 +176,13 @@ fun GameMasterCategoryListScreen(
             onAssignFactions = {
                 assigningFactions = true
             },
-            onPersonClick = { },
-            onFactionClick = { },
+            onPersonClick = { id ->
+                onPersonLinkClicked(id)
+            },
+
+            onFactionClick = { id ->
+                onFactionLinkClicked(id)
+            },
             onShowOnMap = onShowOnMap
         )
 

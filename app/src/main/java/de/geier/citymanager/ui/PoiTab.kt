@@ -17,6 +17,8 @@ fun PoiTab(
     cityViewModel: CityViewModel,
     factions: List<Faction>,
     accessContext: AccessContext,
+    onPersonLinkClicked: (String) -> Unit,
+    onFactionLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
 ) {
     val context = LocalContext.current
@@ -62,7 +64,12 @@ fun PoiTab(
             factions = factions,
             persons = allPersons,
             accessContext = accessContext,
-            onShowOnMap = triggerShowOnMap   // 🔥 geändert
+
+            onPersonLinkClicked = onPersonLinkClicked,
+
+            onFactionLinkClicked = onFactionLinkClicked,
+
+            onShowOnMap = triggerShowOnMap
         )
 
     } else {
