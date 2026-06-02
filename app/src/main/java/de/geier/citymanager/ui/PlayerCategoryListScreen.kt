@@ -33,6 +33,8 @@ fun PlayerCategoryListScreen(
     categoryViewModel: PoiCategoryViewModel,
     factions: List<Faction>,
     accessContext: AccessContext,
+    onPersonLinkClicked: (String) -> Unit,
+    onFactionLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
 ) {
 
@@ -541,17 +543,35 @@ fun PlayerCategoryListScreen(
                         .filter { it.id in personIds }
                         .filter { it.visible }
             }
+            val assignedFactions =
+                factions.filter {
+                    it.id in assignedFactionIds
+                }
 
-            PlayerPoiDetailScreen(
+            PoiDetailScreen(
                 poi = selectedPoi!!,
-                factions = factions,
-                assignedFactionIds = assignedFactionIds,
+                assignedFactions = assignedFactions,
                 assignedPersons = assignedPersons,
                 accessContext = accessContext,
-                onSave = {},
+
                 onBack = {
                     selectedPoi = null
                 },
+
+                onSave = {},
+
+                onDelete = {},
+
+                onAssignFactions = {},
+
+                onPersonClick = { id ->
+                    onPersonLinkClicked(id)
+                },
+
+                onFactionClick = { id ->
+                    onFactionLinkClicked(id)
+                },
+
                 onShowOnMap = onShowOnMap
             )
         }

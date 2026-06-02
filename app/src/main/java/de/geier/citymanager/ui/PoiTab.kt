@@ -79,7 +79,12 @@ fun PoiTab(
             categoryViewModel = categoryViewModel,
             factions = visibleFactionsForPlayer,
             accessContext = accessContext,
-            onShowOnMap = triggerShowOnMap   // 🔥 geändert
+
+            onPersonLinkClicked = onPersonLinkClicked,
+
+            onFactionLinkClicked = onFactionLinkClicked,
+
+            onShowOnMap = triggerShowOnMap
         )
     }
 }
