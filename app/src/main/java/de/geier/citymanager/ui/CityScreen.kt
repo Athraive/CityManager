@@ -401,8 +401,22 @@ fun CityScreen(
                                             factions = factions,
                                             persons = allPersons,
                                             pois = allPois,
-                                            onSave = { cityViewModel.saveFaction(it) },
-                                            onDelete = { cityViewModel.deleteFaction(it) }
+
+                                            onSave = {
+                                                cityViewModel.saveFaction(it)
+                                            },
+
+                                            onDelete = {
+                                                cityViewModel.deleteFaction(it)
+                                            },
+
+                                            onPersonLinkClicked = {
+                                                activeDetail = DetailTarget.Person(it)
+                                            },
+
+                                            onPoiLinkClicked = {
+                                                activeDetail = DetailTarget.Poi(it)
+                                            }
                                         )
                                     }
                                 }

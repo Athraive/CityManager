@@ -25,7 +25,9 @@ fun FraktionenTab(
     persons: List<Person>,
     pois: List<PointOfInterest>,
     onSave: (Faction) -> Unit,
-    onDelete: (Faction) -> Unit
+    onDelete: (Faction) -> Unit,
+    onPersonLinkClicked: (String) -> Unit,
+    onPoiLinkClicked: (String) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -99,8 +101,14 @@ fun FraktionenTab(
             onBack = { activeFaction = null },
             onSave = onSave,
             onDelete = onDelete,
-            onPersonClick = { /* später Graph-Navigation */ },
-            onPoiClick = { /* später Graph-Navigation */ }
+
+            onPersonClick = { id ->
+                onPersonLinkClicked(id)
+            },
+
+            onPoiClick = { id ->
+                onPoiLinkClicked(id)
+            }
         )
         return
     }
