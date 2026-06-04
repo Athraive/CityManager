@@ -132,14 +132,24 @@ class CityViewModel(
                 emptyList()
             )
 
-    fun poisByCategory(categoryId: String): StateFlow<List<PointOfInterest>> =
-        poiRepository
-            .getPoisByCategory(categoryId, accessContext)
-            .stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                emptyList()
-            )
+    private val poiCategoryFlows =
+        mutableMapOf<String, StateFlow<List<PointOfInterest>>>()
+
+    fun poisByCategory(
+        categoryId: String
+    ): StateFlow<List<PointOfInterest>> {
+
+        return poiCategoryFlows.getOrPut(categoryId) {
+
+            poiRepository
+                .getPoisByCategory(categoryId, accessContext)
+                .stateIn(
+                    viewModelScope,
+                    SharingStarted.WhileSubscribed(5_000),
+                    emptyList()
+                )
+        }
+    }
 
     fun savePoi(poi: PointOfInterest) {
         viewModelScope.launch {

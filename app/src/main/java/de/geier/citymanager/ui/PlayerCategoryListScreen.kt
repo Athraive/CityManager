@@ -66,10 +66,16 @@ fun PlayerCategoryListScreen(
 
     var selectedSearchCategories by remember(categories) {
         mutableStateOf(
-            categories
-                .filter { it.visible }
-                .map { it.id }
-                .toSet()
+            buildSet {
+
+                addAll(
+                    categories
+                        .filter { it.visible }
+                        .map { it.id }
+                )
+
+                add("__OTHER__")
+            }
         )
     }
 
@@ -470,6 +476,11 @@ fun PlayerCategoryListScreen(
 
         } else if (selectedPoi == null) {
 
+            val poisByCategory by
+            cityViewModel
+                .poisByCategory(selectedCategory!!.id)
+                .collectAsState(initial = emptyList())
+
             val poisInCategory =
                 if (selectedCategory!!.id == "__OTHER__") {
 
@@ -485,10 +496,7 @@ fun PlayerCategoryListScreen(
 
                 } else {
 
-                    cityViewModel
-                        .poisByCategory(selectedCategory!!.id)
-                        .collectAsState(initial = emptyList())
-                        .value
+                    poisByCategory
                 }
 
             Column(
