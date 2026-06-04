@@ -99,6 +99,14 @@ fun PlayerCategoryListScreen(
                 matchesCategory && matchesFilter
             }
 
+
+
+    val hiddenCategoryIds =
+        categories
+            .filter { !it.visible }
+            .map { it.id }
+            .toSet()
+
     val filteredPois =
         allPois
             .filter { poi ->
@@ -114,9 +122,19 @@ fun PlayerCategoryListScreen(
                     )
 
                 val matchesCategory =
-                    selectedSearchCategories.contains(
-                        poi.categoryId
-                    )
+                    if (
+                        selectedSearchCategories.contains("__OTHER__") &&
+                        poi.categoryId in hiddenCategoryIds
+                    ) {
+
+                        true
+
+                    } else {
+
+                        selectedSearchCategories.contains(
+                            poi.categoryId
+                        )
+                    }
 
                 matchesName && matchesCategory
             }
@@ -406,13 +424,31 @@ fun PlayerCategoryListScreen(
             }
         }
 
+            val searchCategories =
+                buildList {
+
+                    addAll(
+                        categories.filter { it.visible }
+                    )
+
+                    add(
+                        PoiCategory(
+                            id = "__OTHER__",
+                            title = "Sonstige Orte",
+                            icon = "folder",
+                            description = null,
+                            visible = true
+                        )
+                    )
+                }
+
             SearchToolboxPanel(
                 visible = searchPanelVisible,
                 searchQuery = searchQuery,
                 onSearchQueryChange = {
                     searchQuery = it
                 },
-                categories = categories.filter { it.visible },
+                categories = searchCategories,
                 selectedCategoryIds = selectedSearchCategories,
                 onToggleCategory = { categoryId ->
 

@@ -69,7 +69,6 @@ fun GameMasterCategoryListScreen(
     var selectedSearchCategories by remember(categories) {
         mutableStateOf(
             categories
-                .filter { it.visible }
                 .map { it.id }
                 .toSet()
         )
@@ -552,8 +551,7 @@ fun GameMasterCategoryListScreen(
                     onSearchQueryChange = {
                         searchQuery = it
                     },
-                    categories =
-                        categories.filter { it.visible },
+                    categories = categories,
                     selectedCategoryIds =
                         selectedSearchCategories,
                     onToggleCategory = { categoryId ->
