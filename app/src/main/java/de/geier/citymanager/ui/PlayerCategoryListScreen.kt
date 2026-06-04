@@ -273,6 +273,26 @@ fun PlayerCategoryListScreen(
 
             } else {
 
+                val playerCategories =
+                    buildList {
+
+                        addAll(
+                            categories
+                                .filter { it.visible }
+                                .sortedBy { it.title.lowercase() }
+                        )
+
+                        add(
+                            PoiCategory(
+                                id = "__OTHER__",
+                                title = "Sonstige Orte",
+                                icon = "folder",
+                                description = null,
+                                visible = true
+                            )
+                        )
+                    }
+
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     modifier = Modifier
@@ -289,14 +309,27 @@ fun PlayerCategoryListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                    items(
-                        categories
-                            .filter { it.visible }
-                            .sortedBy { it.title.lowercase() }
-                    ) { category ->
+                    items(playerCategories) { category ->
 
                         val poiCount =
-                            allPois.count { it.categoryId == category.id }
+                            if (category.id == "__OTHER__") {
+
+                                val hiddenCategoryIds =
+                                    categories
+                                        .filter { !it.visible }
+                                        .map { it.id }
+                                        .toSet()
+
+                                allPois.count {
+                                    it.categoryId in hiddenCategoryIds
+                                }
+
+                            } else {
+
+                                allPois.count {
+                                    it.categoryId == category.id
+                                }
+                            }
 
                         Surface(
                             modifier = Modifier
@@ -401,9 +434,26 @@ fun PlayerCategoryListScreen(
 
         } else if (selectedPoi == null) {
 
-            val poisInCategory by cityViewModel
-                .poisByCategory(selectedCategory!!.id)
-                .collectAsState(initial = emptyList())
+            val poisInCategory =
+                if (selectedCategory!!.id == "__OTHER__") {
+
+                    val hiddenCategoryIds =
+                        categories
+                            .filter { !it.visible }
+                            .map { it.id }
+                            .toSet()
+
+                    allPois.filter {
+                        it.categoryId in hiddenCategoryIds
+                    }
+
+                } else {
+
+                    cityViewModel
+                        .poisByCategory(selectedCategory!!.id)
+                        .collectAsState(initial = emptyList())
+                        .value
+                }
 
             Column(
                 modifier = Modifier.fillMaxSize()

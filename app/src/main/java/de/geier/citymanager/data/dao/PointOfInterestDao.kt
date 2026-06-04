@@ -1,6 +1,10 @@
 package de.geier.citymanager.data.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import de.geier.citymanager.data.entity.PointOfInterestEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -11,7 +15,29 @@ interface PointOfInterestDao {
     fun getAll(cityId: String): Flow<List<PointOfInterestEntity>>
 
     @Query("SELECT * FROM pois WHERE cityId = :cityId AND categoryId = :categoryId")
-    fun getByCategory(cityId: String, categoryId: String): Flow<List<PointOfInterestEntity>>
+    fun getByCategory(
+        cityId: String,
+        categoryId: String
+    ): Flow<List<PointOfInterestEntity>>
+
+    /**
+     * Alle für Spieler sichtbaren POIs.
+     *
+     * Wichtig:
+     * Die Sichtbarkeit der Kategorie spielt hier bewusst
+     * keine Rolle mehr.
+     */
+    @Query(
+        """
+        SELECT *
+        FROM pois
+        WHERE cityId = :cityId
+          AND visible = 1
+        """
+    )
+    fun getVisiblePois(
+        cityId: String
+    ): Flow<List<PointOfInterestEntity>>
 
     @Query(
         """
@@ -24,7 +50,9 @@ interface PointOfInterestDao {
           AND pois.visible = 1
         """
     )
-    fun getVisibleForPlayer(cityId: String): Flow<List<PointOfInterestEntity>>
+    fun getVisibleForPlayer(
+        cityId: String
+    ): Flow<List<PointOfInterestEntity>>
 
     @Query(
         """

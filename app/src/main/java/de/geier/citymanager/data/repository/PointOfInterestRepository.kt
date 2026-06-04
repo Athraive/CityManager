@@ -21,7 +21,7 @@ class PointOfInterestRepository(
                 }
 
             else ->
-                dao.getVisibleForPlayer(cityId).map { list ->
+                dao.getVisiblePois(cityId).map { list ->
                     list.map { it.toUi() }
                 }
         }
