@@ -115,6 +115,9 @@ fun PersonenTab(
                 accessContext = accessContext,
                 onBack = { viewModel.clearSelection() },
                 onSave = { viewModel.save(it) },
+                onSavePlayerNotes = { personId, notes ->
+                    viewModel.savePlayerNotes(personId, notes)
+                },
                 onDelete = { viewModel.delete(it) },
                 onAssignPois = { showAssignPois = true },
                 onAssignFactions = { showAssignFactions = true },

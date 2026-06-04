@@ -177,6 +177,12 @@ fun CityScreen(
                                         accessContext = accessContext,
                                         onBack = { activeDetail = null },
                                         onSave = { personViewModel.save(it) },
+                                        onSavePlayerNotes = { personId, notes ->
+                                            personViewModel.savePlayerNotes(
+                                                personId,
+                                                notes
+                                            )
+                                        },
                                         onDelete = { personViewModel.delete(it) },
                                         onAssignPois = {},
                                         onAssignFactions = {},

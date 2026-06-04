@@ -52,7 +52,23 @@ class PersonViewModel(
             }
         }
     }
+    fun savePlayerNotes(
+        personId: String,
+        playerNotes: String
+    ) {
+        viewModelScope.launch {
 
+            personRepository.savePlayerNotes(
+                personId = personId,
+                playerNotes = playerNotes
+            )
+
+            _selectedPerson.value =
+                _selectedPerson.value?.copy(
+                    playerNotes = playerNotes
+                )
+        }
+    }
     fun delete(person: Person) {
         viewModelScope.launch {
             personRepository.delete(person, accessContext)

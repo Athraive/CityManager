@@ -41,6 +41,7 @@ fun PersonDetailScreen(
     accessContext: AccessContext,
     onBack: () -> Unit,
     onSave: (Person) -> Unit,
+    onSavePlayerNotes: (String, String) -> Unit,
     onDelete: (Person) -> Unit,
     onAssignPois: () -> Unit,
     onAssignFactions: () -> Unit,
@@ -365,22 +366,36 @@ fun PersonDetailScreen(
             Button(
                 enabled = name.isNotBlank(),
                 onClick = {
-                    onSave(
-                        person.copy(
-                            name = name,
-                            shortDescription = shortDescription,
-                            description = description,
-                            playerNotes = playerNotes,
-                            gameMasterNotes = gameMasterNotes,
-                            visible = visible,
-                            portraitImageUri = imageUri
+
+                    if (canEdit) {
+
+                        onSave(
+                            person.copy(
+                                name = name,
+                                shortDescription = shortDescription,
+                                description = description,
+                                playerNotes = playerNotes,
+                                gameMasterNotes = gameMasterNotes,
+                                visible = visible,
+                                portraitImageUri = imageUri
+                            )
                         )
-                    )
+
+                    } else {
+
+                        onSavePlayerNotes(
+                            person.id,
+                            playerNotes
+                        )
+                    }
+
                     onBack()
                 }
             ) {
-                Text("Speichern",
-                    fontFamily = FontFamily.SansSerif)
+                Text(
+                    "Speichern",
+                    fontFamily = FontFamily.SansSerif
+                )
             }
         }
     }

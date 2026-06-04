@@ -32,7 +32,15 @@ class PersonRepository(
         }
         dao.upsertPerson(person.toEntity(cityId))
     }
-
+    suspend fun savePlayerNotes(
+        personId: String,
+        playerNotes: String
+    ) {
+        dao.updatePlayerNotes(
+            personId = personId,
+            playerNotes = playerNotes
+        )
+    }
     suspend fun delete(person: Person, accessContext: AccessContext) {
         require(accessContext.canEdit()) {
             "Player is not allowed to delete persons"

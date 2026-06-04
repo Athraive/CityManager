@@ -19,6 +19,15 @@ interface PersonDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPerson(person: PersonEntity)
 
+    @Query("""
+    UPDATE persons
+    SET playerNotes = :playerNotes
+    WHERE id = :personId
+""")
+    suspend fun updatePlayerNotes(
+        personId: String,
+        playerNotes: String
+    )
     @Query("DELETE FROM persons WHERE id = :personId")
     suspend fun deletePerson(personId: String)
 
