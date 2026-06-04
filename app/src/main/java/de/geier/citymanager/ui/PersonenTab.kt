@@ -17,6 +17,7 @@ import de.geier.citymanager.ui.viewmodel.PersonViewModel
 import java.util.Locale
 import java.util.UUID
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Search
 
 @Composable
 fun PersonenTab(
@@ -174,7 +175,13 @@ fun PersonenTab(
                             .fillMaxWidth()
                             .padding(12.dp),
                         label = { Text("Person suchen") },
-                        singleLine = true
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = null
+                            )
+                        }
                     )
 
                     if (groupedPersons.isEmpty()) {
@@ -214,28 +221,36 @@ fun PersonenTab(
                                 }
 
                                 items(personsInGroup, key = { it.id }) { person ->
-                                    Column(
+
+                                    ElevatedCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable {
-                                                viewModel.selectPerson(person)
-                                            }
                                             .padding(
                                                 horizontal = 16.dp,
-                                                vertical = 12.dp
-                                            )
+                                                vertical = 4.dp
+                                            ),
+                                        onClick = {
+                                            viewModel.selectPerson(person)
+                                        }
                                     ) {
-                                        Text(
-                                            text = person.name.ifBlank { "Unbenannte Person" },
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
 
-                                        if (person.description.isNotBlank()) {
+                                        Column(
+                                            modifier = Modifier.padding(16.dp)
+                                        ) {
                                             Text(
-                                                text = person.description,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                maxLines = 2
+                                                text = person.name.ifBlank { "Unbenannte Person" },
+                                                style = MaterialTheme.typography.titleMedium
                                             )
+
+                                            if (person.shortDescription.isNotBlank()) {
+
+                                                Text(
+                                                    text = person.shortDescription,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                            }
                                         }
                                     }
                                 }

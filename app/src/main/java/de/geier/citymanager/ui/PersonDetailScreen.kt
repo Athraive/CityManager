@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
+
 package de.geier.citymanager.ui
 
 import android.content.Intent
@@ -27,7 +28,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.material3.AssistChip
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PersonDetailScreen(
     person: Person,
@@ -260,13 +265,22 @@ fun PersonDetailScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                assignedFactions.forEach { faction ->
-                    Text(
-                        text = "• ${faction.name}",
-                        modifier = Modifier.clickable {
-                            onFactionClick(faction.id)
-                        }
-                    )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    assignedFactions.forEach { faction ->
+
+                        AssistChip(
+                            onClick = {
+                                onFactionClick(faction.id)
+                            },
+                            label = {
+                                Text(faction.name)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -288,13 +302,22 @@ fun PersonDetailScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                assignedPois.forEach { poi ->
-                    Text(
-                        text = "• ${poi.name}",
-                        modifier = Modifier.clickable {
-                            onPoiClick(poi.id)
-                        }
-                    )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    assignedPois.forEach { poi ->
+
+                        AssistChip(
+                            onClick = {
+                                onPoiClick(poi.id)
+                            },
+                            label = {
+                                Text(poi.name)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -310,7 +333,12 @@ fun PersonDetailScreen(
             HorizontalDivider()
             Text("Notizen", style = MaterialTheme.typography.titleMedium)
 
-            Text("Spieler-Notizen")
+            Text(
+                "Spieler-Notizen",
+                style = MaterialTheme.typography.titleSmall
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = playerNotes,
                 onValueChange = { playerNotes = it },
@@ -319,7 +347,13 @@ fun PersonDetailScreen(
             )
 
             if (canEdit) {
-                Text("SL-Notizen")
+                Text(
+                    "SL-Notizen",
+                    style = MaterialTheme.typography.titleSmall
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = gameMasterNotes,
                     onValueChange = { gameMasterNotes = it },
