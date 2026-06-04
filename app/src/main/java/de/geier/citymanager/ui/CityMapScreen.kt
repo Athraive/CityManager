@@ -503,7 +503,7 @@ fun CityMapScreen(
                             modifier = Modifier.padding(start = 40.dp)
                         ) {
                             Text(
-                                text = "Kategorien (${visibleCategoryIds.size}/${poiCategories.size})",
+                                "Kategorien (${visibleCategoryIds.size}/${poiCategories.size})",
                                 style = MaterialTheme.typography.bodyMedium
                             )
 
@@ -543,6 +543,31 @@ fun CityMapScreen(
 
 
             /* ---------------- CATEGORY PANEL ---------------- */
+
+            val mapCategories =
+                if (accessContext.canEdit()) {
+
+                    poiCategories
+
+                } else {
+
+                    buildList {
+
+                        addAll(
+                            poiCategories.filter { it.visible }
+                        )
+
+                        add(
+                            PoiCategory(
+                                id = "__OTHER__",
+                                title = "Sonstige Orte",
+                                icon = "folder",
+                                description = null,
+                                visible = true
+                            )
+                        )
+                    }
+                }
 
             if (activePanel == MapPanel.CATEGORIES) {
 
@@ -591,9 +616,25 @@ fun CityMapScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        poiCategories.forEach { category ->
+                        mapCategories.forEach { category ->
 
-                            val checked = visibleCategoryIds.contains(category.id)
+                            val checked =
+                                if (category.id == "__OTHER__") {
+
+                                    val hiddenCategoryIds =
+                                        poiCategories
+                                            .filter { !it.visible }
+                                            .map { it.id }
+                                            .toSet()
+
+                                    hiddenCategoryIds.any {
+                                        visibleCategoryIds.contains(it)
+                                    }
+
+                                } else {
+
+                                    visibleCategoryIds.contains(category.id)
+                                }
 
                             Row(
                                 modifier = Modifier
@@ -601,14 +642,33 @@ fun CityMapScreen(
                                     .toggleable(
                                         value = checked,
                                         onValueChange = { isChecked ->
-                                            visibleCategoryIds =
-                                                if (isChecked)
-                                                    visibleCategoryIds + category.id
-                                                else
-                                                    visibleCategoryIds - category.id
+
+                                            if (category.id == "__OTHER__") {
+
+                                                val hiddenCategoryIds =
+                                                    poiCategories
+                                                        .filter { !it.visible }
+                                                        .map { it.id }
+                                                        .toSet()
+
+                                                visibleCategoryIds =
+                                                    if (isChecked) {
+                                                        visibleCategoryIds + hiddenCategoryIds
+                                                    } else {
+                                                        visibleCategoryIds - hiddenCategoryIds
+                                                    }
+
+                                            } else {
+
+                                                visibleCategoryIds =
+                                                    if (isChecked)
+                                                        visibleCategoryIds + category.id
+                                                    else
+                                                        visibleCategoryIds - category.id
+                                            }
 
                                             showPois =
-                                                visibleCategoryIds.size == poiCategories.size
+                                                visibleCategoryIds.isNotEmpty()
                                         }
                                     )
                                     .padding(vertical = 8.dp),
