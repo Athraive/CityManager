@@ -11,6 +11,7 @@ import de.geier.citymanager.ui.AccessContext
 import de.geier.citymanager.ui.Person
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class PersonViewModel(
     private val accessContext: AccessContext,
@@ -35,10 +36,23 @@ class PersonViewModel(
     val selectedPerson: StateFlow<Person?> = _selectedPerson.asStateFlow()
 
     fun selectPerson(person: Person) {
+
+        Log.d(
+            "PERSON_DRAFT",
+            "selectPerson: ${person.id} | ${person.name}"
+        )
+
         _selectedPerson.value = person
     }
 
     fun clearSelection() {
+
+        Log.e(
+            "PERSON_DRAFT",
+            "clearSelection",
+            RuntimeException("trace")
+        )
+
         _selectedPerson.value = null
     }
 

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.material3.AssistChip
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -51,7 +52,9 @@ fun PersonDetailScreen(
     onShowOnMap: (String) -> Unit
 ) {
 
-    var name by remember(person.id) { mutableStateOf(person.name) }
+    var name by rememberSaveable(person.id) {
+        mutableStateOf(person.name)
+    }
     var description by remember(person.id) { mutableStateOf(person.description) }
     var shortDescription by remember(person.id) {
         mutableStateOf(person.shortDescription)
@@ -96,8 +99,38 @@ fun PersonDetailScreen(
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.Close, contentDescription = "Schließen")
+                    IconButton(
+                        onClick = {
+
+                            if (canEdit) {
+
+                                onSave(
+                                    person.copy(
+                                        name = name,
+                                        shortDescription = shortDescription,
+                                        description = description,
+                                        playerNotes = playerNotes,
+                                        gameMasterNotes = gameMasterNotes,
+                                        visible = visible,
+                                        portraitImageUri = imageUri
+                                    )
+                                )
+
+                            } else {
+
+                                onSavePlayerNotes(
+                                    person.id,
+                                    playerNotes
+                                )
+                            }
+
+                            onBack()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
                     }
                 },
                 actions = {
@@ -293,9 +326,28 @@ fun PersonDetailScreen(
             }
 
             if (canEdit) {
-                Button(onClick = onAssignFactions) {
-                    Text("Fraktionen zuweisen",
-                        fontFamily = FontFamily.SansSerif)
+                Button(
+                    onClick = {
+
+                        onSave(
+                            person.copy(
+                                name = name,
+                                shortDescription = shortDescription,
+                                description = description,
+                                playerNotes = playerNotes,
+                                gameMasterNotes = gameMasterNotes,
+                                visible = visible,
+                                portraitImageUri = imageUri
+                            )
+                        )
+
+                        onAssignFactions()
+                    }
+                ) {
+                    Text(
+                        "Fraktionen zuweisen",
+                        fontFamily = FontFamily.SansSerif
+                    )
                 }
             }
 
@@ -330,9 +382,28 @@ fun PersonDetailScreen(
             }
 
             if (canEdit) {
-                Button(onClick = onAssignPois) {
-                    Text("Orte zuweisen",
-                        fontFamily = FontFamily.SansSerif)
+                Button(
+                    onClick = {
+
+                        onSave(
+                            person.copy(
+                                name = name,
+                                shortDescription = shortDescription,
+                                description = description,
+                                playerNotes = playerNotes,
+                                gameMasterNotes = gameMasterNotes,
+                                visible = visible,
+                                portraitImageUri = imageUri
+                            )
+                        )
+
+                        onAssignPois()
+                    }
+                ) {
+                    Text(
+                        "Orte zuweisen",
+                        fontFamily = FontFamily.SansSerif
+                    )
                 }
             }
 

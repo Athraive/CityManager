@@ -146,20 +146,25 @@ fun PersonenTab(
                     if (accessContext.canEdit()) {
                         FloatingActionButton(
                             onClick = {
-                                viewModel.selectPerson(
-                                    Person(
-                                        id = UUID.randomUUID().toString(),
-                                        name = "",
-                                        description = "",
-                                        portraitImageUri = null,
-                                        visible = true,
-                                        playerNotes = "",
-                                        gameMasterNotes = ""
-                                    )
+
+                                val newPerson = Person(
+                                    id = UUID.randomUUID().toString(),
+                                    name = "",
+                                    description = "",
+                                    portraitImageUri = null,
+                                    visible = true,
+                                    playerNotes = "",
+                                    gameMasterNotes = ""
                                 )
+
+                                viewModel.save(newPerson)
+                                viewModel.selectPerson(newPerson)
                             }
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Person anlegen")
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Person anlegen"
+                            )
                         }
                     }
                 }
