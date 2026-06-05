@@ -643,26 +643,42 @@ fun GameMasterCategoryListScreen(
                             }
                         ) { poi ->
 
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        selectedPoi = poi
-                                        poiViewModel.selectPoi(poi)
-                                    }
-                                    .padding(
-                                        vertical = 10.dp,
-                                        horizontal = 4.dp
-                                    )
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    selectedPoi = poi
+                                    poiViewModel.selectPoi(poi)
+                                }
                             ) {
 
-                                Text(
-                                    text = poi.name,
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .titleMedium
-                                )
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+
+                                    Text(
+                                        text = poi.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+
+                                    poi.description
+                                        ?.takeIf { it.isNotBlank() }
+                                        ?.let { description ->
+
+                                            Spacer(
+                                                modifier = Modifier.height(4.dp)
+                                            )
+
+                                            Text(
+                                                text = description,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                                maxLines = 2
+                                            )
+                                        }
+                                }
                             }
                         }
                     }
