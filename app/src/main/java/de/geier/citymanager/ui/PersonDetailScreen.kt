@@ -261,7 +261,12 @@ fun PersonDetailScreen(
 
             /* ---------- Karte ---------- */
 
+            val hasMapPosition =
+                person.mapX != null &&
+                        person.mapY != null
+
             OutlinedButton(
+                enabled = hasMapPosition,
                 onClick = { onShowOnMap(person.id) },
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -166,12 +166,19 @@ fun PoiDetailScreen(
 
             /* ---------- Karte ---------- */
 
-            Button(
+            val hasMapPosition =
+                poi.mapX != null &&
+                        poi.mapY != null
+
+            OutlinedButton(
+                enabled = hasMapPosition,
                 onClick = { onShowOnMap(poi.id) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Auf Karte anzeigen",
-                    fontFamily = FontFamily.SansSerif)
+                Text(
+                    "Auf Karte anzeigen",
+                    fontFamily = FontFamily.SansSerif
+                )
             }
 
             Text(
