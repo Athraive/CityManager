@@ -291,7 +291,10 @@ fun MapContent(
                             modifier = Modifier
                                 .size(pinSize * 0.45f)
                                 .background(
-                                    Color(0xFF6FA8DC),
+                                    if (selectedPersonId == it.id)
+                                        Color.White
+                                    else
+                                        Color(0xFF6FA8DC),
                                     CircleShape
                                 )
                         )
@@ -346,7 +349,10 @@ fun MapContent(
                             modifier = Modifier
                                 .size(pinSize * 0.45f)
                                 .background(
-                                    Color(0xFFC04BFF),
+                                    if (selectedPoiId == it.id)
+                                        Color.White
+                                    else
+                                        Color(0xFFC04BFF),
                                     RoundedCornerShape(1.dp)
                                 )
                         )
