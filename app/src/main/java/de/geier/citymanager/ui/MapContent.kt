@@ -304,6 +304,7 @@ fun MapContent(
                             x = x,
                             y = y,
                             scale = scale,
+                            showLeft = x > renderedWidth * 0.75f,
                             onClick = {
                                 onPersonBubbleClick(it.id)
                             }
@@ -358,6 +359,7 @@ fun MapContent(
                             x = x,
                             y = y,
                             scale = scale,
+                            showLeft = x > renderedWidth * 0.75f,
                             onClick = {
                                 onPoiBubbleClick(it.id)
                             }
@@ -396,6 +398,7 @@ private fun PinLabel(
     x: Float,
     y: Float,
     scale: Float,
+    showLeft: Boolean,
     onClick: () -> Unit
 ) {
 
@@ -405,8 +408,14 @@ private fun PinLabel(
     Box(
         modifier = Modifier
             .offset {
+                val labelX =
+                    if (showLeft)
+                        x - (220f / scale)
+                    else
+                        x + offsetXPx
+
                 IntOffset(
-                    (x + offsetXPx).roundToInt(),
+                    labelX.roundToInt(),
                     (y - offsetYPx).roundToInt()
                 )
             }

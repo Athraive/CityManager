@@ -32,6 +32,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.filled.Place
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -160,6 +161,10 @@ fun PersonDetailScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
+                val hasMapPosition =
+                    person.mapX != null &&
+                            person.mapY != null
+
                 Box(
                     modifier = Modifier
                         .width(180.dp)
@@ -175,7 +180,7 @@ fun PersonDetailScreen(
                             model = imageUri,
                             contentDescription = "Person Bild",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Crop
                         )
 
                     } else {
@@ -186,6 +191,28 @@ fun PersonDetailScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(72.dp)
                         )
+                    }
+
+                    if (hasMapPosition) {
+
+                        Surface(
+                            onClick = {
+                                onShowOnMap(person.id)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.Place,
+                                contentDescription = "Auf Karte anzeigen",
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
                     }
                 }
 
@@ -261,21 +288,7 @@ fun PersonDetailScreen(
 
             /* ---------- Karte ---------- */
 
-            val hasMapPosition =
-                person.mapX != null &&
-                        person.mapY != null
 
-            OutlinedButton(
-                enabled = hasMapPosition,
-                onClick = { onShowOnMap(person.id) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Auf Karte anzeigen",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = FontFamily.SansSerif
-                )
-            }
 
             Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
