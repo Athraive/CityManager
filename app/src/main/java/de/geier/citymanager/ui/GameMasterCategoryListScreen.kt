@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 import de.geier.citymanager.ui.viewmodel.PoiViewModel
 import java.util.UUID
+import androidx.compose.material.icons.filled.Close
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -583,44 +584,31 @@ fun GameMasterCategoryListScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
 
+                    TopAppBar(
+                        title = { },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    selectedCategory = null
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Schließen"
+                                )
+                            }
+                        }
+                    )
+
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
 
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme
-                                .surfaceVariant
-                                .copy(alpha = 0.6f)
-                        ) {
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 4.dp
-                                )
-                            ) {
-
-                                Text(
-                                    text = selectedCategory!!.title,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Text(
-                                    text = "✕",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .clickable {
-                                            selectedCategory = null
-                                        }
-                                )
-                            }
-                        }
+                        Text(
+                            text = selectedCategory!!.title,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
 
                         selectedCategory!!
                             .description
@@ -633,18 +621,15 @@ fun GameMasterCategoryListScreen(
 
                                 Text(
                                     text = description,
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .bodySmall,
-                                    color =
-                                        MaterialTheme
-                                            .colorScheme
-                                            .onSurfaceVariant
-                                            .copy(alpha = 0.85f)
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .copy(alpha = 0.85f)
                                 )
                             }
                     }
+
 
                     LazyColumn(
                         contentPadding = PaddingValues(16.dp),
