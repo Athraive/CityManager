@@ -43,8 +43,8 @@ fun CityOverviewTab(
     LaunchedEffect(focusTrigger) {
 
         if (
-            currentRoute == Route.STADTUEBERSICHT &&
-            (focusPersonId != null || focusPoiId != null)
+            focusPersonId != null ||
+            focusPoiId != null
         ) {
             navController.navigate(Route.STADTKARTE) {
                 popUpTo(Route.STADTUEBERSICHT) { inclusive = false }

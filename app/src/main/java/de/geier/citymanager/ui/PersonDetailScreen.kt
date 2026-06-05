@@ -58,6 +58,13 @@ fun PersonDetailScreen(
     }
     var playerNotes by remember(person.id) { mutableStateOf(person.playerNotes) }
     var gameMasterNotes by remember(person.id) { mutableStateOf(person.gameMasterNotes) }
+    var playerNotesExpanded by remember(person.id) {
+        mutableStateOf(false)
+    }
+
+    var gameMasterNotesExpanded by remember(person.id) {
+        mutableStateOf(false)
+    }
     var visible by remember(person.id) { mutableStateOf(person.visible) }
 
     // ✅ NEU: Bild-State
@@ -344,9 +351,21 @@ fun PersonDetailScreen(
                 value = playerNotes,
                 onValueChange = { playerNotes = it },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 4
+                minLines = 4,
+                maxLines = if (playerNotesExpanded) 12 else 4
             )
-
+            TextButton(
+                onClick = {
+                    playerNotesExpanded = !playerNotesExpanded
+                }
+            ) {
+                Text(
+                    if (playerNotesExpanded)
+                        "Weniger anzeigen"
+                    else
+                        "Mehr anzeigen"
+                )
+            }
             if (canEdit) {
                 Text(
                     "SL-Notizen",
