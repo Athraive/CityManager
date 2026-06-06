@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.material.icons.filled.Place
 
 @Composable
 fun PoiDetailScreen(
@@ -36,7 +37,7 @@ fun PoiDetailScreen(
     onBack: () -> Unit,
     onSave: (PointOfInterest) -> Unit,
     onDelete: (PointOfInterest) -> Unit,
-    onAssignFactions: () -> Unit,
+    onAssignFactions: (PointOfInterest) -> Unit,
     onPersonClick: (String) -> Unit,
     onFactionClick: (String) -> Unit,
     onShowOnMap: (String) -> Unit
@@ -78,8 +79,30 @@ fun PoiDetailScreen(
             TopAppBar(
                 title = { Text(name.ifBlank { "Ort" }) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.Close, contentDescription = "Schließen")
+                    IconButton(
+                        onClick = {
+
+                            if (canEdit) {
+
+                                onSave(
+                                    poi.copy(
+                                        name = name,
+                                        description = description.takeIf { it.isNotBlank() },
+                                        visible = visible,
+                                        playerNotes = playerNotes,
+                                        gameMasterNotes = gameMasterNotes,
+                                        imageUri = imageUri
+                                    )
+                                )
+                            }
+
+                            onBack()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
                     }
                 },
                 actions = {
@@ -102,112 +125,99 @@ fun PoiDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            if (canEdit) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Name",
-                        fontFamily = FontFamily.SansSerif) },
-                    singleLine = true
-                )
-            } else {
-                Text(name, style = MaterialTheme.typography.titleLarge)
-            }
 
-            /* ---------- Bild ---------- */
 
-            Row(
+            /* ---------- Header ---------- */
+
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Spacer(modifier = Modifier.weight(1f))
+                val hasMapPosition =
+                    poi.mapX != null &&
+                            poi.mapY != null
 
-                Column(horizontalAlignment = Alignment.End) {
+                Box(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(enabled = canEdit) {
+                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
 
-                    Box(
-                        modifier = Modifier
-                            .width(140.dp)
-                            .heightIn(max = 220.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (displayImage != null) {
-                            AsyncImage(
-                                model = displayImage,
-                                contentDescription = "POI Bild",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(64.dp)
-                            )
-                        }
+                    if (displayImage != null) {
+
+                        AsyncImage(
+                            model = displayImage,
+                            contentDescription = "POI Bild",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                    } else {
+
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(72.dp)
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    if (hasMapPosition) {
 
-                    if (canEdit) {
-                        Button(
-                            onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
+                        Surface(
+                            onClick = {
+                                onShowOnMap(poi.id)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
                         ) {
-                            Text("Bild auswählen",
-                                fontFamily = FontFamily.SansSerif)
+
+                            Icon(
+                                imageVector = Icons.Default.Place,
+                                contentDescription = "Auf Karte anzeigen",
+                                modifier = Modifier.padding(8.dp)
+                            )
                         }
                     }
                 }
-            }
 
-            /* ---------- Karte ---------- */
+                Spacer(modifier = Modifier.height(16.dp))
 
-            val hasMapPosition =
-                poi.mapX != null &&
-                        poi.mapY != null
+                if (canEdit) {
 
-            OutlinedButton(
-                enabled = hasMapPosition,
-                onClick = { onShowOnMap(poi.id) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Auf Karte anzeigen",
-                    fontFamily = FontFamily.SansSerif
-                )
-            }
-
-            Text(
-                "Beschreibung",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontFamily = FontFamily.SansSerif
-                )
-            )
-
-            if (canEdit) {
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
-                )
-            } else if (description.isNotBlank()) {
-                Text(description)
-            }
-
-            if (canEdit) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Checkbox(
-                        checked = visible,
-                        onCheckedChange = { visible = it }
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        label = {
+                            Text(
+                                "Name",
+                                fontFamily = FontFamily.SansSerif
+                            )
+                        }
                     )
-                    Text("Für Spieler sichtbar",
-                        fontFamily = FontFamily.SansSerif)
+
+                } else {
+
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             /* ---------- Fraktionen ---------- */
@@ -237,7 +247,20 @@ fun PoiDetailScreen(
             }
 
             if (canEdit) {
-                Button(onClick = onAssignFactions) {
+                Button(
+                    onClick = {
+                        onAssignFactions(
+                            poi.copy(
+                                name = name,
+                                description = description.takeIf { it.isNotBlank() },
+                                visible = visible,
+                                playerNotes = playerNotes,
+                                gameMasterNotes = gameMasterNotes,
+                                imageUri = imageUri
+                            )
+                        )
+                    }
+                ) {
                     Text(
                         "Fraktionen zuweisen",
                         fontFamily = FontFamily.SansSerif

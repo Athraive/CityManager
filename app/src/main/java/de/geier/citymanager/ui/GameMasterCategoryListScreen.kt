@@ -173,7 +173,13 @@ fun GameMasterCategoryListScreen(
                 selectedPoi = null
                 poiViewModel.clearSelection()
             },
-            onAssignFactions = {
+            onAssignFactions = { updatedPoi ->
+
+                cityViewModel.savePoi(updatedPoi)
+
+                selectedPoi = updatedPoi
+                poiViewModel.selectPoi(updatedPoi)
+
                 assigningFactions = true
             },
             onPersonClick = { id ->

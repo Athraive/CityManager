@@ -170,7 +170,10 @@ fun PersonDetailScreen(
                         .width(180.dp)
                         .heightIn(max = 260.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(enabled = canEdit) {
+                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        },
                     contentAlignment = Alignment.Center
                 ) {
 
@@ -269,21 +272,7 @@ fun PersonDetailScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                if (canEdit) {
 
-                    OutlinedButton(
-                        onClick = {
-                            imagePickerLauncher.launch(arrayOf("image/*"))
-                        }
-                    ) {
-
-                        Text(
-                            "Bild auswählen",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = FontFamily.SansSerif
-                        )
-                    }
-                }
             }
 
             /* ---------- Karte ---------- */
