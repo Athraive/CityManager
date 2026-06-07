@@ -157,11 +157,21 @@ fun FraktionenTab(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
+
                         Text(
-                            faction.name,
+                            text = faction.name.ifBlank { "Unbenannte Fraktion" },
                             style = MaterialTheme.typography.titleMedium
                         )
-                        faction.description?.let { Text(it) }
+
+                        if (faction.shortDescription.isNotBlank()) {
+
+                            Text(
+                                text = faction.shortDescription,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }

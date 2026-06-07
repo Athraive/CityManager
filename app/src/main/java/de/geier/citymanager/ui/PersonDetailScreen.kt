@@ -247,39 +247,9 @@ fun PersonDetailScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                if (!canEdit) {
 
-                if (canEdit) {
-
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        label = {
-                            Text(
-                                "Name",
-                                fontFamily = FontFamily.SansSerif
-                            )
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = shortDescription,
-                        onValueChange = { shortDescription = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        label = {
-                            Text(
-                                "Kurzbeschreibung",
-                                fontFamily = FontFamily.SansSerif
-                            )
-                        }
-                    )
-
-                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = name,
@@ -301,20 +271,53 @@ fun PersonDetailScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            /* ---------- Karte ---------- */
+            if (canEdit) {
 
+                Text(
+                    "Name",
+                    style = MaterialTheme.typography.titleMedium
+                )
 
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    "Kurzbeschreibung",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                OutlinedTextField(
+                    value = shortDescription,
+                    onValueChange = { shortDescription = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            /* ---------- Beschreibung ---------- */
 
             if (canEdit) {
+
+                Text(
+                    "Beschreibung",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
+
             } else if (description.isNotBlank()) {
+
                 Text(description)
             }
 
@@ -447,14 +450,12 @@ fun PersonDetailScreen(
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-            Text("Notizen", style = MaterialTheme.typography.titleMedium)
 
             Text(
                 "Spieler-Notizen",
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = playerNotes,
                 onValueChange = { playerNotes = it },
@@ -474,20 +475,35 @@ fun PersonDetailScreen(
                         "Mehr anzeigen"
                 )
             }
+
+            HorizontalDivider()
+
             if (canEdit) {
                 Text(
                     "SL-Notizen",
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleMedium
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = gameMasterNotes,
                     onValueChange = { gameMasterNotes = it },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 4
+                    minLines = 4,
+                    maxLines = if (gameMasterNotesExpanded) 12 else 4
                 )
+
+                TextButton(
+                    onClick = {
+                        gameMasterNotesExpanded = !gameMasterNotesExpanded
+                    }
+                ) {
+                    Text(
+                        if (gameMasterNotesExpanded)
+                            "Weniger anzeigen"
+                        else
+                            "Mehr anzeigen"
+                    )
+                }
             }
 
             Button(
