@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -196,6 +198,32 @@ fun PersonDetailScreen(
                         )
                     }
 
+                    if (canEdit) {
+
+                        Surface(
+                            onClick = {
+                                visible = !visible
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
+                        ) {
+
+                            Icon(
+                                imageVector =
+                                    if (visible)
+                                        Icons.Default.Visibility
+                                    else
+                                        Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+
                     if (hasMapPosition) {
 
                         Surface(
@@ -271,8 +299,6 @@ fun PersonDetailScreen(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-
-
             }
 
             /* ---------- Karte ---------- */
@@ -292,27 +318,26 @@ fun PersonDetailScreen(
                 Text(description)
             }
 
-            if (canEdit) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Checkbox(
-                        checked = visible,
-                        onCheckedChange = { visible = it }
-                    )
-                    Text("Für Spieler sichtbar")
-                }
-            }
+
 
             /* ---------- Fraktionen ---------- */
 
             HorizontalDivider()
-            Text("Fraktionen", style = MaterialTheme.typography.titleMedium)
+
+            Text(
+                "Fraktionen",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             if (assignedFactions.isEmpty()) {
+
                 Text(
-                    "Keine Fraktionen zugewiesen",
+                    "–",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
             } else {
+
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -333,7 +358,8 @@ fun PersonDetailScreen(
             }
 
             if (canEdit) {
-                Button(
+
+                OutlinedButton(
                     onClick = {
 
                         onSave(
@@ -351,24 +377,29 @@ fun PersonDetailScreen(
                         onAssignFactions()
                     }
                 ) {
-                    Text(
-                        "Fraktionen zuweisen",
-                        fontFamily = FontFamily.SansSerif
-                    )
+
+                    Text("Fraktionen zuweisen")
                 }
             }
 
             /* ---------- Orte ---------- */
 
             HorizontalDivider()
-            Text("Orte", style = MaterialTheme.typography.titleMedium)
+
+            Text(
+                "Orte",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             if (assignedPois.isEmpty()) {
+
                 Text(
-                    "Keine Orte zugewiesen",
+                    "–",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
             } else {
+
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -389,7 +420,8 @@ fun PersonDetailScreen(
             }
 
             if (canEdit) {
-                Button(
+
+                OutlinedButton(
                     onClick = {
 
                         onSave(
@@ -407,10 +439,8 @@ fun PersonDetailScreen(
                         onAssignPois()
                     }
                 ) {
-                    Text(
-                        "Orte zuweisen",
-                        fontFamily = FontFamily.SansSerif
-                    )
+
+                    Text("Orte zuweisen")
                 }
             }
 

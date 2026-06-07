@@ -27,7 +27,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PoiDetailScreen(
     poi: PointOfInterest,
@@ -169,6 +173,32 @@ fun PoiDetailScreen(
                         )
                     }
 
+                    if (canEdit) {
+
+                        Surface(
+                            onClick = {
+                                visible = !visible
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
+                        ) {
+
+                            Icon(
+                                imageVector =
+                                    if (visible)
+                                        Icons.Default.Visibility
+                                    else
+                                        Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+
                     if (hasMapPosition) {
 
                         Surface(
@@ -223,31 +253,43 @@ fun PoiDetailScreen(
             /* ---------- Fraktionen ---------- */
 
             HorizontalDivider()
+
             Text(
                 "Fraktionen",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontFamily = FontFamily.SansSerif
-                )
+                style = MaterialTheme.typography.titleLarge
             )
 
             if (assignedFactions.isEmpty()) {
+
                 Text(
-                    "Keine Fraktionen zugeordnet",
+                    "–",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
             } else {
-                assignedFactions.forEach { faction ->
-                    Text(
-                        text = "• ${faction.name}",
-                        modifier = Modifier.clickable {
-                            onFactionClick(faction.id)
-                        }
-                    )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    assignedFactions.forEach { faction ->
+
+                        AssistChip(
+                            onClick = {
+                                onFactionClick(faction.id)
+                            },
+                            label = {
+                                Text(faction.name)
+                            }
+                        )
+                    }
                 }
             }
 
             if (canEdit) {
-                Button(
+
+                OutlinedButton(
                     onClick = {
                         onAssignFactions(
                             poi.copy(
@@ -261,36 +303,45 @@ fun PoiDetailScreen(
                         )
                     }
                 ) {
-                    Text(
-                        "Fraktionen zuweisen",
-                        fontFamily = FontFamily.SansSerif
-                    )
+
+                    Text("Fraktionen zuweisen")
                 }
             }
 
             /* ---------- Personen ---------- */
 
             HorizontalDivider()
+
             Text(
                 "Personen",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontFamily = FontFamily.SansSerif
-                )
+                style = MaterialTheme.typography.titleLarge
             )
 
             if (assignedPersons.isEmpty()) {
+
                 Text(
-                    "Keine Personen zugeordnet",
+                    "–",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
             } else {
-                assignedPersons.forEach { person ->
-                    Text(
-                        text = "• ${person.name}",
-                        modifier = Modifier.clickable {
-                            onPersonClick(person.id)
-                        }
-                    )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    assignedPersons.forEach { person ->
+
+                        AssistChip(
+                            onClick = {
+                                onPersonClick(person.id)
+                            },
+                            label = {
+                                Text(person.name)
+                            }
+                        )
+                    }
                 }
             }
 
