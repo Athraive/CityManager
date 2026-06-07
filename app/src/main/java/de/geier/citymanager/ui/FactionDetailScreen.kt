@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 @Composable
 fun FactionDetailScreen(
@@ -41,6 +43,9 @@ fun FactionDetailScreen(
 ) {
 
     var name by remember(faction.id) { mutableStateOf(faction.name) }
+    var shortDescription by remember {
+        mutableStateOf(faction.shortDescription)
+    }
     var description by remember(faction.id) { mutableStateOf(faction.description ?: "") }
     var playerNotes by remember(faction.id) { mutableStateOf(faction.playerNotes) }
     var gameMasterNotes by remember(faction.id) { mutableStateOf(faction.gameMasterNotes) }
@@ -75,8 +80,31 @@ fun FactionDetailScreen(
             TopAppBar(
                 title = { Text(name.ifBlank { "Fraktion" }) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.Close, contentDescription = "Schließen")
+                    IconButton(
+                        onClick = {
+
+                            if (canEdit) {
+
+                                onSave(
+                                    faction.copy(
+                                        name = name,
+                                        shortDescription = shortDescription,
+                                        description = description.takeIf { it.isNotBlank() },
+                                        playerNotes = playerNotes,
+                                        gameMasterNotes = gameMasterNotes,
+                                        visible = visible,
+                                        imageUri = imageUri
+                                    )
+                                )
+                            }
+
+                            onBack()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Schließen"
+                        )
                     }
                 },
                 actions = {
@@ -99,65 +127,117 @@ fun FactionDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            if (canEdit) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            } else {
-                Text(name, style = MaterialTheme.typography.titleLarge)
-            }
+            /* ---------- Header ---------- */
 
-            /* ---------- Bild ---------- */
-
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Spacer(modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .heightIn(max = 260.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(enabled = canEdit) {
+                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
 
-                Column(horizontalAlignment = Alignment.End) {
+                    if (displayImage != null) {
 
-                    Box(
-                        modifier = Modifier
-                            .width(140.dp)
-                            .heightIn(max = 220.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (displayImage != null) {
-                            AsyncImage(
-                                model = displayImage,
-                                contentDescription = "Fraktionsbild",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(64.dp)
-                            )
-                        }
+                        AsyncImage(
+                            model = displayImage,
+                            contentDescription = "Fraktionsbild",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                    } else {
+
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(72.dp)
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     if (canEdit) {
-                        Button(
-                            onClick = { imagePickerLauncher.launch(arrayOf("image/*")) }
+
+                        Surface(
+                            onClick = {
+                                visible = !visible
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
                         ) {
-                            Text("Bild auswählen",
-                                fontFamily = FontFamily.SansSerif)
+
+                            Icon(
+                                imageVector =
+                                    if (visible)
+                                        Icons.Default.Visibility
+                                    else
+                                        Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                modifier = Modifier.padding(8.dp)
+                            )
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (canEdit) {
+
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        label = {
+                            Text("Name")
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = shortDescription,
+                        onValueChange = { shortDescription = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        label = {
+                            Text("Kurzbeschreibung")
+                        }
+                    )
+
+                } else {
+
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    if (shortDescription.isNotBlank()) {
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = shortDescription,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             /* ---------- Beschreibung ---------- */
@@ -246,6 +326,7 @@ fun FactionDetailScreen(
                     onSave(
                         faction.copy(
                             name = name,
+                            shortDescription = shortDescription,
                             description = description.takeIf { it.isNotBlank() },
                             playerNotes = playerNotes,
                             gameMasterNotes = gameMasterNotes,
