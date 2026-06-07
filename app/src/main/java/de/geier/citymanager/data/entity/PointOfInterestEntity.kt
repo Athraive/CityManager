@@ -15,6 +15,7 @@ data class PointOfInterestEntity(
     val cityId: String,
 
     val name: String,
+    val shortDescription: String = "",
     val description: String?,
     val imageUri: String? = null,
     val categoryId: String,

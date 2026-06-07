@@ -48,6 +48,9 @@ fun PoiDetailScreen(
 ) {
 
     var name by remember(poi.id) { mutableStateOf(poi.name) }
+    var shortDescription by remember {
+        mutableStateOf(poi.shortDescription)
+    }
     var description by remember(poi.id) { mutableStateOf(poi.description ?: "") }
     var visible by remember(poi.id) { mutableStateOf(poi.visible) }
     var playerNotes by remember(poi.id) { mutableStateOf(poi.playerNotes) }
@@ -91,6 +94,7 @@ fun PoiDetailScreen(
                                 onSave(
                                     poi.copy(
                                         name = name,
+                                        shortDescription = shortDescription,
                                         description = description.takeIf { it.isNotBlank() },
                                         visible = visible,
                                         playerNotes = playerNotes,
@@ -232,10 +236,19 @@ fun PoiDetailScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(0.8f),
                         label = {
-                            Text(
-                                "Name",
-                                fontFamily = FontFamily.SansSerif
-                            )
+                            Text("Name")
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = shortDescription,
+                        onValueChange = { shortDescription = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        label = {
+                            Text("Kurzbeschreibung")
                         }
                     )
 
@@ -245,6 +258,17 @@ fun PoiDetailScreen(
                         text = name,
                         style = MaterialTheme.typography.headlineSmall
                     )
+
+                    if (shortDescription.isNotBlank()) {
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = shortDescription,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -294,6 +318,7 @@ fun PoiDetailScreen(
                         onAssignFactions(
                             poi.copy(
                                 name = name,
+                                shortDescription = shortDescription,
                                 description = description.takeIf { it.isNotBlank() },
                                 visible = visible,
                                 playerNotes = playerNotes,
@@ -385,6 +410,7 @@ fun PoiDetailScreen(
                     onSave(
                         poi.copy(
                             name = name,
+                            shortDescription = shortDescription,
                             description = description.takeIf { it.isNotBlank() },
                             visible = visible,
                             playerNotes = playerNotes,

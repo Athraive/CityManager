@@ -6,6 +6,8 @@ package de.geier.citymanager.ui
 data class Faction(
     val id: String,
     val name: String,
+
+    val shortDescription: String = "",
     val description: String? = null,
 
     val imageUri: String? = null,   // ✅ HIER IST DER FIX

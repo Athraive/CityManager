@@ -7,6 +7,7 @@ fun PointOfInterestEntity.toUi(): PointOfInterest =
     PointOfInterest(
         id = id,
         name = name,
+        shortDescription = shortDescription,
         description = description,
         imageUri = imageUri,          // ✅ NEU
         categoryId = categoryId,
@@ -26,6 +27,7 @@ fun PointOfInterest.toEntity(cityId: String): PointOfInterestEntity =
         id = id,
         cityId = cityId,
         name = name,
+        shortDescription = shortDescription,
         description = description,
         imageUri = imageUri,          // ✅ NEU
         categoryId = categoryId,

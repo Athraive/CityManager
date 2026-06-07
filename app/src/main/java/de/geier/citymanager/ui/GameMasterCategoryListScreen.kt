@@ -667,21 +667,21 @@ fun GameMasterCategoryListScreen(
                                         fontWeight = FontWeight.SemiBold
                                     )
 
-                                    poi.description
-                                        ?.takeIf { it.isNotBlank() }
-                                        ?.let { description ->
+                                    poi.shortDescription
+                                        .takeIf { it.isNotBlank() }
+                                        ?.let { shortDescription ->
 
                                             Spacer(
                                                 modifier = Modifier.height(4.dp)
                                             )
 
                                             Text(
-                                                text = description,
+                                                text = shortDescription,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme
                                                     .colorScheme
                                                     .onSurfaceVariant,
-                                                maxLines = 2
+                                                maxLines = 1
                                             )
                                         }
                                 }

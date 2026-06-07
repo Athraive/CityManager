@@ -3,6 +3,8 @@ package de.geier.citymanager.ui
 data class PointOfInterest(
     val id: String,
     val name: String,
+
+    val shortDescription: String = "",
     val description: String?,
     val imageUri: String? = null,
     val categoryId: String,
