@@ -299,7 +299,8 @@ fun PoiDetailScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
                 )
 
             } else if (description.isNotBlank()) {

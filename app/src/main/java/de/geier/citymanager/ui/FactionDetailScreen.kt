@@ -28,7 +28,10 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FactionDetailScreen(
     faction: Faction,
@@ -58,6 +61,14 @@ fun FactionDetailScreen(
     val displayImage = imageUri ?: faction.imageUri
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    var playerNotesExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    var gameMasterNotesExpanded by remember {
+        mutableStateOf(false)
+    }
 
     val canEdit = accessContext.canEdit()
 
@@ -192,33 +203,9 @@ fun FactionDetailScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                if (!canEdit) {
 
-                if (canEdit) {
-
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        label = {
-                            Text("Name")
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = shortDescription,
-                        onValueChange = { shortDescription = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        label = {
-                            Text("Kurzbeschreibung")
-                        }
-                    )
-
-                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = name,
@@ -240,84 +227,200 @@ fun FactionDetailScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
+            if (canEdit) {
+
+                Text(
+                    "Name",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    "Kurzbeschreibung",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                OutlinedTextField(
+                    value = shortDescription,
+                    onValueChange = { shortDescription = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+
+            }
+
             /* ---------- Beschreibung ---------- */
 
-            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Beschreibung",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+
 
             if (canEdit) {
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
-            } else if (description.isNotBlank()) {
-                Text(description)
-            }
 
-            if (canEdit) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Checkbox(
-                        checked = visible,
-                        onCheckedChange = { visible = it }
-                    )
-                    Text("Für Spieler sichtbar")
-                }
+            } else if (description.isNotBlank()) {
+
+                Text(description)
             }
 
             /* ---------- Personen ---------- */
 
             HorizontalDivider()
-            Text("Personen", style = MaterialTheme.typography.titleMedium)
+
+            Text(
+                "Personen",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             if (assignedPersons.isEmpty()) {
-                Text("Keine Personen zugeordnet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                Text(
+                    "–",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
             } else {
-                assignedPersons.forEach {
-                    Text(
-                        text = "• ${it.name}",
-                        modifier = Modifier.clickable { onPersonClick(it.id) }
-                    )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    assignedPersons.forEach { person ->
+
+                        AssistChip(
+                            onClick = {
+                                onPersonClick(person.id)
+                            },
+                            label = {
+                                Text(person.name)
+                            }
+                        )
+                    }
                 }
             }
 
-            /* ---------- POIs ---------- */
+            /* ---------- Orte ---------- */
 
             HorizontalDivider()
-            Text("Orte", style = MaterialTheme.typography.titleMedium)
+
+            Text(
+                "Orte",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             if (assignedPois.isEmpty()) {
-                Text("Keine Orte zugeordnet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                Text(
+                    "–",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
             } else {
-                assignedPois.forEach {
-                    Text(
-                        text = "• ${it.name}",
-                        modifier = Modifier.clickable { onPoiClick(it.id) }
-                    )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    assignedPois.forEach { poi ->
+
+                        AssistChip(
+                            onClick = {
+                                onPoiClick(poi.id)
+                            },
+                            label = {
+                                Text(poi.name)
+                            }
+                        )
+                    }
                 }
             }
 
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
-            Text("Notizen", style = MaterialTheme.typography.titleMedium)
 
-            Text("Spieler-Notizen")
+            Text(
+                "Notizen",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                "Spieler-Notizen",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+
             OutlinedTextField(
                 value = playerNotes,
                 onValueChange = { playerNotes = it },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 4
+                minLines = 4,
+                maxLines = if (playerNotesExpanded) 12 else 4
             )
 
+            TextButton(
+                onClick = {
+                    playerNotesExpanded = !playerNotesExpanded
+                }
+            ) {
+                Text(
+                    if (playerNotesExpanded)
+                        "Weniger anzeigen"
+                    else
+                        "Mehr anzeigen"
+                )
+            }
+
+            HorizontalDivider()
+
             if (canEdit) {
-                Text("SL-Notizen")
+
+                Text(
+                    "SL-Notizen",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+
                 OutlinedTextField(
                     value = gameMasterNotes,
                     onValueChange = { gameMasterNotes = it },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 4
+                    minLines = 4,
+                    maxLines = if (gameMasterNotesExpanded) 12 else 4
                 )
+
+                TextButton(
+                    onClick = {
+                        gameMasterNotesExpanded = !gameMasterNotesExpanded
+                    }
+                ) {
+                    Text(
+                        if (gameMasterNotesExpanded)
+                            "Weniger anzeigen"
+                        else
+                            "Mehr anzeigen"
+                    )
+                }
             }
 
             Button(
@@ -337,36 +440,8 @@ fun FactionDetailScreen(
                     onBack()
                 }
             ) {
-                Text("Speichern",
-                    fontFamily = FontFamily.SansSerif)
+                Text("Speichern")
             }
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Fraktion löschen?") },
-            text = { Text("Möchtest du diese Fraktion wirklich löschen?") },
-            confirmButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    onClick = {
-                        onDelete(faction)
-                        showDeleteConfirm = false
-                        onBack()
-                    }
-                ) {
-                    Text("Löschen",
-                        fontFamily = FontFamily.SansSerif)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Abbrechen",
-                        fontFamily = FontFamily.SansSerif)
-                }
-            }
-        )
     }
 }

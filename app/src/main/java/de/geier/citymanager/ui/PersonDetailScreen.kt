@@ -541,8 +541,7 @@ fun PersonDetailScreen(
                 }
             ) {
                 Text(
-                    "Speichern",
-                    fontFamily = FontFamily.SansSerif
+                    "Speichern"
                 )
             }
         }
