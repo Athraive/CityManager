@@ -275,7 +275,7 @@ fun PersonDetailScreen(
 
                 Text(
                     "Name",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge
                 )
 
                 OutlinedTextField(
@@ -289,7 +289,7 @@ fun PersonDetailScreen(
 
                 Text(
                     "Kurzbeschreibung",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge
                 )
 
                 OutlinedTextField(
@@ -306,7 +306,7 @@ fun PersonDetailScreen(
 
                 Text(
                     "Beschreibung",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge
                 )
 
                 OutlinedTextField(
@@ -450,6 +450,11 @@ fun PersonDetailScreen(
             /* ---------- Notizen ---------- */
 
             HorizontalDivider()
+
+            Text(
+                "Notizen",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             Text(
                 "Spieler-Notizen",
