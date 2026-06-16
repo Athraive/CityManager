@@ -30,6 +30,9 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import kotlinx.coroutines.delay
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -85,6 +88,18 @@ fun FactionDetailScreen(
             imageUri = it.toString()
         }
     }
+    var visibilityMessage by remember {
+        mutableStateOf<String?>(null)
+    }
+    LaunchedEffect(visibilityMessage) {
+
+        if (visibilityMessage != null) {
+
+            kotlinx.coroutines.delay(2000)
+
+            visibilityMessage = null
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -138,7 +153,7 @@ fun FactionDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- Header ---------- */
+/* ---------- Header ---------- */
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -180,7 +195,14 @@ fun FactionDetailScreen(
 
                         Surface(
                             onClick = {
+
                                 visible = !visible
+
+                                visibilityMessage =
+                                    if (visible)
+                                        "\"$name\" ist für Spieler sichtbar"
+                                    else
+                                        "\"$name\" ist für Spieler unsichtbar"
                             },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -198,6 +220,27 @@ fun FactionDetailScreen(
                                         Icons.Default.VisibilityOff,
                                 contentDescription = null,
                                 modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
+
+                    if (visibilityMessage != null) {
+
+                        Surface(
+                            modifier = Modifier.align(Alignment.Center),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                            tonalElevation = 4.dp
+                        ) {
+
+                            Text(
+                                text = visibilityMessage!!,
+                                modifier = Modifier.padding(
+                                    horizontal = 16.dp,
+                                    vertical = 10.dp
+                                ),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
@@ -231,7 +274,7 @@ fun FactionDetailScreen(
 
                 Text(
                     "Name",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 OutlinedTextField(
@@ -245,7 +288,7 @@ fun FactionDetailScreen(
 
                 Text(
                     "Kurzbeschreibung",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 OutlinedTextField(
@@ -254,8 +297,6 @@ fun FactionDetailScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
-
             }
 
             /* ---------- Beschreibung ---------- */
