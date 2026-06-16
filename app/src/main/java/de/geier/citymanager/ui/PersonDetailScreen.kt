@@ -35,6 +35,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -94,6 +97,18 @@ fun PersonDetailScreen(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
             imageUri = it.toString()
+        }
+    }
+    var visibilityMessage by remember {
+        mutableStateOf<String?>(null)
+    }
+    LaunchedEffect(visibilityMessage) {
+
+        if (visibilityMessage != null) {
+
+            delay(2000)
+
+            visibilityMessage = null
         }
     }
 
@@ -202,7 +217,14 @@ fun PersonDetailScreen(
 
                         Surface(
                             onClick = {
+
                                 visible = !visible
+
+                                visibilityMessage =
+                                    if (visible)
+                                        "\"$name\" ist für Spieler sichtbar"
+                                    else
+                                        "\"$name\" ist für Spieler unsichtbar"
                             },
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -245,6 +267,27 @@ fun PersonDetailScreen(
                             )
                         }
                     }
+
+                    if (visibilityMessage != null) {
+
+                        Surface(
+                            modifier = Modifier.align(Alignment.Center),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                            tonalElevation = 4.dp
+                        ) {
+
+                            Text(
+                                text = visibilityMessage!!,
+                                modifier = Modifier.padding(
+                                    horizontal = 16.dp,
+                                    vertical = 10.dp
+                                ),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
                 }
 
                 if (!canEdit) {
@@ -275,7 +318,7 @@ fun PersonDetailScreen(
 
                 Text(
                     "Name",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 OutlinedTextField(
@@ -289,7 +332,7 @@ fun PersonDetailScreen(
 
                 Text(
                     "Kurzbeschreibung",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 OutlinedTextField(
