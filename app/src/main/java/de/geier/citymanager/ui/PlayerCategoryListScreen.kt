@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.Alignment
+import androidx.compose.material3.ElevatedCard
 
 @Composable
 fun PlayerCategoryListScreen(
@@ -572,22 +573,38 @@ fun PlayerCategoryListScreen(
                         }
                     ) { poi ->
 
-                        Row(
+                        ElevatedCard(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    selectedPoi = poi
-                                }
-                                .padding(
-                                    vertical = 10.dp,
-                                    horizontal = 4.dp
-                                )
+                                .padding(vertical = 4.dp),
+                            onClick = {
+                                selectedPoi = poi
+                            }
                         ) {
 
-                            Text(
-                                text = poi.name,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+
+                                Text(
+                                    text = poi.name,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                if (poi.shortDescription.isNotBlank()) {
+
+                                    Spacer(
+                                        modifier = Modifier.height(4.dp)
+                                    )
+
+                                    Text(
+                                        text = poi.shortDescription,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2
+                                    )
+                                }
+                            }
                         }
                     }
                 }
