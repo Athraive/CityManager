@@ -299,14 +299,14 @@ fun FactionDetailScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             /* ---------- Beschreibung ---------- */
 
             Text(
                 "Beschreibung",
                 style = MaterialTheme.typography.titleLarge
             )
-
-
 
             if (canEdit) {
 
@@ -317,10 +317,22 @@ fun FactionDetailScreen(
                     minLines = 3
                 )
 
-            } else if (description.isNotBlank()) {
+            } else {
 
-                Text(description)
+                if (!description.isNullOrBlank()) {
+
+                    Text(description)
+
+                } else {
+
+                    Text(
+                        text = "Keine Beschreibung vorhanden",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
+
 
             /* ---------- Personen ---------- */
 

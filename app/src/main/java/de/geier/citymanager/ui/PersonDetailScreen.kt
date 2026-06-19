@@ -343,14 +343,16 @@ fun PersonDetailScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             /* ---------- Beschreibung ---------- */
 
-            if (canEdit) {
+            Text(
+                "Beschreibung",
+                style = MaterialTheme.typography.titleLarge
+            )
 
-                Text(
-                    "Beschreibung",
-                    style = MaterialTheme.typography.titleLarge
-                )
+            if (canEdit) {
 
                 OutlinedTextField(
                     value = description,
@@ -359,9 +361,20 @@ fun PersonDetailScreen(
                     minLines = 3
                 )
 
-            } else if (description.isNotBlank()) {
+            } else {
 
-                Text(description)
+                if (description.isNotBlank()) {
+
+                    Text(description)
+
+                } else {
+
+                    Text(
+                        text = "Keine Beschreibung vorhanden",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
 

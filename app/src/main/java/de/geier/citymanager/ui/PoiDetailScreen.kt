@@ -329,6 +329,8 @@ fun PoiDetailScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             /* ---------- Beschreibung ---------- */
 
             Text(
@@ -345,12 +347,22 @@ fun PoiDetailScreen(
                     minLines = 3
                 )
 
-            } else if (description.isNotBlank()) {
+            } else {
 
-                Text(description)
+                if (description.isNotBlank()) {
+
+                    Text(description)
+
+                } else {
+
+                    Text(
+                        text = "Keine Beschreibung vorhanden",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
 
             /* ---------- Fraktionen ---------- */
 
