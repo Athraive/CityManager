@@ -9,6 +9,7 @@ import de.geier.citymanager.data.entity.*
     entities = [
         /* --- Root Entity --- */
         CityEntity::class,
+        CityInfoCardEntity::class,
 
         /* --- Core Entities --- */
         CityDistrictEntity::class,
@@ -23,7 +24,7 @@ import de.geier.citymanager.data.entity.*
         PersonPoiCrossRef::class,
         PoiFactionCrossRef::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun cityDao(): CityDao
 
     /* --- Core DAOs --- */
+    abstract fun cityInfoCardDao(): CityInfoCardDao
     abstract fun cityDistrictDao(): CityDistrictDao
     abstract fun cityLoreDao(): CityLoreDao
     abstract fun factionDao(): FactionDao

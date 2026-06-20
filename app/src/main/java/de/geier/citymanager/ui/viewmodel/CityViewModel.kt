@@ -13,10 +13,12 @@ import de.geier.citymanager.ui.PoiCategory
 import de.geier.citymanager.ui.Person
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import de.geier.citymanager.data.entity.CityInfoCardEntity
 
 class CityViewModel(
     private val accessContext: AccessContext,
     private val cityRepository: CityRepository,
+    private val cityInfoCardRepository: CityInfoCardRepository,
     private val poiCategoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
     private val factionRepository: FactionRepositoryImpl,
@@ -32,6 +34,15 @@ class CityViewModel(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 null
+            )
+
+    val cityInfoCards =
+        cityInfoCardRepository
+            .cardsForCity(accessContext.cityId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
             )
 
     val cityLore: StateFlow<CityLoreEntity?> =
@@ -227,6 +238,23 @@ class CityViewModel(
 
         viewModelScope.launch {
             cityLoreRepository.save(lore)
+        }
+    }
+
+    fun createTestCard() {
+
+        viewModelScope.launch {
+
+            cityInfoCardRepository.saveCard(
+                CityInfoCardEntity(
+                    id = java.util.UUID.randomUUID().toString(),
+                    cityId = accessContext.cityId,
+                    title = "Testkarte",
+                    content = "Erfolgreich gespeichert",
+                    visible = true,
+                    order = 0
+                )
+            )
         }
     }
 }
