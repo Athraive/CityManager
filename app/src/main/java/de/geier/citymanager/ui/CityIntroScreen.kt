@@ -1,5 +1,7 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
+@file:OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class
+)
 package de.geier.citymanager.ui
 
 import android.content.Intent
@@ -23,6 +25,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import de.geier.citymanager.ui.viewmodel.CityViewModel
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
 @Composable
 fun CityIntroScreen(
@@ -36,6 +41,10 @@ fun CityIntroScreen(
     }
 
     val city by cityViewModel.city.collectAsState()
+    val cards by cityViewModel.cityInfoCards.collectAsState()
+    var showTemplateDialog by remember {
+        mutableStateOf(false)
+    }
     val canEdit = accessContext.canEdit()
 
     if (city == null) {
@@ -62,7 +71,24 @@ fun CityIntroScreen(
     var coatOfArmsUri by remember(c.id) {
         mutableStateOf(c.coatOfArmsUri)
     }
+    val recommendedTemplates = listOf(
+        "Beschreibung",
+        "Einwohner",
+        "Land",
+        "Regierung",
+        "Region",
+        "Sprache"
+    )
 
+    val additionalTemplates = listOf(
+        "Bildungsniveau",
+        "Handel",
+        "Magie",
+        "Religion",
+        "Verkehr",
+        "Verteidigung",
+        "Wirtschaft"
+    )
     val context = LocalContext.current
 
     val imagePicker = rememberLauncherForActivityResult(
@@ -76,162 +102,412 @@ fun CityIntroScreen(
             coatOfArmsUri = it.toString()
         }
     }
+    if (showTemplateDialog) {
+
+        AlertDialog(
+            onDismissRequest = {
+                showTemplateDialog = false
+            },
+
+            title = {
+                Text("Neue Karte")
+            },
+
+            text = {
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    Text(
+                        "Empfohlen",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+
+                        recommendedTemplates.forEach { template ->
+
+                            val alreadyExists =
+                                cards.any {
+                                    it.title.trim().equals(
+                                        template.trim(),
+                                        ignoreCase = true
+                                    )
+                                }
+
+                            ElevatedCard(
+                                onClick = {
+                                    if (!alreadyExists) {
+                                        cityViewModel.createCard(template)
+                                        showTemplateDialog = false
+                                    }
+                                }
+                            ) {
+
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 16.dp,
+                                        vertical = 12.dp
+                                    ),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+
+                                    if (alreadyExists) {
+                                        Text("✓")
+                                    }
+
+                                    Text(
+                                        text = template,
+                                        color =
+                                            if (alreadyExists)
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                            else
+                                                MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider()
+
+                    Text(
+                        "Weitere Vorlagen",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+
+                        additionalTemplates.forEach { template ->
+
+                            val alreadyExists =
+                                cards.any {
+                                    it.title.trim().equals(
+                                        template.trim(),
+                                        ignoreCase = true
+                                    )
+                                }
+
+                            ElevatedCard(
+                                onClick = {
+                                    if (!alreadyExists) {
+                                        cityViewModel.createCard(template)
+                                        showTemplateDialog = false
+                                    }
+                                }
+                            ) {
+
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 16.dp,
+                                        vertical = 12.dp
+                                    ),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+
+                                    if (alreadyExists) {
+                                        Text("✓")
+                                    }
+
+                                    Text(
+                                        text = template,
+                                        color =
+                                            if (alreadyExists)
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                            else
+                                                MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider()
+
+                    ElevatedCard(
+                        onClick = {
+                            cityViewModel.createCard("Neue Karte")
+                            showTemplateDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "+ Eigene Karte",
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            },
+
+            confirmButton = {}
+        )
+    }
 
     /* ---------- UI ---------- */
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        floatingActionButton = {
 
-        /* ---------- HEADER ---------- */
+            if (canEdit) {
+                FloatingActionButton(
+                    onClick = {
+                        showTemplateDialog = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Karte hinzufügen"
+                    )
+                }
+            }
+        }
+    ) { paddingValues ->
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            /* ---------- HEADER ---------- */
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                if (canEdit) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Stadtname") },
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.headlineLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(horizontalAlignment = Alignment.End) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (coatOfArmsUri != null) {
+                            AsyncImage(
+                                model = coatOfArmsUri,
+                                contentDescription = "Wappen",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.LocationCity,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+
+                    if (canEdit) {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = {
+                                imagePicker.launch(arrayOf("image/*"))
+                            }
+                        ) {
+                            Text("Wappen wählen")
+                        }
+                    }
+                }
+            }
+
+            /* ---------- FIELDS ---------- */
+
+            EditableField("Land", country, canEdit) { country = it }
+            EditableField("Region", region, canEdit) { region = it }
+            EditableField("Sprache", language, canEdit) { language = it }
+            EditableField("Regierung", government, canEdit) { government = it }
+            EditableField("Höhe", elevation, canEdit) { elevation = it }
+            EditableField("Fläche", area, canEdit) { area = it }
+            EditableField("Einwohner", population, canEdit) { population = it }
+
+            /* ---------- DESCRIPTION ---------- */
+
+            HorizontalDivider()
+
+            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
 
             if (canEdit) {
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Stadtname") },
-                    modifier = Modifier.weight(1f)
+                    value = description,
+                    onValueChange = { description = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4
                 )
-            } else {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.weight(1f)
-                )
+            } else if (description.isNotBlank()) {
+                Text(description, style = MaterialTheme.typography.bodyMedium)
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            /* ---------- INFO CARDS ---------- */
 
-            Column(horizontalAlignment = Alignment.End) {
+            HorizontalDivider()
 
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (coatOfArmsUri != null) {
-                        AsyncImage(
-                            model = coatOfArmsUri,
-                            contentDescription = "Wappen",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
-                    } else {
-                        Icon(
-                            Icons.Default.LocationCity,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
+            Text(
+                "InfoCards",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            cards.forEach { card ->
+
+                var title by remember(card.id) {
+                    mutableStateOf(card.title)
                 }
 
-                if (canEdit) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                var content by remember(card.id) {
+                    mutableStateOf(card.content)
+                }
 
-                    Button(
-                        onClick = {
-                            imagePicker.launch(arrayOf("image/*"))
-                        }
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Wappen wählen")
+
+                        OutlinedTextField(
+                            value = title,
+                            onValueChange = {
+                                title = it
+                            },
+                            label = {
+                                Text("Titel")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        OutlinedTextField(
+                            value = content,
+                            onValueChange = {
+                                content = it
+                            },
+                            label = {
+                                Text("Inhalt")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 4
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            Button(
+                                onClick = {
+                                    cityViewModel.saveCard(
+                                        card.copy(
+                                            title = title,
+                                            content = content
+                                        )
+                                    )
+                                }
+                            ) {
+                                Text("Speichern")
+                            }
+
+                            if (canEdit) {
+                                TextButton(
+                                    onClick = {
+                                        cityViewModel.deleteCard(card)
+                                    }
+                                ) {
+                                    Text("Löschen")
+                                }
+                            }
+                        }
                     }
+                }
+            }
+
+            /* ---------- SAVE ---------- */
+
+            if (canEdit) {
+                Button(
+                    onClick = {
+                        cityViewModel.saveCity(
+                            c.copy(
+                                name = name,
+                                country = country,
+                                region = region,
+                                language = language,
+                                government = government,
+                                elevation = elevation,
+                                area = area,
+                                population = population,
+                                description = description,
+                                coatOfArmsUri = coatOfArmsUri
+                            )
+                        )
+                    }
+                ) {
+                    Text("Speichern")
                 }
             }
         }
+    }
+}
 
-        /* ---------- FIELDS ---------- */
+    /* ---------- Helper ---------- */
 
-        EditableField("Land", country, canEdit) { country = it }
-        EditableField("Region", region, canEdit) { region = it }
-        EditableField("Sprache", language, canEdit) { language = it }
-        EditableField("Regierung", government, canEdit) { government = it }
-        EditableField("Höhe", elevation, canEdit) { elevation = it }
-        EditableField("Fläche", area, canEdit) { area = it }
-        EditableField("Einwohner", population, canEdit) { population = it }
-
-        /* ---------- DESCRIPTION ---------- */
-
-        HorizontalDivider()
-
-        Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
-
+    @Composable
+    private fun EditableField(
+        label: String,
+        value: String,
+        canEdit: Boolean,
+        onChange: (String) -> Unit
+    ) {
         if (canEdit) {
             OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 4
+                value = value,
+                onValueChange = onChange,
+                label = { Text(label) },
+                modifier = Modifier.fillMaxWidth()
             )
-        } else if (description.isNotBlank()) {
-            Text(description, style = MaterialTheme.typography.bodyMedium)
-        }
+        } else if (value.isNotBlank()) {
 
-        /* ---------- SAVE ---------- */
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium
+                )
 
-        if (canEdit) {
-            Button(
-                onClick = {
-                    cityViewModel.saveCity(
-                        c.copy(
-                            name = name,
-                            country = country,
-                            region = region,
-                            language = language,
-                            government = government,
-                            elevation = elevation,
-                            area = area,
-                            population = population,
-                            description = description,
-                            coatOfArmsUri = coatOfArmsUri
-                        )
-                    )
-                }
-            ) {
-                Text("Speichern")
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
-}
-
-/* ---------- Helper ---------- */
-
-@Composable
-private fun EditableField(
-    label: String,
-    value: String,
-    canEdit: Boolean,
-    onChange: (String) -> Unit
-) {
-    if (canEdit) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onChange,
-            label = { Text(label) },
-            modifier = Modifier.fillMaxWidth()
-        )
-    } else if (value.isNotBlank()) {
-
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}

@@ -241,20 +241,59 @@ class CityViewModel(
         }
     }
 
-    fun createTestCard() {
+    fun createCard(
+        title: String
+    ) {
 
         viewModelScope.launch {
+
+            val isStandardTemplate =
+                title != "Neue Karte"
+
+            if (isStandardTemplate) {
+
+                val alreadyExists =
+                    cityInfoCards.value.any {
+                        it.title.trim().equals(
+                            title.trim(),
+                            ignoreCase = true
+                        )
+                    }
+
+                if (alreadyExists) {
+                    return@launch
+                }
+            }
+
+            val nextOrder =
+                cityInfoCards.value.size
 
             cityInfoCardRepository.saveCard(
                 CityInfoCardEntity(
                     id = java.util.UUID.randomUUID().toString(),
                     cityId = accessContext.cityId,
-                    title = "Testkarte",
-                    content = "Erfolgreich gespeichert",
+                    title = title,
+                    content = "",
                     visible = true,
-                    order = 0
+                    order = nextOrder
                 )
             )
+        }
+    }
+
+    fun saveCard(
+        card: CityInfoCardEntity
+    ) {
+        viewModelScope.launch {
+            cityInfoCardRepository.saveCard(card)
+        }
+    }
+
+    fun deleteCard(
+        card: CityInfoCardEntity
+    ) {
+        viewModelScope.launch {
+            cityInfoCardRepository.deleteCard(card)
         }
     }
 }
