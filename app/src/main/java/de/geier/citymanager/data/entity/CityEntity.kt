@@ -32,6 +32,7 @@ data class CityEntity(
      * ===================================================== */
 
     val coatOfArmsUri: String? = null,
+    val subtitle: String = "",
 
     val country: String = "",
     val region: String = "",

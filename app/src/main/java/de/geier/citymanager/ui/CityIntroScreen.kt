@@ -28,6 +28,8 @@ import de.geier.citymanager.ui.viewmodel.CityViewModel
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.foundation.clickable
 
 @Composable
 fun CityIntroScreen(
@@ -58,19 +60,26 @@ fun CityIntroScreen(
 
     /* ---------- STATE ---------- */
 
-    var name by remember(c.id) { mutableStateOf(c.name) }
-    var country by remember(c.id) { mutableStateOf(c.country) }
-    var region by remember(c.id) { mutableStateOf(c.region) }
-    var language by remember(c.id) { mutableStateOf(c.language) }
-    var government by remember(c.id) { mutableStateOf(c.government) }
-    var elevation by remember(c.id) { mutableStateOf(c.elevation) }
-    var area by remember(c.id) { mutableStateOf(c.area) }
-    var population by remember(c.id) { mutableStateOf(c.population) }
-    var description by remember(c.id) { mutableStateOf(c.description) }
+    var name by remember(c.id) {
+        mutableStateOf(c.name)
+    }
+
+    var subtitle by remember(c.id) {
+        mutableStateOf(c.subtitle)
+    }
 
     var coatOfArmsUri by remember(c.id) {
         mutableStateOf(c.coatOfArmsUri)
     }
+
+    var editingCardId by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var editingSubtitle by remember {
+        mutableStateOf(false)
+    }
+
     val recommendedTemplates = listOf(
         "Beschreibung",
         "Einwohner",
@@ -283,100 +292,144 @@ fun CityIntroScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
 
-                if (canEdit) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Stadtname") },
-                        modifier = Modifier.weight(1f)
-                    )
-                } else {
+                /* ---------- Name + Beiname ---------- */
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
                     Text(
-                        text = name,
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.weight(1f)
+                        text = c.name,
+                        style = MaterialTheme.typography.headlineLarge
                     )
-                }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
 
-                Column(horizontalAlignment = Alignment.End) {
+                    if (editingSubtitle) {
 
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (coatOfArmsUri != null) {
-                            AsyncImage(
-                                model = coatOfArmsUri,
-                                contentDescription = "Wappen",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            Icon(
-                                Icons.Default.LocationCity,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
+                        OutlinedTextField(
+                            value = subtitle,
+                            onValueChange = {
+                                subtitle = it
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = {
+                                Text(
+                                    "Beiname",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        )
 
-                    if (canEdit) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
 
                         Button(
                             onClick = {
-                                imagePicker.launch(arrayOf("image/*"))
+                                cityViewModel.saveCity(
+                                    c.copy(
+                                        subtitle = subtitle,
+                                        coatOfArmsUri = coatOfArmsUri
+                                    )
+                                )
+
+                                editingSubtitle = false
                             }
                         ) {
-                            Text("Wappen wählen")
+                            Text(
+                                text = "Übernehmen",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
+
+                    } else {
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            Text(
+                                text = if (subtitle.isBlank())
+                                    "Beiname hinzufügen"
+                                else
+                                    subtitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                color =
+                                    if (subtitle.isBlank())
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    else
+                                        MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            if (canEdit) {
+
+                                IconButton(
+                                    onClick = {
+                                        editingSubtitle = true
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Beiname bearbeiten"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier.width(16.dp)
+                )
+
+                /* ---------- Wappen ---------- */
+
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(enabled = canEdit) {
+                            imagePicker.launch(arrayOf("image/*"))
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    if (coatOfArmsUri != null) {
+
+                        AsyncImage(
+                            model = coatOfArmsUri,
+                            contentDescription = "Wappen",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+
+                    } else {
+
+                        Icon(
+                            imageVector = Icons.Default.LocationCity,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp)
+                        )
                     }
                 }
             }
 
-            /* ---------- FIELDS ---------- */
 
-            EditableField("Land", country, canEdit) { country = it }
-            EditableField("Region", region, canEdit) { region = it }
-            EditableField("Sprache", language, canEdit) { language = it }
-            EditableField("Regierung", government, canEdit) { government = it }
-            EditableField("Höhe", elevation, canEdit) { elevation = it }
-            EditableField("Fläche", area, canEdit) { area = it }
-            EditableField("Einwohner", population, canEdit) { population = it }
-
-            /* ---------- DESCRIPTION ---------- */
-
-            HorizontalDivider()
-
-            Text("Beschreibung", style = MaterialTheme.typography.titleMedium)
-
-            if (canEdit) {
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 4
-                )
-            } else if (description.isNotBlank()) {
-                Text(description, style = MaterialTheme.typography.bodyMedium)
-            }
 
             /* ---------- INFO CARDS ---------- */
 
             HorizontalDivider()
 
-            Text(
-                "InfoCards",
-                style = MaterialTheme.typography.titleLarge
-            )
 
             cards.forEach { card ->
 
@@ -389,7 +442,13 @@ fun CityIntroScreen(
                 }
 
                 ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = {
+                        if (canEdit && editingCardId == null) {
+                            editingCardId = card.id
+                        }
+                    }
                 ) {
 
                     Column(
@@ -397,55 +456,93 @@ fun CityIntroScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
 
-                        OutlinedTextField(
-                            value = title,
-                            onValueChange = {
-                                title = it
-                            },
-                            label = {
-                                Text("Titel")
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        if (editingCardId == card.id) {
 
-                        OutlinedTextField(
-                            value = content,
-                            onValueChange = {
-                                content = it
-                            },
-                            label = {
-                                Text("Inhalt")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            minLines = 4
-                        )
+                            if (card.title == "Neue Karte") {
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                                OutlinedTextField(
+                                    value = title,
+                                    onValueChange = {
+                                        title = it
+                                    },
+                                    label = {
+                                        Text("Titel")
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
-                            Button(
-                                onClick = {
-                                    cityViewModel.saveCard(
-                                        card.copy(
-                                            title = title,
-                                            content = content
-                                        )
-                                    )
-                                }
-                            ) {
-                                Text("Speichern")
+                            } else {
+
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleLarge
+                                )
                             }
 
-                            if (canEdit) {
+                            OutlinedTextField(
+                                value = content,
+                                onValueChange = {
+                                    content = it
+                                },
+                                label = {
+                                    Text("Inhalt")
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 4
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+
+                                Button(
+                                    onClick = {
+
+                                        cityViewModel.saveCard(
+                                            card.copy(
+                                                title = title,
+                                                content = content
+                                            )
+                                        )
+
+                                        editingCardId = null
+                                    }
+                                ) {
+                                    Text("Speichern")
+                                }
+
                                 TextButton(
                                     onClick = {
                                         cityViewModel.deleteCard(card)
+                                        editingCardId = null
                                     }
                                 ) {
                                     Text("Löschen")
                                 }
+                            }
+
+                        } else {
+
+                            Text(
+                                text = card.title,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+
+                            if (card.content.isNotBlank()) {
+
+                                Text(
+                                    text = card.content,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                            } else {
+
+                                Text(
+                                    text = "Zum Bearbeiten antippen",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -459,15 +556,8 @@ fun CityIntroScreen(
                     onClick = {
                         cityViewModel.saveCity(
                             c.copy(
+                                subtitle = subtitle,
                                 name = name,
-                                country = country,
-                                region = region,
-                                language = language,
-                                government = government,
-                                elevation = elevation,
-                                area = area,
-                                population = population,
-                                description = description,
                                 coatOfArmsUri = coatOfArmsUri
                             )
                         )
@@ -480,34 +570,3 @@ fun CityIntroScreen(
     }
 }
 
-    /* ---------- Helper ---------- */
-
-    @Composable
-    private fun EditableField(
-        label: String,
-        value: String,
-        canEdit: Boolean,
-        onChange: (String) -> Unit
-    ) {
-        if (canEdit) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onChange,
-                label = { Text(label) },
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else if (value.isNotBlank()) {
-
-            Column {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-    }
