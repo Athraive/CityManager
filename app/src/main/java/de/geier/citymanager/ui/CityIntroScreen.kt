@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.clickable
+import de.geier.citymanager.ui.components.CityHeaderCard
 
 @Composable
 fun CityIntroScreen(
@@ -288,143 +289,30 @@ fun CityIntroScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* ---------- HEADER ---------- */
+/* ---------- HEADER ---------- */
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
+            CityHeaderCard(
+                cityName = c.name,
+                subtitle = subtitle,
+                coatOfArmsUri = coatOfArmsUri,
+                canEdit = canEdit,
 
-                /* ---------- Name + Beiname ---------- */
+                onSubtitleChanged = {
 
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+                    subtitle = it
 
-                    Text(
-                        text = c.name,
-                        style = MaterialTheme.typography.headlineLarge
+                    cityViewModel.saveCity(
+                        c.copy(
+                            subtitle = it,
+                            coatOfArmsUri = coatOfArmsUri
+                        )
                     )
+                },
 
-                    Spacer(
-                        modifier = Modifier.height(8.dp)
-                    )
-
-                    if (editingSubtitle) {
-
-                        OutlinedTextField(
-                            value = subtitle,
-                            onValueChange = {
-                                subtitle = it
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            label = {
-                                Text(
-                                    "Beiname",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(8.dp)
-                        )
-
-                        Button(
-                            onClick = {
-                                cityViewModel.saveCity(
-                                    c.copy(
-                                        subtitle = subtitle,
-                                        coatOfArmsUri = coatOfArmsUri
-                                    )
-                                )
-
-                                editingSubtitle = false
-                            }
-                        ) {
-                            Text(
-                                text = "Übernehmen",
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-
-                    } else {
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Text(
-                                text = if (subtitle.isBlank())
-                                    "Beiname hinzufügen"
-                                else
-                                    subtitle,
-                                style = MaterialTheme.typography.titleMedium,
-                                color =
-                                    if (subtitle.isBlank())
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    else
-                                        MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            if (canEdit) {
-
-                                IconButton(
-                                    onClick = {
-                                        editingSubtitle = true
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Beiname bearbeiten"
-                                    )
-                                }
-                            }
-                        }
-                    }
+                onImageClick = {
+                    imagePicker.launch(arrayOf("image/*"))
                 }
-
-                Spacer(
-                    modifier = Modifier.width(16.dp)
-                )
-
-                /* ---------- Wappen ---------- */
-
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable(enabled = canEdit) {
-                            imagePicker.launch(arrayOf("image/*"))
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    if (coatOfArmsUri != null) {
-
-                        AsyncImage(
-                            model = coatOfArmsUri,
-                            contentDescription = "Wappen",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
-
-                    } else {
-
-                        Icon(
-                            imageVector = Icons.Default.LocationCity,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                }
-            }
-
-
+            )
 
             /* ---------- INFO CARDS ---------- */
 
