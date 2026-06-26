@@ -21,7 +21,7 @@ fun CityHeaderCard(
     subtitle: String,
     coatOfArmsUri: String?,
     canEdit: Boolean,
-    onSubtitleChanged: (String) -> Unit,
+    onSubtitleChange: (String) -> Unit,
     onImageClick: () -> Unit
 ) {
 
@@ -85,17 +85,15 @@ fun CityHeaderCard(
                         modifier = Modifier.height(8.dp)
                     )
 
-                    Button(
+                    TextButton(
                         onClick = {
-
                             editingSubtitle = false
-
-                            onSubtitleChanged(currentSubtitle)
+                            onSubtitleChange(currentSubtitle)
                         }
                     ) {
                         Text(
-                            text = "Übernehmen",
-                            style = MaterialTheme.typography.labelLarge
+                            "Übernehmen",
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
 

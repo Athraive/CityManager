@@ -297,16 +297,8 @@ fun CityIntroScreen(
                 coatOfArmsUri = coatOfArmsUri,
                 canEdit = canEdit,
 
-                onSubtitleChanged = {
-
+                onSubtitleChange = {
                     subtitle = it
-
-                    cityViewModel.saveCity(
-                        c.copy(
-                            subtitle = it,
-                            coatOfArmsUri = coatOfArmsUri
-                        )
-                    )
                 },
 
                 onImageClick = {
@@ -451,7 +443,8 @@ fun CityIntroScreen(
                         )
                     }
                 ) {
-                    Text("Speichern")
+                    Text("Speichern",
+                    style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
