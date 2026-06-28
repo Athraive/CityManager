@@ -296,4 +296,68 @@ class CityViewModel(
             cityInfoCardRepository.deleteCard(card)
         }
     }
+
+    fun moveCardUp(
+        card: CityInfoCardEntity
+    ) {
+
+        viewModelScope.launch {
+
+            val cards =
+                cityInfoCards.value.sortedBy { it.order }
+
+            val index =
+                cards.indexOfFirst { it.id == card.id }
+
+            if (index <= 0) return@launch
+
+            val previous =
+                cards[index - 1]
+
+            cityInfoCardRepository.saveCard(
+                card.copy(
+                    order = previous.order
+                )
+            )
+
+            cityInfoCardRepository.saveCard(
+                previous.copy(
+                    order = card.order
+                )
+            )
+        }
+    }
+
+    fun moveCardDown(
+        card: CityInfoCardEntity
+    ) {
+
+        viewModelScope.launch {
+
+            val cards =
+                cityInfoCards.value.sortedBy { it.order }
+
+            val index =
+                cards.indexOfFirst { it.id == card.id }
+
+            if (index == -1 || index >= cards.lastIndex) {
+                return@launch
+            }
+
+            val next =
+                cards[index + 1]
+
+            cityInfoCardRepository.saveCard(
+                card.copy(
+                    order = next.order
+                )
+            )
+
+            cityInfoCardRepository.saveCard(
+                next.copy(
+                    order = card.order
+                )
+            )
+        }
+    }
 }

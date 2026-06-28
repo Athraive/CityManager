@@ -31,6 +31,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.clickable
 import de.geier.citymanager.ui.components.CityHeaderCard
+import de.geier.citymanager.ui.components.EditableCard
+import androidx.compose.foundation.layout.Row
+import de.geier.citymanager.ui.components.MoveButtons
 
 @Composable
 fun CityIntroScreen(
@@ -71,10 +74,6 @@ fun CityIntroScreen(
 
     var coatOfArmsUri by remember(c.id) {
         mutableStateOf(c.coatOfArmsUri)
-    }
-
-    var editingCardId by remember {
-        mutableStateOf<String?>(null)
     }
 
     var editingSubtitle by remember {
@@ -311,120 +310,48 @@ fun CityIntroScreen(
             HorizontalDivider()
 
 
-            cards.forEach { card ->
+            cards.forEachIndexed { index, card ->
 
-                var title by remember(card.id) {
-                    mutableStateOf(card.title)
-                }
-
-                var content by remember(card.id) {
-                    mutableStateOf(card.content)
-                }
-
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = {
-                        if (canEdit && editingCardId == null) {
-                            editingCardId = card.id
-                        }
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
 
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                    EditableCard(
+                        modifier = Modifier.weight(1f),
+                        title = card.title,
+                        content = card.content,
+                        canEdit = canEdit,
 
-                        if (editingCardId == card.id) {
+                        onSave = { title, content ->
 
-                            if (card.title == "Neue Karte") {
-
-                                OutlinedTextField(
-                                    value = title,
-                                    onValueChange = {
-                                        title = it
-                                    },
-                                    label = {
-                                        Text("Titel")
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
+                            cityViewModel.saveCard(
+                                card.copy(
+                                    title = title,
+                                    content = content
                                 )
-
-                            } else {
-
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            }
-
-                            OutlinedTextField(
-                                value = content,
-                                onValueChange = {
-                                    content = it
-                                },
-                                label = {
-                                    Text("Inhalt")
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                minLines = 4
                             )
+                        },
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-
-                                Button(
-                                    onClick = {
-
-                                        cityViewModel.saveCard(
-                                            card.copy(
-                                                title = title,
-                                                content = content
-                                            )
-                                        )
-
-                                        editingCardId = null
-                                    }
-                                ) {
-                                    Text("Speichern")
-                                }
-
-                                TextButton(
-                                    onClick = {
-                                        cityViewModel.deleteCard(card)
-                                        editingCardId = null
-                                    }
-                                ) {
-                                    Text("Löschen")
-                                }
-                            }
-
-                        } else {
-
-                            Text(
-                                text = card.title,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-
-                            if (card.content.isNotBlank()) {
-
-                                Text(
-                                    text = card.content,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-
-                            } else {
-
-                                Text(
-                                    text = "Zum Bearbeiten antippen",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        onDelete = {
+                            cityViewModel.deleteCard(card)
                         }
+                    )
+
+                    if (canEdit) {
+
+                        MoveButtons(
+                            canMoveUp = index > 0,
+                            canMoveDown = index < cards.lastIndex,
+                            onMoveUp = {
+                                cityViewModel.moveCardUp(card)
+                            },
+
+                            onMoveDown = {
+                                cityViewModel.moveCardDown(card)
+                            }
+                        )
                     }
                 }
             }
