@@ -40,6 +40,14 @@ fun EditableCard(
         mutableStateOf(content)
     }
 
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    var hasOverflow by remember {
+        mutableStateOf(false)
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -111,7 +119,8 @@ fun EditableCard(
                                 )
                             }
                         ) {
-                            Text("Speichern")
+                            Text("Speichern",
+                                style = MaterialTheme.typography.bodyMedium)
                         }
 
                         if (canEdit && onDelete != null) {
@@ -122,7 +131,8 @@ fun EditableCard(
                                     onDelete()
                                 }
                             ) {
-                                Text("Löschen")
+                                Text("Löschen",
+                                    style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
@@ -138,8 +148,29 @@ fun EditableCard(
 
                         Text(
                             text = currentContent,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = if (expanded) Int.MAX_VALUE else 4,
+                            onTextLayout = { layoutResult ->
+                                hasOverflow = layoutResult.hasVisualOverflow
+                            }
                         )
+
+                        if (hasOverflow || expanded) {
+
+                            TextButton(
+                                onClick = {
+                                    expanded = !expanded
+                                }
+                            ) {
+                                Text(
+                                    if (expanded)
+                                        "Weniger anzeigen"
+                                    else
+                                        "Mehr anzeigen",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
 
                     } else if (canEdit) {
 

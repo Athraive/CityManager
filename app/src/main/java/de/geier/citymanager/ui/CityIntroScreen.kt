@@ -309,8 +309,14 @@ fun CityIntroScreen(
 
             HorizontalDivider()
 
+            val visibleCards =
+                if (canEdit) {
+                    cards
+                } else {
+                    cards.filter { it.content.isNotBlank() }
+                }
 
-            cards.forEachIndexed { index, card ->
+            visibleCards.forEachIndexed { index, card ->
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -343,11 +349,10 @@ fun CityIntroScreen(
 
                         MoveButtons(
                             canMoveUp = index > 0,
-                            canMoveDown = index < cards.lastIndex,
+                            canMoveDown = index < visibleCards.lastIndex,
                             onMoveUp = {
                                 cityViewModel.moveCardUp(card)
                             },
-
                             onMoveDown = {
                                 cityViewModel.moveCardDown(card)
                             }
@@ -370,7 +375,7 @@ fun CityIntroScreen(
                         )
                     }
                 ) {
-                    Text("Speichern",
+                    Text("Alles speichern",
                     style = MaterialTheme.typography.bodyMedium)
                 }
             }
