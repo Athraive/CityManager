@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+private val ThumbnailWidth = 110.dp
+
 @Composable
 fun EditableCard(
     title: String,
@@ -25,13 +27,10 @@ fun EditableCard(
     onSave: (String, String) -> Unit,
     onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    leadingContent: (@Composable (() -> Unit))? = null,
+    thumbnail: (@Composable (() -> Unit))? = null,
     moveButtons: (@Composable () -> Unit)? = null
 ) {
-
-    var editing by remember {
-        mutableStateOf(false)
-    }
+    var editing by remember { mutableStateOf(false) }
 
     var currentTitle by remember(title) {
         mutableStateOf(title)
@@ -70,11 +69,11 @@ fun EditableCard(
                 verticalAlignment = Alignment.Top
             ) {
 
-                if (leadingContent != null) {
+                if (thumbnail != null) {
                     Column(
-                        modifier = Modifier.width(110.dp)
+                        modifier = Modifier.width(ThumbnailWidth)
                     ) {
-                        leadingContent()
+                        thumbnail()
                     }
                 }
 
@@ -86,7 +85,6 @@ fun EditableCard(
                     if (editing) {
 
                         if (title == "Neue Karte") {
-
                             OutlinedTextField(
                                 value = currentTitle,
                                 onValueChange = {
@@ -97,9 +95,7 @@ fun EditableCard(
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             )
-
                         } else {
-
                             Text(
                                 text = currentTitle,
                                 style = MaterialTheme.typography.titleLarge
@@ -125,7 +121,6 @@ fun EditableCard(
 
                             Button(
                                 onClick = {
-
                                     editing = false
 
                                     onSave(
@@ -141,7 +136,6 @@ fun EditableCard(
                             }
 
                             if (canEdit && onDelete != null) {
-
                                 TextButton(
                                     onClick = {
                                         editing = false
@@ -175,17 +169,17 @@ fun EditableCard(
                             )
 
                             if (hasOverflow || expanded) {
-
                                 TextButton(
                                     onClick = {
                                         expanded = !expanded
                                     }
                                 ) {
                                     Text(
-                                        if (expanded)
+                                        text = if (expanded) {
                                             "Weniger anzeigen"
-                                        else
-                                            "Mehr anzeigen",
+                                        } else {
+                                            "Mehr anzeigen"
+                                        },
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
