@@ -1,11 +1,11 @@
 package de.geier.citymanager.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -13,9 +13,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
 
 @Composable
 fun EditableCard(
@@ -25,6 +25,7 @@ fun EditableCard(
     onSave: (String, String) -> Unit,
     onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    leadingContent: (@Composable (() -> Unit))? = null,
     moveButtons: (@Composable () -> Unit)? = null
 ) {
 
@@ -40,7 +41,7 @@ fun EditableCard(
         mutableStateOf(content)
     }
 
-    var expanded by remember {
+    var expanded by remember(content) {
         mutableStateOf(false)
     }
 
@@ -63,25 +64,97 @@ fun EditableCard(
             }
         ) {
 
-            Column(
+            Row(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.Top
             ) {
 
-                if (editing) {
+                if (leadingContent != null) {
+                    Column(
+                        modifier = Modifier.width(110.dp)
+                    ) {
+                        leadingContent()
+                    }
+                }
 
-                    if (title == "Neue Karte") {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    if (editing) {
+
+                        if (title == "Neue Karte") {
+
+                            OutlinedTextField(
+                                value = currentTitle,
+                                onValueChange = {
+                                    currentTitle = it
+                                },
+                                label = {
+                                    Text("Titel")
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                        } else {
+
+                            Text(
+                                text = currentTitle,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
 
                         OutlinedTextField(
-                            value = currentTitle,
+                            value = currentContent,
                             onValueChange = {
-                                currentTitle = it
+                                currentContent = it
                             },
                             label = {
-                                Text("Titel")
+                                Text("Inhalt")
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 4
                         )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            Button(
+                                onClick = {
+
+                                    editing = false
+
+                                    onSave(
+                                        currentTitle,
+                                        currentContent
+                                    )
+                                }
+                            ) {
+                                Text(
+                                    "Speichern",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+
+                            if (canEdit && onDelete != null) {
+
+                                TextButton(
+                                    onClick = {
+                                        editing = false
+                                        onDelete()
+                                    }
+                                ) {
+                                    Text(
+                                        "Löschen",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
 
                     } else {
 
@@ -89,96 +162,43 @@ fun EditableCard(
                             text = currentTitle,
                             style = MaterialTheme.typography.titleLarge
                         )
-                    }
 
-                    OutlinedTextField(
-                        value = currentContent,
-                        onValueChange = {
-                            currentContent = it
-                        },
-                        label = {
-                            Text("Inhalt")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 4
-                    )
+                        if (currentContent.isNotBlank()) {
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        Button(
-                            onClick = {
-
-                                editing = false
-
-                                onSave(
-                                    currentTitle,
-                                    currentContent
-                                )
-                            }
-                        ) {
-                            Text("Speichern",
-                                style = MaterialTheme.typography.bodyMedium)
-                        }
-
-                        if (canEdit && onDelete != null) {
-
-                            TextButton(
-                                onClick = {
-                                    editing = false
-                                    onDelete()
+                            Text(
+                                text = currentContent,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = if (expanded) Int.MAX_VALUE else 4,
+                                onTextLayout = { layoutResult ->
+                                    hasOverflow = layoutResult.hasVisualOverflow
                                 }
-                            ) {
-                                Text("Löschen",
-                                    style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                    }
+                            )
 
-                } else {
+                            if (hasOverflow || expanded) {
 
-                    Text(
-                        text = currentTitle,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    if (currentContent.isNotBlank()) {
-
-                        Text(
-                            text = currentContent,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = if (expanded) Int.MAX_VALUE else 4,
-                            onTextLayout = { layoutResult ->
-                                hasOverflow = layoutResult.hasVisualOverflow
-                            }
-                        )
-
-                        if (hasOverflow || expanded) {
-
-                            TextButton(
-                                onClick = {
-                                    expanded = !expanded
+                                TextButton(
+                                    onClick = {
+                                        expanded = !expanded
+                                    }
+                                ) {
+                                    Text(
+                                        if (expanded)
+                                            "Weniger anzeigen"
+                                        else
+                                            "Mehr anzeigen",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
                                 }
-                            ) {
-                                Text(
-                                    if (expanded)
-                                        "Weniger anzeigen"
-                                    else
-                                        "Mehr anzeigen",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
                             }
+
+                        } else if (canEdit) {
+
+                            Text(
+                                text = "Zum Bearbeiten antippen",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-
-                    } else if (canEdit) {
-
-                        Text(
-                            text = "Zum Bearbeiten antippen",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }
@@ -187,4 +207,3 @@ fun EditableCard(
         moveButtons?.invoke()
     }
 }
-
