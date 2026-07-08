@@ -15,6 +15,9 @@ data class CityInfoCardEntity(
 
     val content: String,
 
+    /** URI des optionalen Bildes dieser Card */
+    val imageUri: String? = null,
+
     val visible: Boolean = true,
 
     val order: Int = 0

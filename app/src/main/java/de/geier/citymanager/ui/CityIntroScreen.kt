@@ -34,6 +34,7 @@ import de.geier.citymanager.ui.components.CityHeaderCard
 import de.geier.citymanager.ui.components.EditableCard
 import androidx.compose.foundation.layout.Row
 import de.geier.citymanager.ui.components.MoveButtons
+import de.geier.citymanager.ui.components.CardThumbnail
 
 @Composable
 fun CityIntroScreen(
@@ -48,6 +49,7 @@ fun CityIntroScreen(
 
     val city by cityViewModel.city.collectAsState()
     val cards by cityViewModel.cityInfoCards.collectAsState()
+
     var showTemplateDialog by remember {
         mutableStateOf(false)
     }
@@ -288,7 +290,8 @@ fun CityIntroScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-/* ---------- HEADER ---------- */
+
+            /* ---------- HEADER ---------- */
 
             CityHeaderCard(
                 cityName = c.name,
@@ -316,6 +319,7 @@ fun CityIntroScreen(
                     cards.filter { it.content.isNotBlank() }
                 }
 
+
             visibleCards.forEachIndexed { index, card ->
 
                 Row(
@@ -330,6 +334,39 @@ fun CityIntroScreen(
                         content = card.content,
                         canEdit = canEdit,
 
+                        thumbnail = {
+
+                            CardThumbnail(
+                                imageUri = card.imageUri,
+                                canEdit = canEdit,
+
+                                onReplace = { uri ->
+
+                                    cityViewModel.saveCard(
+                                        card.copy(
+                                            imageUri = uri.toString()
+                                        )
+                                    )
+
+                                },
+
+                                onRemove = {
+
+                                    cityViewModel.saveCard(
+                                        card.copy(
+                                            imageUri = null
+                                        )
+                                    )
+
+                                },
+
+                                onOpen = {
+                                    // Vollbild folgt später.
+                                }
+                            )
+
+                        },
+
                         onSave = { title, content ->
 
                             cityViewModel.saveCard(
@@ -338,26 +375,13 @@ fun CityIntroScreen(
                                     content = content
                                 )
                             )
+
                         },
 
                         onDelete = {
                             cityViewModel.deleteCard(card)
                         }
                     )
-
-                    if (canEdit) {
-
-                        MoveButtons(
-                            canMoveUp = index > 0,
-                            canMoveDown = index < visibleCards.lastIndex,
-                            onMoveUp = {
-                                cityViewModel.moveCardUp(card)
-                            },
-                            onMoveDown = {
-                                cityViewModel.moveCardDown(card)
-                            }
-                        )
-                    }
                 }
             }
 
