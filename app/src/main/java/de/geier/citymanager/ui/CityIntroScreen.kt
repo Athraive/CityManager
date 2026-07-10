@@ -354,42 +354,51 @@ fun CityIntroScreen(
                         content = card.content,
                         canEdit = canEdit,
 
-                        thumbnail = {
+                        thumbnail =
+                            if (!canEdit && card.imageUri == null) {
 
-                            CardThumbnail(
-                                imageUri = card.imageUri,
-                                canEdit = canEdit,
+                                null
 
-                                onReplace = { uri ->
+                            } else {
 
-                                    cityViewModel.saveCard(
-                                        card.copy(
-                                            imageUri = uri.toString()
-                                        )
+                                {
+
+                                    CardThumbnail(
+                                        imageUri = card.imageUri,
+                                        canEdit = canEdit,
+
+                                        onReplace = { uri ->
+
+                                            cityViewModel.saveCard(
+                                                card.copy(
+                                                    imageUri = uri.toString()
+                                                )
+                                            )
+
+                                        },
+
+                                        onRemove = {
+
+                                            cityViewModel.saveCard(
+                                                card.copy(
+                                                    imageUri = null
+                                                )
+                                            )
+
+                                        },
+
+                                        onOpen = {
+
+                                            if (card.imageUri != null) {
+                                                openedImage = card.imageUri
+                                            }
+
+                                        }
                                     )
-
-                                },
-
-                                onRemove = {
-
-                                    cityViewModel.saveCard(
-                                        card.copy(
-                                            imageUri = null
-                                        )
-                                    )
-
-                                },
-
-                                onOpen = {
-
-                                    if (card.imageUri != null) {
-                                        openedImage = card.imageUri
-                                    }
 
                                 }
-                            )
 
-                        },
+                            },
 
                         onSave = { title, content ->
 
