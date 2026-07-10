@@ -19,45 +19,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun Thumbnail(
     imageUri: String?,
     canEdit: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    style: ThumbnailStyle = ThumbnailStyle.Landscape
 ) {
+
     val shape = RoundedCornerShape(12.dp)
 
     when {
+
         imageUri != null -> {
+
             AsyncImage(
                 model = imageUri,
                 contentDescription = "Bild",
-                contentScale = ContentScale.Crop,
+                contentScale = style.contentScale,
                 modifier = modifier
-                    .size(width = 110.dp, height = 80.dp)
+                    .size(
+                        width = style.width,
+                        height = style.height
+                    )
                     .clip(shape)
                     .clickable(onClick = onClick)
             )
         }
 
         canEdit -> {
+
             Box(
                 modifier = modifier
-                    .size(width = 110.dp, height = 80.dp)
+                    .size(
+                        width = style.width,
+                        height = style.height
+                    )
                     .clip(shape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable(onClick = onClick),
                 contentAlignment = Alignment.Center
             ) {
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.width(96.dp)
+                    modifier = Modifier.width(style.width - 14.dp)
                 ) {
+
                     Icon(
                         imageVector = Icons.Outlined.Image,
                         contentDescription = null,

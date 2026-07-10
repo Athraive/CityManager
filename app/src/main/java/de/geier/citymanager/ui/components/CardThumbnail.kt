@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import de.geier.citymanager.ui.components.ThumbnailStyle
 
 @Composable
 fun CardThumbnail(
@@ -26,7 +27,8 @@ fun CardThumbnail(
     onReplace: (Uri) -> Unit,
     onRemove: () -> Unit,
     onOpen: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    style: ThumbnailStyle = ThumbnailStyle.Landscape
 ) {
 
     val context = LocalContext.current
@@ -60,7 +62,8 @@ fun CardThumbnail(
                 } else {
                     onOpen()
                 }
-            }
+            },
+            style = style
         )
 
         if (canEdit && imageUri != null) {

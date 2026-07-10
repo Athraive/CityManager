@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.Row
 import de.geier.citymanager.ui.components.MoveButtons
 import de.geier.citymanager.ui.components.CardThumbnail
 import de.geier.citymanager.ui.components.ImageViewerDialog
+import de.geier.citymanager.ui.components.ThumbnailStyle
 
 @Composable
 fun CityIntroScreen(
@@ -366,6 +367,7 @@ fun CityIntroScreen(
                                     CardThumbnail(
                                         imageUri = card.imageUri,
                                         canEdit = canEdit,
+                                        style = ThumbnailStyle.Square,
 
                                         onReplace = { uri ->
 
