@@ -35,6 +35,7 @@ import de.geier.citymanager.ui.components.EditableCard
 import androidx.compose.foundation.layout.Row
 import de.geier.citymanager.ui.components.MoveButtons
 import de.geier.citymanager.ui.components.CardThumbnail
+import de.geier.citymanager.ui.components.ImageViewerDialog
 
 @Composable
 fun CityIntroScreen(
@@ -50,13 +51,21 @@ fun CityIntroScreen(
     val city by cityViewModel.city.collectAsState()
     val cards by cityViewModel.cityInfoCards.collectAsState()
 
+    var openedImage by remember {
+        mutableStateOf<String?>(null)
+    }
+
     var showTemplateDialog by remember {
         mutableStateOf(false)
     }
+
     val canEdit = accessContext.canEdit()
 
     if (city == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             CircularProgressIndicator()
         }
         return
@@ -281,6 +290,17 @@ fun CityIntroScreen(
         }
     ) { paddingValues ->
 
+        if (openedImage != null) {
+
+            ImageViewerDialog(
+                imageUri = openedImage!!,
+                onDismiss = {
+                    openedImage = null
+                }
+            )
+
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -361,7 +381,11 @@ fun CityIntroScreen(
                                 },
 
                                 onOpen = {
-                                    // Vollbild folgt später.
+
+                                    if (card.imageUri != null) {
+                                        openedImage = card.imageUri
+                                    }
+
                                 }
                             )
 
