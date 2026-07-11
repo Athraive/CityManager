@@ -14,11 +14,15 @@ import de.geier.citymanager.ui.Person
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import de.geier.citymanager.data.entity.CityInfoCardEntity
+import de.geier.citymanager.data.entity.CityHistoryCardEntity
+import java.util.UUID
+import kotlin.math.max
 
 class CityViewModel(
     private val accessContext: AccessContext,
     private val cityRepository: CityRepository,
     private val cityInfoCardRepository: CityInfoCardRepository,
+    private val cityHistoryCardRepository: CityHistoryCardRepository,
     private val poiCategoryRepository: PoiCategoryRepository,
     private val poiRepository: PointOfInterestRepository,
     private val factionRepository: FactionRepositoryImpl,
@@ -38,6 +42,15 @@ class CityViewModel(
 
     val cityInfoCards =
         cityInfoCardRepository
+            .cardsForCity(accessContext.cityId)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                emptyList()
+            )
+
+    val cityHistoryCards =
+        cityHistoryCardRepository
             .cardsForCity(accessContext.cityId)
             .stateIn(
                 viewModelScope,
@@ -289,11 +302,50 @@ class CityViewModel(
         }
     }
 
+    fun saveHistoryCard(
+        card: CityHistoryCardEntity
+    ) {
+        viewModelScope.launch {
+            cityHistoryCardRepository.saveCard(card)
+        }
+    }
+
+    fun createHistoryCard() {
+
+        viewModelScope.launch {
+
+            val nextOrder =
+                (cityHistoryCards.value.maxOfOrNull { it.order } ?: -1) + 1
+
+            cityHistoryCardRepository.saveCard(
+
+                CityHistoryCardEntity(
+                    id = UUID.randomUUID().toString(),
+                    cityId = accessContext.cityId,
+                    title = "Neue Karte",
+                    content = "",
+                    imageUri = null,
+                    visible = true,
+                    order = nextOrder
+                )
+
+            )
+        }
+    }
+
     fun deleteCard(
         card: CityInfoCardEntity
     ) {
         viewModelScope.launch {
             cityInfoCardRepository.deleteCard(card)
+        }
+    }
+
+    fun deleteHistoryCard(
+        card: CityHistoryCardEntity
+    ) {
+        viewModelScope.launch {
+            cityHistoryCardRepository.deleteCard(card)
         }
     }
 
@@ -321,6 +373,37 @@ class CityViewModel(
             )
 
             cityInfoCardRepository.saveCard(
+                previous.copy(
+                    order = card.order
+                )
+            )
+        }
+    }
+
+    fun moveHistoryCardUp(
+        card: CityHistoryCardEntity
+    ) {
+
+        viewModelScope.launch {
+
+            val cards =
+                cityHistoryCards.value.sortedBy { it.order }
+
+            val index =
+                cards.indexOfFirst { it.id == card.id }
+
+            if (index <= 0) return@launch
+
+            val previous =
+                cards[index - 1]
+
+            cityHistoryCardRepository.saveCard(
+                card.copy(
+                    order = previous.order
+                )
+            )
+
+            cityHistoryCardRepository.saveCard(
                 previous.copy(
                     order = card.order
                 )
@@ -360,4 +443,38 @@ class CityViewModel(
             )
         }
     }
+
+    fun moveHistoryCardDown(
+        card: CityHistoryCardEntity
+    ) {
+
+        viewModelScope.launch {
+
+            val cards =
+                cityHistoryCards.value.sortedBy { it.order }
+
+            val index =
+                cards.indexOfFirst { it.id == card.id }
+
+            if (index == -1 || index >= cards.lastIndex) {
+                return@launch
+            }
+
+            val next =
+                cards[index + 1]
+
+            cityHistoryCardRepository.saveCard(
+                card.copy(
+                    order = next.order
+                )
+            )
+
+            cityHistoryCardRepository.saveCard(
+                next.copy(
+                    order = card.order
+                )
+            )
+        }
+    }
+
 }

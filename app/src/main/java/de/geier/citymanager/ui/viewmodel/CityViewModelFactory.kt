@@ -34,10 +34,16 @@ class CityViewModelFactory(
                     database.cityInfoCardDao()
                 )
 
+            val cityHistoryCardRepository =
+                CityHistoryCardRepositoryImpl(
+                    database.cityHistoryCardDao()
+                )
+
             return CityViewModel(
                 accessContext = accessContext,
                 cityRepository = cityRepository,
                 cityInfoCardRepository = cityInfoCardRepository,
+                cityHistoryCardRepository = cityHistoryCardRepository,
 
                 poiCategoryRepository =
                     PoiCategoryRepository(
