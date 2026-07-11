@@ -415,6 +415,26 @@ fun CityIntroScreen(
 
                         onDelete = {
                             cityViewModel.deleteCard(card)
+                        },
+
+                        moveButtons = {
+
+                            if (canEdit) {
+
+                                MoveButtons(
+                                    canMoveUp = index > 0,
+                                    canMoveDown = index < visibleCards.lastIndex,
+
+                                    onMoveUp = {
+                                        cityViewModel.moveCardUp(card)
+                                    },
+
+                                    onMoveDown = {
+                                        cityViewModel.moveCardDown(card)
+                                    }
+                                )
+
+                            }
                         }
                     )
                 }
