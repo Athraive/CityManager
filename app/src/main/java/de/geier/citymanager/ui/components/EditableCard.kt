@@ -18,15 +18,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 
 private val ThumbnailWidth = ThumbnailStyle.Landscape.width
 
 @Composable
 fun EditableCard(
     title: String,
+    subtitle: String,
     content: String,
     canEdit: Boolean,
-    onSave: (String, String) -> Unit,
+    onSave: (String, String, String) -> Unit,
     onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     thumbnail: (@Composable (() -> Unit))? = null,
@@ -36,6 +38,10 @@ fun EditableCard(
 
     var currentTitle by remember(title) {
         mutableStateOf(title)
+    }
+
+    var currentSubtitle by remember(subtitle) {
+        mutableStateOf(subtitle)
     }
 
     var currentContent by remember(content) {
@@ -92,31 +98,22 @@ fun EditableCard(
                     ) {
 
                         Column(
+                            modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.Center
                         ) {
 
-                            if (editing && title == "Neue Karte") {
+                            Text(
+                                text = currentTitle,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
 
-                                OutlinedTextField(
-                                    value = currentTitle,
-                                    onValueChange = {
-                                        currentTitle = it
-                                    },
-                                    label = {
-                                        Text("Titel")
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                            } else {
-
+                            if (currentSubtitle.isNotBlank()) {
                                 Text(
-                                    text = currentTitle,
-                                    style = MaterialTheme.typography.titleLarge
+                                    text = currentSubtitle,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-
-                                // Platz für einen späteren Untertitel
-
                             }
                         }
                     }
@@ -136,6 +133,16 @@ fun EditableCard(
                         minLines = 4
                     )
 
+                    OutlinedTextField(
+                        value = currentSubtitle,
+                        onValueChange = { currentSubtitle = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = {
+                            Text("Untertitel")
+                        },
+                        singleLine = true
+                    )
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -147,6 +154,7 @@ fun EditableCard(
 
                                 onSave(
                                     currentTitle,
+                                    currentSubtitle,
                                     currentContent
                                 )
                             }

@@ -352,6 +352,7 @@ fun CityIntroScreen(
                     EditableCard(
                         modifier = Modifier.weight(1f),
                         title = card.title,
+                        subtitle = "",
                         content = card.content,
                         canEdit = canEdit,
 
@@ -402,7 +403,7 @@ fun CityIntroScreen(
 
                             },
 
-                        onSave = { title, content ->
+                        onSave = { title, subtitle, content ->
 
                             cityViewModel.saveCard(
                                 card.copy(
