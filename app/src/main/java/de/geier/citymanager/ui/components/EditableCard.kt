@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-private val ThumbnailWidth = 110.dp
+private val ThumbnailWidth = ThumbnailStyle.Landscape.width
 
 @Composable
 fun EditableCard(
@@ -63,136 +65,150 @@ fun EditableCard(
             }
         ) {
 
-            Row(
+            Column(
                 modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.Top
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                if (thumbnail != null) {
-                    Column(
-                        modifier = Modifier.width(ThumbnailWidth)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    if (thumbnail != null) {
+                        Column(
+                            modifier = Modifier.width(ThumbnailWidth)
+                        ) {
+                            thumbnail()
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(ThumbnailStyle.Landscape.height),
+                        contentAlignment = Alignment.CenterStart
                     ) {
-                        thumbnail()
+
+                        Column(
+                            verticalArrangement = Arrangement.Center
+                        ) {
+
+                            if (editing && title == "Neue Karte") {
+
+                                OutlinedTextField(
+                                    value = currentTitle,
+                                    onValueChange = {
+                                        currentTitle = it
+                                    },
+                                    label = {
+                                        Text("Titel")
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                            } else {
+
+                                Text(
+                                    text = currentTitle,
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+
+                                // Platz für einen späteren Untertitel
+
+                            }
+                        }
                     }
                 }
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                if (editing) {
 
-                    if (editing) {
+                    OutlinedTextField(
+                        value = currentContent,
+                        onValueChange = {
+                            currentContent = it
+                        },
+                        label = {
+                            Text("Inhalt")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 4
+                    )
 
-                        if (title == "Neue Karte") {
-                            OutlinedTextField(
-                                value = currentTitle,
-                                onValueChange = {
-                                    currentTitle = it
-                                },
-                                label = {
-                                    Text("Titel")
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+
+                        Button(
+                            onClick = {
+                                editing = false
+
+                                onSave(
+                                    currentTitle,
+                                    currentContent
+                                )
+                            }
+                        ) {
                             Text(
-                                text = currentTitle,
-                                style = MaterialTheme.typography.titleLarge
+                                "Speichern",
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
 
-                        OutlinedTextField(
-                            value = currentContent,
-                            onValueChange = {
-                                currentContent = it
-                            },
-                            label = {
-                                Text("Inhalt")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            minLines = 4
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-
-                            Button(
+                        if (canEdit && onDelete != null) {
+                            TextButton(
                                 onClick = {
                                     editing = false
-
-                                    onSave(
-                                        currentTitle,
-                                        currentContent
-                                    )
+                                    onDelete()
                                 }
                             ) {
                                 Text(
-                                    "Speichern",
+                                    "Löschen",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
-
-                            if (canEdit && onDelete != null) {
-                                TextButton(
-                                    onClick = {
-                                        editing = false
-                                        onDelete()
-                                    }
-                                ) {
-                                    Text(
-                                        "Löschen",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            }
                         }
+                    }
 
-                    } else {
+                } else {
+
+                    if (currentContent.isNotBlank()) {
 
                         Text(
-                            text = currentTitle,
-                            style = MaterialTheme.typography.titleLarge
+                            text = currentContent,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = if (expanded) Int.MAX_VALUE else 4,
+                            onTextLayout = { layoutResult ->
+                                hasOverflow = layoutResult.hasVisualOverflow
+                            }
                         )
 
-                        if (currentContent.isNotBlank()) {
-
-                            Text(
-                                text = currentContent,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = if (expanded) Int.MAX_VALUE else 4,
-                                onTextLayout = { layoutResult ->
-                                    hasOverflow = layoutResult.hasVisualOverflow
+                        if (hasOverflow || expanded) {
+                            TextButton(
+                                onClick = {
+                                    expanded = !expanded
                                 }
-                            )
-
-                            if (hasOverflow || expanded) {
-                                TextButton(
-                                    onClick = {
-                                        expanded = !expanded
-                                    }
-                                ) {
-                                    Text(
-                                        text = if (expanded) {
-                                            "Weniger anzeigen"
-                                        } else {
-                                            "Mehr anzeigen"
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
+                            ) {
+                                Text(
+                                    text = if (expanded) {
+                                        "Weniger anzeigen"
+                                    } else {
+                                        "Mehr anzeigen"
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
-
-                        } else if (canEdit) {
-
-                            Text(
-                                text = "Zum Bearbeiten antippen",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
+
+                    } else if (canEdit) {
+
+                        Text(
+                            text = "Zum Bearbeiten antippen",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
