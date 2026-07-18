@@ -13,6 +13,8 @@ data class CityInfoCardEntity(
 
     val title: String,
 
+    val subtitle: String = "",
+
     val content: String,
 
     /** URI des optionalen Bildes dieser Card */

@@ -122,6 +122,17 @@ fun EditableCard(
                 if (editing) {
 
                     OutlinedTextField(
+                        value = currentSubtitle,
+                        onValueChange = { currentSubtitle = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = {
+                            Text("Untertitel")
+                        },
+                        singleLine = true
+                    )
+
+
+                    OutlinedTextField(
                         value = currentContent,
                         onValueChange = {
                             currentContent = it
@@ -133,15 +144,6 @@ fun EditableCard(
                         minLines = 4
                     )
 
-                    OutlinedTextField(
-                        value = currentSubtitle,
-                        onValueChange = { currentSubtitle = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = {
-                            Text("Untertitel")
-                        },
-                        singleLine = true
-                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
