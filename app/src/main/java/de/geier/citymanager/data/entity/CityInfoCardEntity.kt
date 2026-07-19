@@ -22,5 +22,7 @@ data class CityInfoCardEntity(
 
     val visible: Boolean = true,
 
+    val isCustom: Boolean = false,
+
     val order: Int = 0
 )

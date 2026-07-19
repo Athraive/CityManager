@@ -19,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 
-private val ThumbnailWidth = ThumbnailStyle.Landscape.width
 
 @Composable
 fun EditableCard(
@@ -28,6 +28,8 @@ fun EditableCard(
     subtitle: String,
     content: String,
     canEdit: Boolean,
+    titleEditable: Boolean = false,
+    thumbnailWidth: Dp = ThumbnailStyle.Landscape.width,
     onSave: (String, String, String) -> Unit,
     onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -84,7 +86,7 @@ fun EditableCard(
 
                     if (thumbnail != null) {
                         Column(
-                            modifier = Modifier.width(ThumbnailWidth)
+                            modifier = Modifier.width(thumbnailWidth)
                         ) {
                             thumbnail()
                         }
@@ -121,6 +123,28 @@ fun EditableCard(
 
                 if (editing) {
 
+                    if (titleEditable) {
+
+                        OutlinedTextField(
+                            value = currentTitle,
+                            onValueChange = { currentTitle = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = {
+                                Text("Titel")
+                            },
+                            singleLine = true
+                        )
+
+                    } else {
+
+                        Text(
+                            text = currentTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                    }
+
                     OutlinedTextField(
                         value = currentSubtitle,
                         onValueChange = { currentSubtitle = it },
@@ -130,7 +154,6 @@ fun EditableCard(
                         },
                         singleLine = true
                     )
-
 
                     OutlinedTextField(
                         value = currentContent,

@@ -283,11 +283,14 @@ class CityViewModel(
 
             cityInfoCardRepository.saveCard(
                 CityInfoCardEntity(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = UUID.randomUUID().toString(),
                     cityId = accessContext.cityId,
                     title = title,
+                    subtitle = "",
                     content = "",
+                    imageUri = null,
                     visible = true,
+                    isCustom = !isStandardTemplate,
                     order = nextOrder
                 )
             )

@@ -354,6 +354,8 @@ fun CityIntroScreen(
                         title = card.title,
                         subtitle = card.subtitle,
                         content = card.content,
+                        titleEditable = card.isCustom,
+                        thumbnailWidth = ThumbnailStyle.Square.width + 4.dp,
                         canEdit = canEdit,
 
                         thumbnail =
