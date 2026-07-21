@@ -120,9 +120,19 @@ fun CityIntroScreen(
                 it,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
-            coatOfArmsUri = it.toString()
+
+            val newUri = it.toString()
+            coatOfArmsUri = newUri
+
+            cityViewModel.saveCity(
+                c.copy(
+                    subtitle = subtitle,
+                    coatOfArmsUri = newUri
+                )
+            )
         }
     }
+
     if (showTemplateDialog) {
 
         AlertDialog(
@@ -324,6 +334,16 @@ fun CityIntroScreen(
                     subtitle = it
                 },
 
+                onSubtitleSave = {
+                    cityViewModel.saveCity(
+                        c.copy(
+                            subtitle = it,
+                            name = name,
+                            coatOfArmsUri = coatOfArmsUri
+                        )
+                    )
+                },
+
                 onImageClick = {
                     imagePicker.launch(arrayOf("image/*"))
                 }
@@ -441,25 +461,6 @@ fun CityIntroScreen(
                             }
                         }
                     )
-                }
-            }
-
-            /* ---------- SAVE ---------- */
-
-            if (canEdit) {
-                Button(
-                    onClick = {
-                        cityViewModel.saveCity(
-                            c.copy(
-                                subtitle = subtitle,
-                                name = name,
-                                coatOfArmsUri = coatOfArmsUri
-                            )
-                        )
-                    }
-                ) {
-                    Text("Alles speichern",
-                    style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }

@@ -185,7 +185,7 @@ fun EditableCard(
                             }
                         ) {
                             Text(
-                                "Speichern",
+                                "Fertig",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
