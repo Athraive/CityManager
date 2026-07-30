@@ -1,13 +1,24 @@
 package de.geier.citymanager.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import de.geier.citymanager.data.entity.CityLoreEntity
+import de.geier.citymanager.ui.components.CardThumbnail
+import de.geier.citymanager.ui.components.EditableCard
+import de.geier.citymanager.ui.components.ImageViewerDialog
+import de.geier.citymanager.ui.components.MoveButtons
 import de.geier.citymanager.ui.viewmodel.CityViewModel
 
 @Composable
@@ -16,180 +27,170 @@ fun StadtgeschichteScreen(
     cityViewModel: CityViewModel,
     accessContext: AccessContext
 ) {
-    val lore by cityViewModel.cityLore.collectAsState()
-    var editMode by remember { mutableStateOf(false) }
 
-    /* ---------------- KEINE LORE VORHANDEN ---------------- */
+    val cards by cityViewModel.cityHistoryCards.collectAsState()
 
-    if (lore == null) {
+    var imageViewerUri by remember {
+        mutableStateOf<String?>(null)
+    }
 
-        if (editMode) {
-            EditLoreScreen(
-                lore = CityLoreEntity(
-                    cityId = cityId,
-                    title = "Stadtgeschichte",
-                    text = ""
-                ),
-                onSave = {
-                    cityViewModel.saveCityLore(it)
-                    editMode = false
-                },
-                onCancel = {
-                    editMode = false
-                }
-            )
-            return
-        }
+    Scaffold(
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-
-            Text(
-                text = "Keine Stadtgeschichte vorhanden.",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+        floatingActionButton = {
 
             if (accessContext.canEdit()) {
-                Button(
-                    onClick = { editMode = true },
-                    modifier = Modifier.fillMaxWidth()
+
+                FloatingActionButton(
+                    onClick = {
+                        cityViewModel.createHistoryCard()
+                    }
                 ) {
-                    Text("Erstellen")
-                }
-            }
-        }
-
-        return
-    }
-
-    /* ---------------- LORE VORHANDEN ---------------- */
-
-    val currentLore = lore!!
-
-    if (editMode) {
-        EditLoreScreen(
-            lore = currentLore,
-            onSave = {
-                cityViewModel.saveCityLore(it)
-                editMode = false
-            },
-            onCancel = {
-                editMode = false
-            }
-        )
-        return
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-
-        // 🔹 Scrollbarer Inhalt
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-        ) {
-
-            Text(
-                text = currentLore.title,
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = currentLore.text,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 🔹 Fixer Button unten
-        if (accessContext.canEdit()) {
-            Button(
-                onClick = { editMode = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Bearbeiten")
-            }
-        }
-    }
-}
-
-/* ---------------- EDIT SCREEN ---------------- */
-
-@Composable
-private fun EditLoreScreen(
-    lore: CityLoreEntity,
-    onSave: (CityLoreEntity) -> Unit,
-    onCancel: () -> Unit
-) {
-    var title by remember { mutableStateOf(lore.title) }
-    var text by remember { mutableStateOf(lore.text) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-
-        Text(
-            text = "Stadtgeschichte bearbeiten",
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Titel") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it },
-            label = { Text("Chronik") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            maxLines = Int.MAX_VALUE
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-
-            Button(
-                onClick = {
-                    onSave(
-                        lore.copy(
-                            title = title,
-                            text = text
-                        )
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = "Historieneintrag hinzufügen"
                     )
                 }
-            ) {
-                Text("Speichern")
-            }
-
-            OutlinedButton(
-                onClick = onCancel
-            ) {
-                Text("Abbrechen")
             }
         }
+
+    ) { paddingValues ->
+
+        LazyColumn(
+
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+
+            contentPadding = PaddingValues(24.dp),
+
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+
+        ) {
+
+            itemsIndexed(
+                items = cards,
+                key = { _, card -> card.id }
+            ) { index, card ->
+
+                EditableCard(
+
+                    title = card.title,
+
+                    subtitle = card.subtitle,
+
+                    content = card.content,
+
+                    canEdit = accessContext.canEdit(),
+
+                    titleEditable = true,
+
+                    thumbnail =
+                        if (!accessContext.canEdit() && card.imageUri == null) {
+
+                            null
+
+                        } else {
+
+                            {
+
+                                CardThumbnail(
+                                    imageUri = card.imageUri,
+                                    canEdit = accessContext.canEdit(),
+
+                                    onReplace = { uri ->
+                                        cityViewModel.saveHistoryCard(
+                                            card.copy(imageUri = uri.toString())
+                                        )
+                                    },
+
+                                    onRemove = {
+                                        cityViewModel.saveHistoryCard(
+                                            card.copy(imageUri = null)
+                                        )
+                                    },
+
+                                    onOpen = {
+                                        imageViewerUri = card.imageUri
+                                    }
+                                )
+
+                            }
+
+                        },
+
+
+
+                    moveButtons = {
+
+                        if (accessContext.canEdit()) {
+
+                            MoveButtons(
+
+                                canMoveUp = index > 0,
+
+                                canMoveDown = index < cards.lastIndex,
+
+                                onMoveUp = {
+
+                                    cityViewModel.moveHistoryCardUp(card)
+
+                                },
+
+                                onMoveDown = {
+
+                                    cityViewModel.moveHistoryCardDown(card)
+
+                                }
+
+                            )
+
+                        }
+
+                    },
+
+                    onSave = { title, subtitle, content ->
+
+                        cityViewModel.saveHistoryCard(
+
+                            card.copy(
+
+                                title = title,
+
+                                subtitle = subtitle,
+
+                                content = content
+
+                            )
+
+                        )
+
+                    },
+
+                    onDelete = {
+
+                        cityViewModel.deleteHistoryCard(card)
+
+                    }
+
+                )
+
+            }
+
+        }
+
+        imageViewerUri?.let { uri ->
+
+            ImageViewerDialog(
+
+                imageUri = uri,
+                onDismiss = {
+                    imageViewerUri = null
+                }
+
+            )
+
+        }
+
     }
+
 }

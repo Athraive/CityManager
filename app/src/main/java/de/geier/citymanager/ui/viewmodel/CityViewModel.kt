@@ -326,6 +326,7 @@ class CityViewModel(
                     id = UUID.randomUUID().toString(),
                     cityId = accessContext.cityId,
                     title = "Neue Karte",
+                    subtitle = "",
                     content = "",
                     imageUri = null,
                     visible = true,

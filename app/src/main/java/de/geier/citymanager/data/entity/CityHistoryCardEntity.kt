@@ -13,6 +13,7 @@ data class CityHistoryCardEntity(
 
     val title: String,
 
+    val subtitle: String = "",
     val content: String,
 
     /** Optionales Bild dieser Geschichtskarte */
