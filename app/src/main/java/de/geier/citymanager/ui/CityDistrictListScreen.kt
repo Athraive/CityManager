@@ -1,25 +1,33 @@
 package de.geier.citymanager.ui
 
-import android.net.Uri
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import de.geier.citymanager.data.entity.CityDistrictEntity
+import de.geier.citymanager.ui.components.CardThumbnail
+import de.geier.citymanager.ui.components.EditableCard
+import de.geier.citymanager.ui.components.MoveButtons
 import de.geier.citymanager.ui.viewmodel.CityViewModel
-import java.util.UUID
+import de.geier.citymanager.ui.components.ImageViewerDialog
 
 @Composable
 fun CityDistrictListScreen(
@@ -28,440 +36,349 @@ fun CityDistrictListScreen(
     accessContext: AccessContext,
     onDistrictSelected: (String) -> Unit
 ) {
-    val districts by cityViewModel
-        .districtsForCity(cityId)
-        .collectAsState(initial = emptyList())
+
+    val canEdit = accessContext.canEdit()
 
     val city by cityViewModel.city.collectAsState()
 
-    var showCreate by remember { mutableStateOf(false) }
-    var selectedDistrict by remember { mutableStateOf<CityDistrictEntity?>(null) }
+    val districts by cityViewModel.cityDistricts.collectAsState()
 
-    var showCityImageFullscreen by remember { mutableStateOf(false) }
-
-    val cityImagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            city?.let { currentCity ->
-                cityViewModel.saveCity(
-                    currentCity.copy(backgroundImageUri = it.toString())
-                )
-            }
-        }
+    var openedImage by remember {
+        mutableStateOf<String?>(null)
     }
 
-    when {
+    Scaffold(
 
-        showCreate -> {
-            CreateDistrictScreen(
-                onSave = { name: String, description: String ->
-                    cityViewModel.saveDistrict(
-                        CityDistrictEntity(
-                            id = UUID.randomUUID().toString(),
-                            cityId = cityId,
-                            name = name,
-                            description = description,
-                            orderIndex = districts.size,
-                            mapKey = null,
-                            imageUri = null
-                        )
-                    )
-                    showCreate = false
-                },
-                onCancel = { showCreate = false }
-            )
-        }
+        floatingActionButton = {
 
-        selectedDistrict != null -> {
-            DistrictDetailPanel(
-                district = selectedDistrict!!,
-                accessContext = accessContext,
-                onBack = { selectedDistrict = null },
-                onSave = {
-                    cityViewModel.saveDistrict(it)
-                    selectedDistrict = it
-                }
-            )
-        }
+            if (canEdit) {
 
-        else -> {
-
-            Scaffold(
-                containerColor = Color.Transparent,
-                floatingActionButton = {
-                    if (accessContext.canEdit()) {
-                        FloatingActionButton(
-                            onClick = { showCreate = true }
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                        }
+                FloatingActionButton(
+                    onClick = {
+                        cityViewModel.createDistrict()
                     }
-                }
-            ) { padding ->
-
-                // 🔥 GLOBALER FIX
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.onBackground
                 ) {
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                    ) {
-
-                        Column(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-
-                                if (city?.backgroundImageUri != null) {
-                                    AsyncImage(
-                                        model = city!!.backgroundImageUri,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clickable {
-                                                showCityImageFullscreen = true
-                                            }
-                                    )
-                                } else {
-                                    Text("Kein Stadtviertel-Bild gesetzt")
-                                }
-
-                                if (accessContext.canEdit()) {
-                                    IconButton(
-                                        onClick = { cityImagePicker.launch("image/*") },
-                                        modifier = Modifier.align(Alignment.BottomEnd)
-                                    ) {
-                                        Icon(Icons.Default.Image, contentDescription = null)
-                                    }
-                                }
-                            }
-
-                            if (districts.isEmpty()) {
-
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("Für diese Stadt sind noch keine Stadtviertel angelegt.")
-                                }
-
-                            } else {
-
-                                LazyVerticalGrid(
-                                    columns = GridCells.Adaptive(minSize = 140.dp),
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    items(districts, key = { it.id }) { district ->
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    selectedDistrict = district
-                                                }
-                                        ) {
-
-                                            Column {
-
-                                                if (district.imageUri != null) {
-                                                    AsyncImage(
-                                                        model = district.imageUri,
-                                                        contentDescription = null,
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .height(100.dp)
-                                                    )
-                                                }
-
-                                                Column(modifier = Modifier.padding(12.dp)) {
-                                                    Text(
-                                                        text = district.name,
-                                                        style = MaterialTheme.typography.titleMedium
-                                                    )
-
-                                                    if (district.description.isNotBlank()) {
-                                                        Spacer(modifier = Modifier.height(4.dp))
-                                                        Text(
-                                                            text = district.description,
-                                                            maxLines = 2
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-
-                            if (showCityImageFullscreen && city?.backgroundImageUri != null) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black)
-                                    .clickable { showCityImageFullscreen = false },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AsyncImage(
-                                    model = city!!.backgroundImageUri,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                        }
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Stadtviertel hinzufügen"
+                    )
                 }
+
             }
+
         }
-    }
-}
 
-@Composable
-private fun DistrictDetailPanel(
-    district: CityDistrictEntity,
-    accessContext: AccessContext,
-    onBack: () -> Unit,
-    onSave: (CityDistrictEntity) -> Unit
-) {
-    var editMode by remember { mutableStateOf(false) }
-    var showImageFullscreen by remember { mutableStateOf(false) }
+    ) { paddingValues ->
 
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            onSave(district.copy(imageUri = it.toString()))
-        }
-    }
+        LazyColumn(
 
-    if (!accessContext.canEdit()) {
-        editMode = false
-    }
-
-    if (editMode) {
-        EditDistrictScreen(
-            district = district,
-            onSave = {
-                onSave(it)
-                editMode = false
-            },
-            onCancel = { editMode = false }
-        )
-        return
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(paddingValues),
+
+            contentPadding = PaddingValues(24.dp),
+
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+
         ) {
 
-            if (district.imageUri != null) {
-                AsyncImage(
-                    model = district.imageUri,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clickable {
-                            showImageFullscreen = true
+            item {
+
+                DistrictMapCard(
+
+                    imageUri = city?.backgroundImageUri,
+
+                    canEdit = canEdit,
+
+                    onReplace = { uri ->
+
+                        city?.let {
+
+                            cityViewModel.saveCity(
+                                it.copy(
+                                    backgroundImageUri = uri
+                                )
+                            )
+
                         }
+
+                    },
+
+                    onRemove = {
+
+                        city?.let {
+
+                            cityViewModel.saveCity(
+                                it.copy(
+                                    backgroundImageUri = null
+                                )
+                            )
+
+                        }
+
+                    },
+
+                    onOpen = {
+
+                        openedImage = city?.backgroundImageUri
+
+                    }
+
+                )
+
+            }
+
+            item {
+
+                HorizontalDivider()
+
+            }
+
+            districts.forEach {
+                android.util.Log.d(
+                    "DistrictOrder",
+                    "${it.name} -> ${it.orderIndex}"
                 )
             }
 
-            if (accessContext.canEdit()) {
-                IconButton(onClick = { imagePicker.launch("image/*") }) {
-                    Icon(Icons.Default.Image, contentDescription = null)
-                }
+            itemsIndexed(
+                items = districts,
+                key = { _, district -> district.id }
+            ) { index, district ->
+
+                EditableCard(
+
+                    title = district.name,
+
+                    subtitle = "",
+
+                    content = district.description,
+
+                    canEdit = canEdit,
+
+                    titleEditable = true,
+
+                    thumbnail =
+                        if (!canEdit && district.imageUri == null) {
+
+                            null
+
+                        } else {
+
+                            {
+
+                                CardThumbnail(
+
+                                    imageUri = district.imageUri,
+
+                                    canEdit = canEdit,
+
+                                    onReplace = { uri ->
+
+                                        cityViewModel.saveDistrict(
+
+                                            district.copy(
+                                                imageUri = uri.toString()
+                                            )
+
+                                        )
+
+                                    },
+
+                                    onRemove = {
+
+                                        cityViewModel.saveDistrict(
+
+                                            district.copy(
+                                                imageUri = null
+                                            )
+
+                                        )
+
+                                    },
+
+                                    onOpen = {
+
+                                        openedImage = district.imageUri
+
+                                    }
+
+                                )
+
+                            }
+
+                        },
+
+                    onSave = { title, _, content ->
+
+                        cityViewModel.saveDistrict(
+
+                            district.copy(
+
+                                name = title,
+
+                                description = content
+
+                            )
+
+                        )
+
+                    },
+
+                    onDelete = {
+
+                        cityViewModel.deleteDistrict(
+                            district.id
+                        )
+
+                    },
+
+                    moveButtons = {
+
+                        if (canEdit) {
+
+                            MoveButtons(
+
+                                canMoveUp = index > 0,
+
+                                canMoveDown = index < districts.lastIndex,
+
+                                onMoveUp = {
+
+                                    cityViewModel.moveDistrictUp(
+                                        district
+                                    )
+
+                                },
+
+                                onMoveDown = {
+
+                                    cityViewModel.moveDistrictDown(
+                                        district
+                                    )
+
+                                }
+
+                            )
+
+                        }
+
+                    }
+
+                )
+
             }
 
-            Text(
-                text = district.name,
-                style = MaterialTheme.typography.headlineMedium
+        }
+
+        openedImage?.let { uri ->
+
+            ImageViewerDialog(
+
+                imageUri = uri,
+
+                onDismiss = {
+
+                    openedImage = null
+
+                }
+
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+        }
 
-            Text(
-                text = district.description,
-                style = MaterialTheme.typography.bodyLarge
+    }
+
+}
+@Composable
+private fun DistrictMapCard(
+    imageUri: String?,
+    canEdit: Boolean,
+    onReplace: (String) -> Unit,
+    onRemove: () -> Unit,
+    onOpen: () -> Unit
+) {
+    val context = LocalContext.current
+
+    val imagePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
+            onReplace(it.toString())
+        }
+    }
 
-            Spacer(modifier = Modifier.height(24.dp))
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+        ) {
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (imageUri != null) {
 
-                if (accessContext.canEdit()) {
-                    Button(onClick = { editMode = true }) {
-                        Text("Bearbeiten")
+                AsyncImage(
+                    model = imageUri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            if (canEdit) {
+                                imagePicker.launch("image/*")
+                            } else {
+                                onOpen()
+                            }
+                        },
+                    contentScale = ContentScale.Crop
+                )
+
+                if (canEdit) {
+                    IconButton(
+                        onClick = onRemove,
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Bild entfernen"
+                        )
                     }
                 }
 
-                OutlinedButton(onClick = onBack) {
-                    Text("Zurück")
+            } else {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable {
+                            if (canEdit) {
+                                imagePicker.launch("image/*")
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                        Icon(
+                            imageVector = Icons.Outlined.Image,
+                            contentDescription = null
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Keine Stadtviertelkarte",
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-            }
-        }
-
-        if (showImageFullscreen && district.imageUri != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-                    .clickable { showImageFullscreen = false },
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = district.imageUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EditDistrictScreen(
-    district: CityDistrictEntity,
-    onSave: (CityDistrictEntity) -> Unit,
-    onCancel: () -> Unit
-) {
-    var name by remember { mutableStateOf(district.name) }
-    var description by remember { mutableStateOf(district.description) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-
-        Text(
-            "Stadtviertel bearbeiten",
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
-            )
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Beschreibung") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
-            )
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
-                onClick = {
-                    onSave(district.copy(name = name, description = description))
-                },
-                enabled = name.isNotBlank()
-            ) {
-                Text("Speichern")
-            }
-
-            OutlinedButton(onClick = onCancel) {
-                Text("Abbrechen")
-            }
-        }
-    }
-}
-
-@Composable
-private fun CreateDistrictScreen(
-    onSave: (String, String) -> Unit,
-    onCancel: () -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-
-        Text(
-            "Stadtviertel erstellen",
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
-            )
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Beschreibung") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
-            )
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
-                onClick = { onSave(name, description) },
-                enabled = name.isNotBlank()
-            ) {
-                Text("Speichern")
-            }
-
-            OutlinedButton(onClick = onCancel) {
-                Text("Abbrechen")
             }
         }
     }

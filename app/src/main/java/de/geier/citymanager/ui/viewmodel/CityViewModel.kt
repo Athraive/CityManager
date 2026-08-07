@@ -87,9 +87,9 @@ class CityViewModel(
         }
     }
 
-    fun districtsForCity(cityId: String): StateFlow<List<CityDistrictEntity>> =
+    val cityDistricts: StateFlow<List<CityDistrictEntity>> =
         cityDistrictRepository
-            .getDistrictsForCity(cityId)
+            .getDistrictsForCity(accessContext.cityId)
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -336,6 +336,146 @@ class CityViewModel(
             )
         }
     }
+
+    fun createDistrict() {
+
+        viewModelScope.launch {
+
+            val districts =
+                cityDistricts.value
+
+            val nextOrder =
+                (districts.maxOfOrNull { it.orderIndex } ?: -1) + 1
+
+            saveDistrict(
+                CityDistrictEntity(
+                    id = UUID.randomUUID().toString(),
+                    cityId = accessContext.cityId,
+                    name = "Neues Stadtviertel",
+                    description = "",
+                    orderIndex = nextOrder,
+                    mapKey = null,
+                    imageUri = null
+                )
+            )
+        }
+    }
+
+    fun moveDistrictUp(
+        district: CityDistrictEntity
+    ) {
+
+        viewModelScope.launch {
+
+            val districts =
+                cityDistricts.value
+                    .sortedBy { it.orderIndex }
+
+            android.util.Log.d(
+                "DistrictMove",
+                "size=${districts.size}, moving=${district.id}, name=${district.name}"
+            )
+
+            val index =
+                districts.indexOfFirst { it.id == district.id }
+
+            android.util.Log.d(
+                "DistrictMove",
+                "index=$index"
+            )
+
+            if (index <= 0) {
+                android.util.Log.d(
+                    "DistrictMove",
+                    "Abbruch: index <= 0"
+                )
+                return@launch
+            }
+
+            val previous =
+                districts[index - 1]
+
+            android.util.Log.d(
+                "DistrictMove",
+                "Swap: ${district.orderIndex} <-> ${previous.orderIndex}"
+            )
+
+            saveDistrict(
+                district.copy(
+                    orderIndex = previous.orderIndex
+                )
+            )
+
+            saveDistrict(
+                previous.copy(
+                    orderIndex = district.orderIndex
+                )
+            )
+
+            android.util.Log.d(
+                "DistrictMove",
+                "Save abgeschlossen"
+            )
+        }
+    }
+
+    fun moveDistrictDown(
+        district: CityDistrictEntity
+    ) {
+
+        viewModelScope.launch {
+
+            val districts =
+                cityDistricts.value
+                    .sortedBy { it.orderIndex }
+
+            val index =
+                districts.indexOfFirst { it.id == district.id }
+
+            android.util.Log.d(
+                "DistrictMoveDown",
+                "size=${districts.size}, index=$index, last=${districts.lastIndex}, district=${district.name}"
+            )
+
+            if (index == -1 || index >= districts.lastIndex) {
+                android.util.Log.d(
+                    "DistrictMoveDown",
+                    "Abbruch"
+                )
+                return@launch
+            }
+
+            val current =
+                districts[index]
+
+            val next =
+                districts[index + 1]
+
+            android.util.Log.d(
+                "DistrictMoveDown",
+                "CURRENT ${current.name} (${current.orderIndex})  NEXT ${next.name} (${next.orderIndex})"
+            )
+
+            saveDistrict(
+                district.copy(
+                    orderIndex = next.orderIndex
+                )
+            )
+
+            saveDistrict(
+                next.copy(
+                    orderIndex = district.orderIndex
+                )
+            )
+
+            android.util.Log.d(
+                "DistrictMoveDown",
+                "Save abgeschlossen"
+            )
+        }
+    }
+
+
 
     fun deleteCard(
         card: CityInfoCardEntity
