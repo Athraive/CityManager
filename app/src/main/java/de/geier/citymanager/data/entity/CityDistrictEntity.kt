@@ -9,10 +9,10 @@ data class CityDistrictEntity(
     val id: String,
     val cityId: String,
     val name: String,
+
+    val subtitle: String = "",
     val description: String,
     val orderIndex: Int,
     val mapKey: String? = null,
-
-    // 🔥 NEU
-    val imageUri: String? = null
+       val imageUri: String? = null
 )

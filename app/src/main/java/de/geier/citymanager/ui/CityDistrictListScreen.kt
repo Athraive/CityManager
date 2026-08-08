@@ -150,7 +150,7 @@ fun CityDistrictListScreen(
 
                     title = district.name,
 
-                    subtitle = "",
+                    subtitle = district.subtitle,
 
                     content = district.description,
 
@@ -209,18 +209,14 @@ fun CityDistrictListScreen(
 
                         },
 
-                    onSave = { title, _, content ->
+                    onSave = { title, subtitle, content ->
 
                         cityViewModel.saveDistrict(
-
                             district.copy(
-
                                 name = title,
-
+                                subtitle = subtitle,
                                 description = content
-
                             )
-
                         )
 
                     },
