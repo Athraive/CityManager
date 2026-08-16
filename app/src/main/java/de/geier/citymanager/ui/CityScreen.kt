@@ -30,6 +30,10 @@ import de.geier.citymanager.ui.map.MapViewModelFactory
 import androidx.navigation.compose.rememberNavController
 import de.geier.citymanager.ui.theme.toColorScheme
 import de.geier.citymanager.data.preferences.UserPreferences
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 enum class CityTab {
     CITY,
@@ -85,6 +89,7 @@ fun CityScreen(
 
     var activeTab by remember { mutableStateOf(CityTab.CITY) }
     var activeDetail by remember { mutableStateOf<DetailTarget?>(null) }
+    var poiSearchVisible by remember { mutableStateOf(false) }
 
     var focusPersonId by remember { mutableStateOf<String?>(null) }
     var focusPoiId by remember { mutableStateOf<String?>(null) }
@@ -123,7 +128,22 @@ fun CityScreen(
                     topBar = {
                         AppTopBar(
                             title = cityEntity?.name ?: "CityManager",
-                            accessContext = accessContext
+                            accessContext = accessContext,
+                            actions = {
+
+                                if (activeTab == CityTab.POIS && activeDetail == null) {
+                                    IconButton(
+                                        onClick = {
+                                            poiSearchVisible = true
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = "Suche"
+                                        )
+                                    }
+                                }
+                            }
                         )
                     },
                     bottomBar = {
@@ -391,6 +411,11 @@ fun CityScreen(
                                             cityViewModel = cityViewModel,
                                             factions = factions,
                                             accessContext = accessContext,
+
+                                            searchPanelVisible = poiSearchVisible,
+                                            onSearchPanelVisibleChange = {
+                                                poiSearchVisible = it
+                                            },
 
                                             onPersonLinkClicked = {
                                                 activeDetail = DetailTarget.Person(it)

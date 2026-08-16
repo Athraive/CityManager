@@ -36,6 +36,8 @@ fun GameMasterCategoryListScreen(
     factions: List<Faction>,
     persons: List<Person>,
     accessContext: AccessContext,
+    searchPanelVisible: Boolean,
+    onSearchPanelVisibleChange: (Boolean) -> Unit,
     onPersonLinkClicked: (String) -> Unit,
     onFactionLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
@@ -56,10 +58,6 @@ fun GameMasterCategoryListScreen(
     }
 
     var assigningFactions by remember {
-        mutableStateOf(false)
-    }
-
-    var searchPanelVisible by remember {
         mutableStateOf(false)
     }
 
@@ -309,7 +307,7 @@ fun GameMasterCategoryListScreen(
 
                                             selectedCategory = category
 
-                                            searchPanelVisible = false
+                                            onSearchPanelVisibleChange(false)
                                             searchQuery = ""
                                         },
                                     shape = RoundedCornerShape(16.dp),
@@ -394,7 +392,7 @@ fun GameMasterCategoryListScreen(
 
                                             poiViewModel.selectPoi(poi)
 
-                                            searchPanelVisible = false
+                                            onSearchPanelVisibleChange(false)
                                             searchQuery = ""
                                         },
                                     shape = RoundedCornerShape(16.dp),
@@ -515,43 +513,6 @@ fun GameMasterCategoryListScreen(
                     }
                 }
 
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-
-                    IconButton(
-                        onClick = {
-                            searchPanelVisible = true
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp)
-                            .size(56.dp)
-                    ) {
-
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            tonalElevation = 4.dp,
-                            shadowElevation = 4.dp,
-                            color = MaterialTheme.colorScheme
-                                .surface
-                                .copy(alpha = 0.92f)
-                        ) {
-
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Suche"
-                                )
-                            }
-                        }
-                    }
-                }
-
                 SearchToolboxPanel(
                     visible = searchPanelVisible,
                     searchQuery = searchQuery,
@@ -574,7 +535,7 @@ fun GameMasterCategoryListScreen(
                     },
                     onClose = {
 
-                        searchPanelVisible = false
+                        onSearchPanelVisibleChange(false)
                         searchQuery = ""
                     }
                 )

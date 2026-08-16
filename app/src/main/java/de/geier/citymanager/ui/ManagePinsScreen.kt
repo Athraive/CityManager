@@ -75,7 +75,7 @@ fun ManagePinsScreen(
                     onClick = { selectedTab = 1 },
                     text = {
                         Text(
-                            text = "POIs",
+                            text = "Orte",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

@@ -34,10 +34,12 @@ fun PlayerCategoryListScreen(
     categoryViewModel: PoiCategoryViewModel,
     factions: List<Faction>,
     accessContext: AccessContext,
+    searchPanelVisible: Boolean,
+    onSearchPanelVisibleChange: (Boolean) -> Unit,
     onPersonLinkClicked: (String) -> Unit,
     onFactionLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
-) {
+){
 
     val context = LocalContext.current
 
@@ -55,10 +57,6 @@ fun PlayerCategoryListScreen(
 
     var selectedPoi by remember {
         mutableStateOf<PointOfInterest?>(null)
-    }
-
-    var searchPanelVisible by remember {
-        mutableStateOf(false)
     }
 
     var searchQuery by remember {
@@ -190,7 +188,7 @@ fun PlayerCategoryListScreen(
                                     .fillMaxWidth()
                                     .clickable {
 
-                                        searchPanelVisible = false
+                                        onSearchPanelVisibleChange(false)
                                         searchQuery = ""
 
                                         selectedCategory = category
@@ -265,7 +263,7 @@ fun PlayerCategoryListScreen(
                                         selectedCategory = category
                                         selectedPoi = poi
 
-                                        searchPanelVisible = false
+                                        onSearchPanelVisibleChange(false)
                                         searchQuery = ""
                                     },
                                 shape = RoundedCornerShape(16.dp),
@@ -393,44 +391,6 @@ fun PlayerCategoryListScreen(
                 }
             }
 
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-
-            IconButton(
-                onClick = {
-                    searchPanelVisible = true
-                },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
-                    .size(56.dp)
-            ) {
-
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    tonalElevation = 4.dp,
-                    shadowElevation = 4.dp,
-                    color = MaterialTheme.colorScheme
-                        .surface
-                        .copy(alpha = 0.92f)
-                ) {
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Suche"
-                        )
-                    }
-                }
-            }
-        }
-
             val searchCategories =
                 buildList {
 
@@ -468,7 +428,7 @@ fun PlayerCategoryListScreen(
                 },
                 onClose = {
 
-                    searchPanelVisible = false
+                    onSearchPanelVisibleChange(false)
                     searchQuery = ""
                 }
             )

@@ -66,7 +66,7 @@ fun CityBottomBar(
                 )
 
                 BottomTabButton(
-                    text = "POIs",
+                    text = "Orte",
                     selected = activeTab == CityTab.POIS,
                     onClick = { onTabSelected(CityTab.POIS) }
                 )

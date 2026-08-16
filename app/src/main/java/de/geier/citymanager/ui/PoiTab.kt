@@ -17,6 +17,8 @@ fun PoiTab(
     cityViewModel: CityViewModel,
     factions: List<Faction>,
     accessContext: AccessContext,
+    searchPanelVisible: Boolean,
+    onSearchPanelVisibleChange: (Boolean) -> Unit,
     onPersonLinkClicked: (String) -> Unit,
     onFactionLinkClicked: (String) -> Unit,
     onShowOnMap: (String) -> Unit
@@ -65,10 +67,11 @@ fun PoiTab(
             persons = allPersons,
             accessContext = accessContext,
 
+            searchPanelVisible = searchPanelVisible,
+            onSearchPanelVisibleChange = onSearchPanelVisibleChange,
+
             onPersonLinkClicked = onPersonLinkClicked,
-
             onFactionLinkClicked = onFactionLinkClicked,
-
             onShowOnMap = triggerShowOnMap
         )
 
@@ -80,10 +83,11 @@ fun PoiTab(
             factions = visibleFactionsForPlayer,
             accessContext = accessContext,
 
+            searchPanelVisible = searchPanelVisible,
+            onSearchPanelVisibleChange = onSearchPanelVisibleChange,
+
             onPersonLinkClicked = onPersonLinkClicked,
-
             onFactionLinkClicked = onFactionLinkClicked,
-
             onShowOnMap = triggerShowOnMap
         )
     }
