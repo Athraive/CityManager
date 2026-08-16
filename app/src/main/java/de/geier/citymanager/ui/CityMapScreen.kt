@@ -106,20 +106,30 @@ fun CityMapScreen(
     /* ---------------- FILTER LOGIC ---------------- */
 
     val basePersons =
-        if (!showPersons)
+        if (!showPersons) {
             emptyList()
-        else
+        } else {
             personsWithFactions
-                .filter {
+                .filter { personWithFactions ->
+
                     if (!showFactions) {
                         true
-                    } else if (it.factionIds.isEmpty()) {
-                        showNoFaction
                     } else {
-                        it.factionIds.any { id -> visibleFactionIds.contains(id) }
+
+                        val hasVisibleFaction =
+                            personWithFactions.factionIds.any { id ->
+                                visibleFactionIds.contains(id)
+                            }
+
+                        if (hasVisibleFaction) {
+                            true
+                        } else {
+                            showNoFaction
+                        }
                     }
                 }
                 .map { it.person }
+        }
 
 // 🔥 Fokus-Person IMMER anzeigen
     val persons = remember(basePersons, selectedPersonId, personsWithFactions) {
@@ -138,21 +148,31 @@ fun CityMapScreen(
 
 
     val basePois =
-        if (!showPois)
+        if (!showPois) {
             emptyList()
-        else
+        } else {
             poisWithFactions
-                .filter {
+                .filter { poiWithFactions ->
+
                     if (!showFactions) {
                         true
-                    } else if (it.factionIds.isEmpty()) {
-                        showNoFaction
                     } else {
-                        it.factionIds.any { id -> visibleFactionIds.contains(id) }
+
+                        val hasVisibleFaction =
+                            poiWithFactions.factionIds.any { id ->
+                                visibleFactionIds.contains(id)
+                            }
+
+                        if (hasVisibleFaction) {
+                            true
+                        } else {
+                            showNoFaction
+                        }
                     }
                 }
                 .map { it.poi }
                 .filter { visibleCategoryIds.contains(it.categoryId) }
+        }
 
 // 🔥 Fokus-POI IMMER anzeigen
     val pois = remember(basePois, selectedPoiId, poisWithFactions) {

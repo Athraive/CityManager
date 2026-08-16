@@ -172,8 +172,12 @@ fun CityScreen(
 
                                     PersonDetailScreen(
                                         person = person,
-                                        assignedPois = allPois.filter { it.id in assignedPoiIds },
-                                        assignedFactions = factions.filter { it.id in assignedFactionIds },
+                                        assignedPois = allPois
+                                            .filter { it.id in assignedPoiIds }
+                                            .filter { accessContext.canEdit() || it.visible },
+                                        assignedFactions = factions
+                                            .filter { it.id in assignedFactionIds }
+                                            .filter { accessContext.canEdit() || it.visible },
                                         accessContext = accessContext,
                                         onBack = { activeDetail = null },
                                         onSave = { personViewModel.save(it) },
@@ -223,8 +227,13 @@ fun CityScreen(
 
                                     PoiDetailScreen(
                                         poi = poi,
-                                        assignedFactions = factions.filter { it.id in assignedFactionIds },
-                                        assignedPersons = allPersons.filter { it.id in assignedPersonIds },
+                                        assignedFactions = factions
+                                            .filter { it.id in assignedFactionIds }
+                                            .filter { accessContext.canEdit() || it.visible },
+
+                                        assignedPersons = allPersons
+                                            .filter { it.id in assignedPersonIds }
+                                            .filter { accessContext.canEdit() || it.visible },
                                         accessContext = accessContext,
                                         onBack = { activeDetail = null },
                                         onSave = { cityViewModel.savePoi(it) },
