@@ -43,7 +43,8 @@ fun AssignPoisInCategoryScreen(
                 title = { Text(category.title) },
                 actions = {
                     TextButton(onClick = { onSave(selectedPoiIds) }) {
-                        Text("Speichern")
+                        Text("Speichern",
+                            style = MaterialTheme.typography.bodyMedium)
                     }
                     IconButton(onClick = onCancel) {
                         Icon(

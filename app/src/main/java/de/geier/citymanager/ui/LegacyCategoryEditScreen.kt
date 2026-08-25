@@ -110,7 +110,8 @@ fun CategoryEditScreen(
                     )
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    style = MaterialTheme.typography.bodyMedium)
             }
 
             OutlinedButton(onClick = onCancel) {

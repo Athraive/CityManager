@@ -586,7 +586,8 @@ fun PoiDetailScreen(
                     onBack()
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    style = MaterialTheme.typography.bodyMedium)
             }
         }
     }

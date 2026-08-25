@@ -75,7 +75,8 @@ fun PoiCreateScreen(
                     )
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    style = MaterialTheme.typography.bodyMedium)
             }
 
             OutlinedButton(onClick = onCancel) {

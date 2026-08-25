@@ -641,7 +641,8 @@ fun PersonDetailScreen(
                 }
             ) {
                 Text(
-                    "Speichern"
+                    "Speichern",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }

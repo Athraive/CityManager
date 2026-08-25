@@ -115,7 +115,8 @@ private fun EditDistrictScreen(
                 },
                 enabled = name.isNotBlank()
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    style = MaterialTheme.typography.bodyMedium)
             }
 
             OutlinedButton(onClick = onCancel) {

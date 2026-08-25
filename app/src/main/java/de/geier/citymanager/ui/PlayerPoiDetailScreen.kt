@@ -231,7 +231,8 @@ fun PlayerPoiDetailScreen(
                         onBack()
                     }
                 ) {
-                    Text("Speichern")
+                    Text("Speichern",
+                        style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }

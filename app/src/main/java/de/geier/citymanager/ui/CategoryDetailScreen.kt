@@ -220,7 +220,7 @@ fun CategoryDetailScreen(
 
                     Text(
                         "Speichern",
-                        fontFamily = FontFamily.SansSerif
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }

@@ -534,7 +534,8 @@ fun FactionDetailScreen(
                     onBack()
                 }
             ) {
-                Text("Speichern")
+                Text("Speichern",
+                    style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
