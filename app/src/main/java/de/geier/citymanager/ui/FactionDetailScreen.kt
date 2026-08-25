@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import kotlinx.coroutines.delay
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.text.style.TextAlign
+import de.geier.citymanager.ui.components.ImageViewerDialog
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -61,7 +62,11 @@ fun FactionDetailScreen(
         mutableStateOf(faction.imageUri)
     }
 
-    val displayImage = imageUri ?: faction.imageUri
+    var openedImage by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    val displayImage = imageUri
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -144,6 +149,16 @@ fun FactionDetailScreen(
         }
     ) { padding ->
 
+        if (openedImage != null) {
+
+            ImageViewerDialog(
+                imageUri = openedImage!!,
+                onDismiss = {
+                    openedImage = null
+                }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -166,8 +181,12 @@ fun FactionDetailScreen(
                         .heightIn(max = 260.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable(enabled = canEdit) {
-                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        .clickable {
+                            if (canEdit) {
+                                imagePickerLauncher.launch(arrayOf("image/*"))
+                            } else if (imageUri != null) {
+                                openedImage = imageUri
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -189,6 +208,28 @@ fun FactionDetailScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(72.dp)
                         )
+                    }
+
+                    if (canEdit && imageUri != null) {
+
+                        Surface(
+                            onClick = {
+                                imageUri = null
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Bild entfernen",
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
                     }
 
                     if (canEdit) {

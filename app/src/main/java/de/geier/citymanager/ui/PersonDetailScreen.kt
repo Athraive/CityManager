@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.text.style.TextAlign
+import de.geier.citymanager.ui.components.ImageViewerDialog
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -79,6 +80,10 @@ fun PersonDetailScreen(
     // ✅ NEU: Bild-State
     var imageUri by remember(person.id) {
         mutableStateOf(person.portraitImageUri)
+    }
+
+    var openedImage by remember {
+        mutableStateOf<String?>(null)
     }
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -154,13 +159,26 @@ fun PersonDetailScreen(
                 actions = {
                     if (canEdit) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Löschen")
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Löschen"
+                            )
                         }
                     }
                 }
             )
         }
     ) { padding ->
+
+        if (openedImage != null) {
+
+            ImageViewerDialog(
+                imageUri = openedImage!!,
+                onDismiss = {
+                    openedImage = null
+                }
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -188,8 +206,12 @@ fun PersonDetailScreen(
                         .heightIn(max = 260.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable(enabled = canEdit) {
-                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        .clickable {
+                            if (canEdit) {
+                                imagePickerLauncher.launch(arrayOf("image/*"))
+                            } else if (imageUri != null) {
+                                openedImage = imageUri
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -211,6 +233,28 @@ fun PersonDetailScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(72.dp)
                         )
+                    }
+
+                    if (canEdit && imageUri != null) {
+
+                        Surface(
+                            onClick = {
+                                imageUri = null
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(8.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            tonalElevation = 2.dp
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Bild entfernen",
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
                     }
 
                     if (canEdit) {

@@ -345,7 +345,23 @@ fun CityIntroScreen(
                 },
 
                 onImageClick = {
-                    imagePicker.launch(arrayOf("image/*"))
+                    if (canEdit) {
+                        imagePicker.launch(arrayOf("image/*"))
+                    } else if (coatOfArmsUri != null) {
+                        openedImage = coatOfArmsUri
+                    }
+                },
+
+                onImageRemove = {
+
+                    coatOfArmsUri = null
+
+                    cityViewModel.saveCity(
+                        c.copy(
+                            subtitle = subtitle,
+                            coatOfArmsUri = null
+                        )
+                    )
                 }
             )
 

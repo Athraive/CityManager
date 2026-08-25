@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Delete
 import coil.compose.AsyncImage
 
 @Composable
@@ -24,6 +25,7 @@ fun CityHeaderCard(
     onSubtitleChange: (String) -> Unit,
     onSubtitleSave: (String) -> Unit,
     onImageClick: () -> Unit,
+    onImageRemove: () -> Unit,
     ) {
 
     var editingSubtitle by remember {
@@ -126,7 +128,7 @@ fun CityHeaderCard(
                     .size(120.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable(enabled = canEdit) {
+                    .clickable {
                         onImageClick()
                     },
                 contentAlignment = Alignment.Center
@@ -148,6 +150,28 @@ fun CityHeaderCard(
                         contentDescription = null,
                         modifier = Modifier.size(48.dp)
                     )
+                }
+
+                if (canEdit && coatOfArmsUri != null) {
+
+                    Surface(
+                        onClick = {
+                            onImageRemove()
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                        tonalElevation = 2.dp
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Wappen entfernen",
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
                 }
             }
         }
