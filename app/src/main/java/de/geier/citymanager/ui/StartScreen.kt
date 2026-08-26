@@ -32,7 +32,10 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import de.geier.citymanager.R
 import kotlinx.coroutines.delay
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 
+@OptIn(UnstableApi::class)
 @Composable
 fun StartScreen(
     onContinue: () -> Unit

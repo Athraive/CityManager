@@ -15,7 +15,7 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "city_manager.db"
             )
-                .fallbackToDestructiveMigration() // 🔹 OK für neues Feature
+                .addMigrations(MIGRATION_20_21)
                 .build()
 
             INSTANCE = instance
