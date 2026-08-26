@@ -12,8 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontFamily
 
 @Composable
 fun CategoryDetailScreen(
@@ -112,10 +112,7 @@ fun CategoryDetailScreen(
                     onValueChange = { title = it },
 
                     label = {
-                        Text(
-                            "Name",
-                            fontFamily = FontFamily.SansSerif
-                        )
+                        Text("Name")
                     },
 
                     singleLine = true,
@@ -134,9 +131,7 @@ fun CategoryDetailScreen(
 
             Text(
                 "Beschreibung",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontFamily = FontFamily.SansSerif
-                )
+                style = MaterialTheme.typography.titleMedium
             )
 
             if (canEdit) {
@@ -169,8 +164,7 @@ fun CategoryDetailScreen(
 
                     Text(
                         "Für Spieler sichtbar",
-                        fontFamily = FontFamily.SansSerif
-                    )
+                        )
                 }
             }
 
@@ -184,10 +178,7 @@ fun CategoryDetailScreen(
                                 "$poiCountInCategory POIs " +
                                 "und kann nicht gelöscht werden.",
 
-                    style =
-                        MaterialTheme.typography.bodySmall.copy(
-                            fontFamily = FontFamily.SansSerif
-                        ),
+                    style = MaterialTheme.typography.bodySmall,
 
                     color =
                         MaterialTheme.colorScheme.onSurfaceVariant
@@ -240,9 +231,8 @@ fun CategoryDetailScreen(
             title = {
 
                 Text(
-                    "Kategorie löschen?",
-                    fontFamily = FontFamily.SansSerif
-                )
+                    "Kategorie löschen?"
+                    )
             },
 
             text = {
@@ -250,9 +240,7 @@ fun CategoryDetailScreen(
                 Text(
                     "Möchtest du die Kategorie " +
                             "„${title.ifBlank { "ohne Namen" }}“ " +
-                            "wirklich löschen?",
-
-                    fontFamily = FontFamily.SansSerif
+                            "wirklich löschen?"
                 )
             },
 
@@ -276,8 +264,7 @@ fun CategoryDetailScreen(
                 ) {
 
                     Text(
-                        "Löschen",
-                        fontFamily = FontFamily.SansSerif
+                        "Löschen"
                     )
                 }
             },
@@ -291,8 +278,7 @@ fun CategoryDetailScreen(
                 ) {
 
                     Text(
-                        "Abbrechen",
-                        fontFamily = FontFamily.SansSerif
+                        "Abbrechen"
                     )
                 }
             }
@@ -313,7 +299,9 @@ fun CategoryDetailScreen(
 
                 Text(
                     "Kategorie nicht leer",
-                    fontFamily = FontFamily.SansSerif
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = FontFamily.SansSerif
+                    )
                 )
             },
 
@@ -324,8 +312,7 @@ fun CategoryDetailScreen(
                             "und kann erst gelöscht werden, " +
                             "wenn alle zugehörigen Orte entfernt " +
                             "oder verschoben wurden.",
-
-                    fontFamily = FontFamily.SansSerif
+                    style = MaterialTheme.typography.bodyMedium
                 )
             },
 
