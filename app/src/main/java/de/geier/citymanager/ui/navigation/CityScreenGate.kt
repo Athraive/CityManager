@@ -17,7 +17,7 @@ fun CityScreenGate(
     role: Role?,
     cityId: String?,
     managePinsMode: Boolean = false,
-    navController: NavController? = null
+    navController: NavController
 ) {
     if (role == null || cityId == null) return
 
@@ -38,7 +38,7 @@ fun CityScreenGate(
         )
     )
 
-    if (managePinsMode && navController != null) {
+    if (managePinsMode) {
 
         ManagePinsScreen(
             navController = navController,
@@ -49,7 +49,8 @@ fun CityScreenGate(
 
         CityScreen(
             cityViewModel = cityViewModel,
-            accessContext = accessContext
+            accessContext = accessContext,
+            navController = navController
         )
     }
 }

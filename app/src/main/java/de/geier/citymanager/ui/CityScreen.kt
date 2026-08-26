@@ -34,6 +34,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.activity.compose.BackHandler
+import androidx.navigation.NavController
 
 enum class CityTab {
     CITY,
@@ -51,7 +53,8 @@ sealed class DetailTarget {
 @Composable
 fun CityScreen(
     cityViewModel: CityViewModel,
-    accessContext: AccessContext
+    accessContext: AccessContext,
+    navController: NavController
 ) {
 
     val context = LocalContext.current
@@ -94,6 +97,26 @@ fun CityScreen(
     var focusPersonId by remember { mutableStateOf<String?>(null) }
     var focusPoiId by remember { mutableStateOf<String?>(null) }
     var mapFocusTick by remember { mutableStateOf(0) }
+
+    BackHandler {
+        when {
+            activeDetail != null -> {
+                activeDetail = null
+            }
+
+            poiSearchVisible -> {
+                poiSearchVisible = false
+            }
+
+            activeTab != CityTab.CITY -> {
+                activeTab = CityTab.CITY
+            }
+
+            else -> {
+                navController.popBackStack()
+            }
+        }
+    }
 
     val cityNavController = rememberNavController()
 

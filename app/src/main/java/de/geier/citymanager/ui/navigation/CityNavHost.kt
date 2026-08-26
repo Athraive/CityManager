@@ -37,7 +37,8 @@ fun NavGraphBuilder.cityNavGraph(
 
         CityScreen(
             cityViewModel = cityViewModel,
-            accessContext = accessContext
+            accessContext = accessContext,
+            navController = navController
         )
     }
 }

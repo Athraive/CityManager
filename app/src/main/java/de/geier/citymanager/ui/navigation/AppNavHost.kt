@@ -178,7 +178,8 @@ fun AppNavHost() {
 
             CityScreenGate(
                 role = selectedRole,
-                cityId = selectedCityId
+                cityId = selectedCityId,
+                navController = navController
             )
         }
     }
